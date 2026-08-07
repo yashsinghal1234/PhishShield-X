@@ -22,13 +22,17 @@ PhishShield-X is a comprehensive, multi-modal phishing detection platform design
 
 ### Backend
 1. Navigate to the `backend` directory: `cd backend`
-2. Activate the virtual environment: `.\venv\Scripts\Activate.ps1` (Windows)
-3. Create a `.env` file and add your API keys:
+2. Create and activate a virtual environment: 
+   - Windows: `python -m venv venv` then `.\venv\Scripts\Activate.ps1`
+   - Mac/Linux: `python3 -m venv venv` then `source venv/bin/activate`
+3. Install the required Python packages: `pip install -r requirements.txt`
+4. Create a `.env` file in the backend folder and add your API keys:
    ```env
    VT_API_KEY=your_virustotal_key
    GSB_API_KEY=your_google_safe_browsing_key
    ```
-4. Run the backend server: `uvicorn main:app --reload`
+5. **Train the ML Model:** Place your `malicious_phish.csv` file into `backend/data/` and run `python train_url_model.py`. This will generate the `url_model.pkl` file (it takes about 1-2 minutes).
+6. Run the backend server: `uvicorn main:app --reload`
 
 ### Frontend
 1. Navigate to the `frontend` directory: `cd frontend`
