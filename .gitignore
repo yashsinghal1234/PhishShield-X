@@ -1,0 +1,16 @@
+# Python / Backend
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/phishshield.db
+backend/url_model.pkl
+backend/email_model.pkl
+backend/data/*.csv
+!backend/data/top_domains.txt
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.eslintcache
