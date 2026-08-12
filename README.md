@@ -39,6 +39,12 @@ The system combines all this evidence into a final decision using a **Three-Tier
 * ⚠️ **Suspicious (41% - 74%):** Conflicting evidence! For example, if the ML model thinks the URL *looks* highly malicious, but all live API checks (VirusTotal, Google) come back clean, the system triggers the **Override Logic**. It gives the site the benefit of the doubt, lowering the threat score from a hard block to a "Suspicious" warning.
 * 🚨 **Phishing (>75%):** High certainty of a threat. Either the ML model is extremely confident and APIs agree, or a major API issued a hard block (which immediately overrides everything to 99% Phishing).
 
+### 6. The QR Decoder (Quishing Detection)
+When a QR code is uploaded, the system utilizes a **Multimodal Fusion Engine**:
+* **Visual Structural Analysis:** OpenCV checks the QR code's module density and looks for large, suspicious central contours often used by attackers to mask fake logos (like a bank logo) via high Error Correction Levels (ECL).
+* **Lexical Payload Analysis:** Extracts the hidden payload and checks for non-standard URI schemes (e.g., `WIFI:`, `SMSTO:`) designed to exploit device features.
+* **URL Unrolling:** If a URL is found, the backend actively sends a `HEAD` request to "unroll" it. This defeats custom or obscure URL shorteners that attackers use to keep the QR code's matrix simple. The *unrolled* destination is then sent through the normal URL detection pipeline.
+
 ---
 
 ## ✨ Features

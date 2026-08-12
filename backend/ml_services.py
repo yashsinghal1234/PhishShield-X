@@ -9,6 +9,8 @@ import pickle
 from datetime import datetime
 import base64
 from dotenv import load_dotenv
+import cv2
+import numpy as np
 
 load_dotenv()
 
@@ -287,8 +289,100 @@ def detect_email_phishing(content: str) -> dict:
         "details": details
     }
 
-def detect_qr_phishing(decoded_url: str) -> dict:
+def detect_qr_phishing(decoded_url: str, img=None) -> dict:
     """
-    Passes decoded QR URL to the URL model.
+    Multimodal Hybrid QR Phishing Detection.
+    Combines visual structural analysis with lexical URL payload analysis.
     """
-    return detect_url_phishing(decoded_url)
+    details = []
+    anomaly_score = 0.0
+    
+    # 1. Non-standard Payload Protocol Check
+    upper_url = decoded_url.upper()
+    is_standard_url = upper_url.startswith('HTTP://') or upper_url.startswith('HTTPS://')
+    
+    if not is_standard_url:
+        if upper_url.startswith('WIFI:') or upper_url.startswith('SMSTO:') or upper_url.startswith('TEL:') or upper_url.startswith('MAILTO:'):
+            anomaly_score += 0.4
+            details.append("Payload Anomaly: Non-standard protocol designed to trigger device actions (e.g., WIFI, SMS)")
+        else:
+            anomaly_score += 0.2
+            details.append("Payload Anomaly: Unrecognized or missing URL protocol scheme")
+            
+    # 2. URL Shortener Check & Unrolling
+    final_url_to_analyze = decoded_url
+    try:
+        parsed = urllib.parse.urlparse(decoded_url if is_standard_url else 'http://' + decoded_url)
+        domain = parsed.netloc.lower()
+        shorteners = ['bit.ly', 'tinyurl.com', 't.co', 'goo.gl', 'ow.ly', 'is.gd', 'buff.ly', 'adf.ly', 'bit.do', 'mcaf.ee', 'su.pr']
+        
+        # We always attempt to unroll if it's a standard URL to catch custom shorteners
+        if is_standard_url:
+            try:
+                response = requests.head(decoded_url, allow_redirects=True, timeout=3)
+                if response.url != decoded_url:
+                    final_url_to_analyze = response.url
+                    # If it unrolled to a different domain, it's definitely a redirect/shortener
+                    if urllib.parse.urlparse(response.url).netloc.lower() != domain:
+                        anomaly_score += 0.35
+                        details.append(f"Payload Anomaly: URL Redirect/Shortener unrolled to {urllib.parse.urlparse(response.url).netloc}")
+            except Exception:
+                # If head request fails, fallback to checking hardcoded list
+                if any(shortener in domain for shortener in shorteners):
+                    anomaly_score += 0.35
+                    details.append("Payload Anomaly: Known URL Shortener detected.")
+    except Exception as e:
+        pass
+        
+    # 3. Base Payload Analysis
+    payload_result = detect_url_phishing(final_url_to_analyze)
+    base_confidence = payload_result["confidence"]
+    details.append(payload_result["details"])
+    
+    # 4. Visual Structural Analysis
+    if img is not None:
+        try:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
+            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            # Attackers use high ECL to embed large central logos. 
+            # Look for large continuous contours (excluding the 3 position squares).
+            total_area = img.shape[0] * img.shape[1]
+            large_contours = 0
+            
+            for cnt in contours:
+                area = cv2.contourArea(cnt)
+                if area > (total_area * 0.05): # Contour taking up > 5% of the image
+                    large_contours += 1
+                    
+            if large_contours > 3:
+                anomaly_score += 0.25
+                details.append("Visual Anomaly: Suspiciously large central structures detected (Possible malicious logo masking)")
+            
+            # Density check
+            black_pixels = np.sum(thresh == 255)
+            density = black_pixels / total_area
+            if density > 0.6 or density < 0.2:
+                anomaly_score += 0.15
+                details.append("Visual Anomaly: Abnormal module density (Potentially manipulated encoding)")
+                
+        except Exception as e:
+            details.append(f"Visual analysis failed: {str(e)}")
+            
+    # 3. Multimodal Fusion Engine
+    final_confidence = min(1.0, base_confidence + anomaly_score)
+    
+    if final_confidence > 0.74:
+        final_prediction = "Phishing"
+    elif final_confidence > 0.40:
+        final_prediction = "Suspicious"
+    else:
+        final_prediction = "Safe"
+        
+    return {
+        "prediction": final_prediction,
+        "confidence": final_confidence,
+        "details": " | ".join(details)
+    }
+
