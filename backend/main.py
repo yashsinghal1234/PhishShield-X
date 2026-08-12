@@ -85,7 +85,7 @@ async def scan_qr(file: UploadFile = File(...), db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="No QR code found in image")
         
         qr_data = decoded_objects[0].data.decode('utf-8')
-        result = ml_services.detect_qr_phishing(qr_data)
+        result = ml_services.detect_qr_phishing(qr_data, img)
         saved = save_history(db, "qr", f"Extracted URL: {qr_data}", result)
         
         return {

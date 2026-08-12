@@ -31,6 +31,8 @@ Simultaneously, the backend queries real-time cybersecurity databases to check t
 
 ### 4. The Interrogation (Live Heuristics)
 * **Domain Age (WHOIS):** Phishing domains are usually spin-ups that only last a few days. If the domain is under 30 days old, the threat score drastically increases.
+* **Typosquatting & Homograph Engine:** A string-similarity algorithm checks if the domain is trying to impersonate a famous brand (e.g., `googIe.com` vs `google.com`), flagging highly deceptive URLs instantly.
+* **SSL/TLS Analysis:** It actively queries the target server's SSL certificate. A free, 90-day certificate (like Let's Encrypt) combined with a newly registered domain is penalized heavily as typical phishing behavior.
 * **Live Scraper:** The backend visits the webpage using BeautifulSoup and looks for immediate red flags in the HTML code, such as hidden iframes or suspicious password fields.
 
 ### 5. The Judge (Three-Tier Classification & Override)
@@ -69,7 +71,14 @@ When a QR code is uploaded, the system utilizes a **Multimodal Fusion Engine**:
 
 ## 🚀 Installation & Setup
 
-### Backend Setup
+### 🐳 Quick Start (Docker - Recommended)
+The entire project (Frontend + Backend) is fully containerized. If you have Docker Desktop installed, simply run:
+```bash
+docker-compose up --build
+```
+This single command handles all dependency installation, database creation, and networking automatically!
+
+### Manual Backend Setup
 1. Navigate to the backend directory:
    ```bash
    cd backend

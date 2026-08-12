@@ -11,6 +11,10 @@ import base64
 from dotenv import load_dotenv
 import cv2
 import numpy as np
+import ssl
+import socket
+import difflib
+from functools import lru_cache
 
 load_dotenv()
 
@@ -95,6 +99,7 @@ def scrape_for_phishing(url: str) -> dict:
     except Exception as e:
         return {"score": 0, "error": str(e)}
 
+@lru_cache(maxsize=1000)
 def check_virustotal(url: str) -> dict:
     VT_API_KEY = os.getenv("VT_API_KEY")
     if not VT_API_KEY:
@@ -118,6 +123,7 @@ def check_virustotal(url: str) -> dict:
     except Exception as e:
         return {"malicious": 0, "error": str(e)}
 
+@lru_cache(maxsize=1000)
 def check_google_safe_browsing(url: str) -> dict:
     GSB_API_KEY = os.getenv("GSB_API_KEY")
     if not GSB_API_KEY:
@@ -148,6 +154,28 @@ def check_google_safe_browsing(url: str) -> dict:
     except Exception as e:
         return {"malicious": False, "error": str(e)}
 
+def check_ssl_certificate(url: str) -> dict:
+    try:
+        domain = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url).netloc
+        if not domain:
+            domain = url.split('/')[0]
+            
+        context = ssl.create_default_context()
+        with socket.create_connection((domain, 443), timeout=3) as sock:
+            with context.wrap_socket(sock, server_hostname=domain) as ssock:
+                cert = ssock.getpeercert()
+                issuer = dict(x[0] for x in cert['issuer'])
+                issuer_org = issuer.get('organizationName', '')
+                
+                is_free_ca = any(ca in issuer_org for ca in ["Let's Encrypt", "ZeroSSL", "cPanel"])
+                
+                not_before = datetime.strptime(cert['notBefore'], '%b %d %H:%M:%S %Y %Z')
+                age_days = (datetime.now() - not_before).days
+                
+                return {"is_free_ca": is_free_ca, "age_days": age_days, "error": None}
+    except Exception as e:
+        return {"is_free_ca": False, "age_days": None, "error": str(e)}
+
 def detect_url_phishing(url: str) -> dict:
     parsed_url = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url)
     domain_netloc = parsed_url.netloc.lower()
@@ -159,6 +187,18 @@ def detect_url_phishing(url: str) -> dict:
             "confidence": 1.0,
             "details": f"Domain {domain_netloc} is in the Top 100,000 Global Sites whitelist. (100% SAFE)"
         }
+
+    # 0.5. Check Typosquatting
+    base_domain = domain_netloc.replace("www.", "")
+    for safe_domain in top_domains:
+        if len(safe_domain) > 4: # Don't compare very short domains
+            similarity = difflib.SequenceMatcher(None, base_domain, safe_domain).ratio()
+            if 0.85 < similarity < 1.0:
+                return {
+                    "prediction": "Phishing",
+                    "confidence": 0.95,
+                    "details": f"Typosquatting detected! Domain looks like '{safe_domain}' but is '{base_domain}' (HIGH RISK)"
+                }
 
     # 1. Check ML Model first
     ml_is_phish = False
@@ -187,6 +227,7 @@ def detect_url_phishing(url: str) -> dict:
     scrape_info = scrape_for_phishing(url)
     vt_info = check_virustotal(url)
     gsb_info = check_google_safe_browsing(url)
+    ssl_info = check_ssl_certificate(url)
     
     final_confidence = ml_confidence
     details = []
@@ -222,6 +263,11 @@ def detect_url_phishing(url: str) -> dict:
     else:
         details.append("Domain age unverifiable")
         
+    if ssl_info["error"] is None:
+        if ssl_info["is_free_ca"] and (age_info["age_days"] is None or age_info["age_days"] < 90):
+            final_confidence = min(0.99, final_confidence + 0.25)
+            details.append("Uses a free SSL certificate often associated with short-lived phishing sites")
+            
     if scrape_info["score"] > 0:
         final_confidence = min(0.99, final_confidence + 0.3 * scrape_info["score"])
         details.append(f"Scraper found {scrape_info['score']} suspicious elements")
@@ -305,6 +351,9 @@ def detect_qr_phishing(decoded_url: str, img=None) -> dict:
         if upper_url.startswith('WIFI:') or upper_url.startswith('SMSTO:') or upper_url.startswith('TEL:') or upper_url.startswith('MAILTO:'):
             anomaly_score += 0.4
             details.append("Payload Anomaly: Non-standard protocol designed to trigger device actions (e.g., WIFI, SMS)")
+        elif upper_url.startswith('UPI://') or upper_url.startswith('BITCOIN:') or upper_url.startswith('ETHEREUM:') or upper_url.startswith('PAYPAL:'):
+            anomaly_score += 0.6
+            details.append("Payload Anomaly: Direct Financial/Payment request detected. High risk of theft if unverified.")
         else:
             anomaly_score += 0.2
             details.append("Payload Anomaly: Unrecognized or missing URL protocol scheme")
