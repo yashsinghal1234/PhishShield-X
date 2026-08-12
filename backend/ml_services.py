@@ -335,6 +335,103 @@ def detect_email_phishing(content: str) -> dict:
         "details": details
     }
 
+def detect_eml_phishing(file_bytes: bytes) -> dict:
+    import email
+    from email import policy
+    
+    try:
+        msg = email.message_from_bytes(file_bytes, policy=policy.default)
+        
+        details = []
+        anomaly_score = 0.0
+        
+        # 1. Header Analysis
+        auth_results = str(msg.get('Authentication-Results', '')).lower()
+        if 'spf=fail' in auth_results or 'spf=softfail' in auth_results:
+            anomaly_score += 0.4
+            details.append("Header Anomaly: SPF Authentication Failed (Sender IP not authorized)")
+            
+        if 'dkim=fail' in auth_results:
+            anomaly_score += 0.4
+            details.append("Header Anomaly: DKIM Signature Failed (Email may have been tampered with or spoofed)")
+            
+        if 'dmarc=fail' in auth_results:
+            anomaly_score += 0.5
+            details.append("Header Anomaly: DMARC Policy Failed (High probability of spoofing)")
+            
+        # 2. Mismatch Analysis
+        from_header = str(msg.get('From', ''))
+        return_path = str(msg.get('Return-Path', ''))
+        
+        def extract_domain(addr):
+            if '@' in addr:
+                return addr.split('@')[-1].strip('<>')
+            return ''
+            
+        from_domain = extract_domain(from_header)
+        return_domain = extract_domain(return_path)
+        
+        if from_domain and return_domain and from_domain.lower() != return_domain.lower():
+            anomaly_score += 0.5
+            details.append(f"Header Anomaly: 'From' domain ({from_domain}) does not match 'Return-Path' ({return_domain}). Classic spoofing tactic.")
+            
+        # 3. Body Extraction for ML
+        body_content = ""
+        if msg.is_multipart():
+            for part in msg.walk():
+                content_type = part.get_content_type()
+                if content_type == 'text/plain' or content_type == 'text/html':
+                    try:
+                        body_content += part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
+                    except:
+                        pass
+        else:
+            try:
+                body_content = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8', errors='ignore')
+            except:
+                pass
+                
+        if not body_content:
+            body_content = str(msg.get('Subject', ''))
+            
+        # 3.5 Fake Job/Internship Detection
+        job_keywords = ["internship", "job offer", "hiring", "salary", "work from home", "remote job", "interview", "recruitment"]
+        is_job_email = any(kw in body_content.lower() for kw in job_keywords)
+        
+        if is_job_email and from_domain:
+            free_email_providers = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "aol.com"]
+            if from_domain.lower() in free_email_providers:
+                anomaly_score += 0.3
+                details.append("Job Scam Heuristic: Job offer sent from a free personal email provider (High Risk)")
+            else:
+                age_info = check_domain_age(from_domain)
+                if age_info["age_days"] is not None and age_info["age_days"] < 180:
+                    anomaly_score += 0.4
+                    details.append(f"Job Scam Heuristic: Job offer from a newly registered corporate domain ({age_info['age_days']} days old)")
+                    
+        # 4. Base ML Analysis
+        ml_result = detect_email_phishing(body_content)
+        
+        final_confidence = min(0.99, ml_result['confidence'] + anomaly_score)
+        
+        if final_confidence > 0.74:
+            final_prediction = "Phishing"
+        elif final_confidence > 0.40:
+            final_prediction = "Suspicious"
+        else:
+            final_prediction = "Safe"
+            
+        details.append(ml_result['details'])
+        
+        return {
+            "prediction": final_prediction,
+            "confidence": final_confidence,
+            "details": " | ".join(details)
+        }
+        
+    except Exception as e:
+        return {"prediction": "Error", "confidence": 0, "details": f"Failed to parse EML file: {str(e)}"}
+
 def detect_qr_phishing(decoded_url: str, img=None) -> dict:
     """
     Multimodal Hybrid QR Phishing Detection.

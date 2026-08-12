@@ -47,6 +47,12 @@ When a QR code is uploaded, the system utilizes a **Multimodal Fusion Engine**:
 * **Lexical Payload Analysis:** Extracts the hidden payload and checks for non-standard URI schemes (e.g., `WIFI:`, `SMSTO:`) designed to exploit device features.
 * **URL Unrolling:** If a URL is found, the backend actively sends a `HEAD` request to "unroll" it. This defeats custom or obscure URL shorteners that attackers use to keep the QR code's matrix simple. The *unrolled* destination is then sent through the normal URL detection pipeline.
 
+### 7. The Email Spoofing & Fraud Engine
+When an email is analyzed, the system parses the raw `.eml` headers alongside the text body:
+* **Authentication Validation (SPF/DKIM/DMARC):** Automatically parses the `Authentication-Results` header to detect if the email was cryptographically tampered with or sent from an unauthorized server.
+* **Return-Path Mismatch:** Compares the visible `From` domain against the hidden `Return-Path` to detect classic spoofing impersonation.
+* **Fake Job/Internship Heuristics:** Detects recruitment scams by identifying job-related keywords originating from free email providers (Gmail, Yahoo) or newly registered corporate domains.
+
 ---
 
 ## ✨ Features

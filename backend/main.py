@@ -61,10 +61,26 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
         "details": result["details"]
     }
 
+from fastapi import Form
+from typing import Optional
+
 @app.post("/api/detect/email", response_model=schemas.ScanResponse)
-def scan_email(request: schemas.EmailScanRequest, db: Session = Depends(get_db)):
-    result = ml_services.detect_email_phishing(request.content)
-    saved = save_history(db, "email", request.content[:200] + "...", result) # Save snippet
+async def scan_email(
+    file: Optional[UploadFile] = File(None),
+    content: Optional[str] = Form(None),
+    db: Session = Depends(get_db)
+):
+    if file:
+        file_bytes = await file.read()
+        result = ml_services.detect_eml_phishing(file_bytes)
+        input_data = f"EML File: {file.filename}"
+    elif content:
+        result = ml_services.detect_email_phishing(content)
+        input_data = content[:200] + "..."
+    else:
+        raise HTTPException(status_code=400, detail="Must provide either a file or text content")
+        
+    saved = save_history(db, "email", input_data, result)
     return {
         "id": saved.id,
         "scan_type": "email",
