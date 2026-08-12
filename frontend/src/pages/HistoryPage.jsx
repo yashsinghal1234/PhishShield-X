@@ -80,7 +80,7 @@ export default function HistoryPage() {
                     </td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.prediction === 'Phishing' ? 'bg-danger/10 text-danger' : 'bg-safe/10 text-safe'
+                        item.prediction === 'Phishing' ? 'bg-danger/10 text-danger' : item.prediction === 'Suspicious' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-safe/10 text-safe'
                       }`}>
                         {item.prediction}
                       </span>

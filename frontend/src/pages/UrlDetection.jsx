@@ -68,15 +68,25 @@ export default function UrlDetection() {
 
         {result && (
           <div className="mt-8 pt-8 border-t border-dark-700 animate-in slide-in-from-bottom-4">
-            <div className={`p-6 rounded-2xl border ${result.prediction === 'Phishing' ? 'bg-danger/10 border-danger/20' : 'bg-safe/10 border-safe/20'}`}>
+            <div className={`p-6 rounded-2xl border ${
+              result.prediction === 'Phishing' ? 'bg-danger/10 border-danger/20' : 
+              result.prediction === 'Suspicious' ? 'bg-yellow-500/10 border-yellow-500/20' : 
+              'bg-safe/10 border-safe/20'
+            }`}>
               <div className="flex items-center space-x-4 mb-4">
                 {result.prediction === 'Phishing' ? (
                   <AlertTriangle className="h-8 w-8 text-danger" />
+                ) : result.prediction === 'Suspicious' ? (
+                  <AlertTriangle className="h-8 w-8 text-yellow-500" />
                 ) : (
                   <ShieldCheck className="h-8 w-8 text-safe" />
                 )}
                 <div>
-                  <h3 className={`text-xl font-bold ${result.prediction === 'Phishing' ? 'text-danger' : 'text-safe'}`}>
+                  <h3 className={`text-xl font-bold ${
+                    result.prediction === 'Phishing' ? 'text-danger' : 
+                    result.prediction === 'Suspicious' ? 'text-yellow-500' : 
+                    'text-safe'
+                  }`}>
                     {result.prediction} Detected
                   </h3>
                   <p className="text-gray-400 text-sm">Confidence Score: {(result.confidence * 100).toFixed(2)}%</p>

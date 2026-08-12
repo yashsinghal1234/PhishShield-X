@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { ShieldAlert, ShieldCheck, Activity } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Activity, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 
 export default function Dashboard() {
@@ -21,6 +21,7 @@ export default function Dashboard() {
 
   const chartData = [
     { name: 'Phishing', value: stats.phishing_detected, color: '#ef4444' },
+    { name: 'Suspicious', value: stats.suspicious_detected, color: '#f59e0b' },
     { name: 'Safe', value: stats.safe_detected, color: '#10b981' }
   ];
 
@@ -31,7 +32,7 @@ export default function Dashboard() {
         <p className="text-gray-400">Real-time analysis of multi-modal phishing threats.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="glass-panel p-6 flex items-center space-x-4">
           <div className="p-4 bg-primary-500/20 rounded-xl">
             <Activity className="text-primary-500" size={24} />
@@ -50,6 +51,17 @@ export default function Dashboard() {
           <div className="relative z-10">
             <p className="text-gray-400 text-sm">Threats Blocked</p>
             <p className="text-2xl font-bold text-white">{stats.phishing_detected}</p>
+          </div>
+        </div>
+
+        <div className="glass-panel p-6 flex items-center space-x-4 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/0 to-yellow-500/10 group-hover:to-yellow-500/20 transition-all" />
+          <div className="p-4 bg-yellow-500/20 rounded-xl relative z-10">
+            <AlertTriangle className="text-yellow-500" size={24} />
+          </div>
+          <div className="relative z-10">
+            <p className="text-gray-400 text-sm">Suspicious</p>
+            <p className="text-2xl font-bold text-white">{stats.suspicious_detected}</p>
           </div>
         </div>
 
@@ -105,8 +117,8 @@ export default function Dashboard() {
                     <span className="text-xs px-2 py-1 bg-dark-700 rounded mr-2 uppercase">{threat.scan_type}</span>
                     {threat.input_data.substring(0, 30)}...
                   </div>
-                  <div className="text-danger font-medium text-sm">
-                    {(threat.confidence * 100).toFixed(1)}% Risk
+                  <div className={`font-medium text-sm ${threat.prediction === 'Safe' ? 'text-safe' : threat.prediction === 'Suspicious' ? 'text-yellow-500' : 'text-danger'}`}>
+                    {threat.prediction} ({(threat.confidence * 100).toFixed(1)}%)
                   </div>
                 </div>
               ))

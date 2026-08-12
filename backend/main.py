@@ -107,12 +107,14 @@ def get_history(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 def get_stats(db: Session = Depends(get_db)):
     total = db.query(models.DetectionHistory).count()
     phishing = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Phishing").count()
+    suspicious = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Suspicious").count()
     safe = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Safe").count()
     recent = db.query(models.DetectionHistory).order_by(models.DetectionHistory.timestamp.desc()).limit(5).all()
     
     return {
         "total_scans": total,
         "phishing_detected": phishing,
+        "suspicious_detected": suspicious,
         "safe_detected": safe,
         "recent_threats": recent
     }

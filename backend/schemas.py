@@ -30,5 +30,6 @@ class DetectionHistoryResponse(BaseModel):
 class DashboardStatsResponse(BaseModel):
     total_scans: int
     phishing_detected: int
+    suspicious_detected: int
     safe_detected: int
     recent_threats: List[DetectionHistoryResponse]

@@ -5,6 +5,7 @@ import whois
 import urllib.parse
 import requests
 from bs4 import BeautifulSoup
+import pickle
 from datetime import datetime
 import base64
 from dotenv import load_dotenv
@@ -22,6 +23,16 @@ try:
     if os.path.exists("url_model.pkl"):
         from features import URLFeatureExtractor # Needs to be imported for joblib to unpickle
         url_model = joblib.load("url_model.pkl")
+        
+    # Load deep learning models
+    deep_phish_model = None
+    tokenizer = None
+    if os.path.exists("deep_phish_model.h5"):
+        import tensorflow as tf
+        deep_phish_model = tf.keras.models.load_model("deep_phish_model.h5")
+    if os.path.exists("tokenizer.pkl"):
+        with open("tokenizer.pkl", "rb") as handle:
+            tokenizer = pickle.load(handle)
     
     # Load whitelist
     if os.path.exists("data/top_domains.txt"):
@@ -151,11 +162,21 @@ def detect_url_phishing(url: str) -> dict:
     ml_is_phish = False
     ml_confidence = 0.5 # Default middle ground if model fails
     
-    if url_model:
+    if deep_phish_model and tokenizer:
+        try:
+            from tensorflow.keras.preprocessing.sequence import pad_sequences
+            sequences = tokenizer.texts_to_sequences([url])
+            X = pad_sequences(sequences, maxlen=200)
+            prob = float(deep_phish_model.predict(X, verbose=0)[0][0])
+            ml_is_phish = prob > 0.5
+            ml_confidence = prob if ml_is_phish else (1 - prob) # deep model outputs prob of phish
+        except Exception as e:
+            print(f"Deep learning error: {e}")
+    elif url_model:
         try:
             prob = url_model.predict_proba([url])[0][1]
             ml_is_phish = prob > 0.5
-            ml_confidence = prob
+            ml_confidence = prob if ml_is_phish else (1 - prob)
         except:
             pass
             
@@ -208,7 +229,15 @@ def detect_url_phishing(url: str) -> dict:
         final_confidence = max(0.01, final_confidence - 0.35)
         details.append("Passed all API and Live Checks (Safe) - Overriding ML suspicion")
         
-    final_prediction = "Phishing" if final_confidence > 0.5 else "Safe"
+    if final_confidence > 0.74:
+        final_prediction = "Phishing"
+        reported_confidence = final_confidence
+    elif final_confidence > 0.40:
+        final_prediction = "Suspicious"
+        reported_confidence = final_confidence
+    else:
+        final_prediction = "Safe"
+        reported_confidence = 1.0 - final_confidence
     
     if vt_info.get("malicious", 0) > 0:
         details.append(f"VirusTotal found {vt_info['malicious']} vendor flags (Warning)")
@@ -222,7 +251,7 @@ def detect_url_phishing(url: str) -> dict:
     
     return {
         "prediction": final_prediction,
-        "confidence": final_confidence if final_prediction == "Phishing" else (1 - final_confidence),
+        "confidence": reported_confidence,
         "details": " | ".join(details)
     }
 
