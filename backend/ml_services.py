@@ -412,7 +412,12 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
         # 4. Base ML Analysis
         ml_result = detect_email_phishing(body_content)
         
-        final_confidence = min(0.99, ml_result['confidence'] + anomaly_score)
+        if ml_result["prediction"] == "Safe":
+            base_ml_confidence = 1.0 - ml_result["confidence"]
+        else:
+            base_ml_confidence = ml_result["confidence"]
+            
+        final_confidence = min(0.99, base_ml_confidence + anomaly_score)
         
         if final_confidence > 0.74:
             final_prediction = "Phishing"
@@ -425,7 +430,7 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
         
         return {
             "prediction": final_prediction,
-            "confidence": final_confidence,
+            "confidence": final_confidence if final_prediction != "Safe" else 1.0 - final_confidence,
             "details": " | ".join(details)
         }
         
@@ -482,7 +487,10 @@ def detect_qr_phishing(decoded_url: str, img=None) -> dict:
         
     # 3. Base Payload Analysis
     payload_result = detect_url_phishing(final_url_to_analyze)
-    base_confidence = payload_result["confidence"]
+    if payload_result["prediction"] == "Safe":
+        base_confidence = 1.0 - payload_result["confidence"]
+    else:
+        base_confidence = payload_result["confidence"]
     details.append(payload_result["details"])
     
     # 4. Visual Structural Analysis
@@ -516,7 +524,7 @@ def detect_qr_phishing(decoded_url: str, img=None) -> dict:
         except Exception as e:
             details.append(f"Visual analysis failed: {str(e)}")
             
-    # 3. Multimodal Fusion Engine
+    # 5. Multimodal Fusion Engine
     final_confidence = min(1.0, base_confidence + anomaly_score)
     
     if final_confidence > 0.74:
@@ -528,7 +536,7 @@ def detect_qr_phishing(decoded_url: str, img=None) -> dict:
         
     return {
         "prediction": final_prediction,
-        "confidence": final_confidence,
+        "confidence": final_confidence if final_prediction != "Safe" else 1.0 - final_confidence,
         "details": " | ".join(details)
     }
 
