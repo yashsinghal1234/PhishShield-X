@@ -553,8 +553,39 @@ def get_osint_data(url: str) -> dict:
         "asn": None,
         "hosting_provider": None,
         "tld": tld,
-        "screenshot_url": f"https://s0.wordpress.com/mshots/v1/{url}?w=1024"
+        "screenshot_url": f"https://s0.wordpress.com/mshots/v1/{url}?w=1024",
+        "brand": None,
+        "certificate_details": None
     }
+    
+    # Try fetching SSL Details
+    try:
+        ctx = ssl.create_default_context()
+        with socket.create_connection((domain, 443), timeout=3) as sock:
+            with ctx.wrap_socket(sock, server_hostname=domain) as ssock:
+                cert = ssock.getpeercert()
+                
+                # Extract Brand (Issuer Organization)
+                issuer_org = "--"
+                for field in cert.get('issuer', []):
+                    for k, v in field:
+                        if k == 'organizationName':
+                            issuer_org = v
+                            break
+                            
+                # Extract Certificate Details (Subject Alt Names)
+                san_list = []
+                for k, v in cert.get('subjectAltName', []):
+                    san_list.append(v)
+                
+                if issuer_org != "--":
+                    osint["brand"] = issuer_org
+                
+                if san_list:
+                    osint["certificate_details"] = f"{issuer_org}: " + ", ".join(san_list[:3]) + ("..." if len(san_list) > 3 else "")
+                    
+    except Exception as e:
+        print(f"SSL error: {e}")
     
     try:
         ip = socket.gethostbyname(domain)

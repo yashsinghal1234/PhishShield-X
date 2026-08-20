@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import UserControls from '../components/UserControls';
 import { Link2, AlertTriangle, ShieldCheck, Loader2, Globe, Server, MapPin, Calendar, Camera, Info, Copy, ExternalLink, Network, Database, Fingerprint } from 'lucide-react';
 
 export default function UrlDetection() {
@@ -33,13 +34,19 @@ export default function UrlDetection() {
   return (
     <div className="space-y-6 font-['Poppins'] animate-in fade-in duration-300 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#0F1720] mb-2">
-          URL Phishing Detection
-        </h1>
-        <p className="text-[#64748B] font-medium">
-          Enter a suspicious URL to analyze its lexical features and domain reputation.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#0F1720] mb-2">
+            URL Phishing Detection
+          </h1>
+          <p className="text-[#64748B] font-medium">
+            Enter a suspicious URL to analyze its lexical features and domain reputation.
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <UserControls />
+        </div>
       </div>
 
       {/* Input Panel */}
@@ -137,6 +144,14 @@ export default function UrlDetection() {
                 </div>
 
                 <div>
+                  <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase block mb-1.5">Brand</span>
+                  <div className="flex items-center gap-2 text-[#0F1720] font-medium">
+                    <Fingerprint className="h-4 w-4 text-[#94A3B8] shrink-0" />
+                    {result.brand || '--'}
+                  </div>
+                </div>
+
+                <div>
                   <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase block mb-1.5">IP Address</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[#2563EB] font-medium">{result.ip_address || '--'}</span>
@@ -177,6 +192,13 @@ export default function UrlDetection() {
                   <div className="flex items-center gap-2 text-[#0F1720] font-medium">
                     <Calendar className="h-4 w-4 text-[#94A3B8] shrink-0" />
                     {new Date().toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 mt-2">
+                  <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase block mb-2">Certificate Details</span>
+                  <div className="text-[#334155] text-sm font-medium leading-relaxed">
+                    {result.certificate_details || '--'}
                   </div>
                 </div>
                 

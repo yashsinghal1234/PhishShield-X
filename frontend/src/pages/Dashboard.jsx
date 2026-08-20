@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import UserControls from '../components/UserControls';
 import {
   ArrowUpRight,
   Ban,
@@ -255,6 +256,9 @@ export default function Dashboard() {
             <Download size={16} />
             <span>Export Report</span>
           </button>
+          
+          <div className="h-8 w-px bg-[#E5E9EB] mx-1"></div>
+          <UserControls />
         </div>
       </div>
 

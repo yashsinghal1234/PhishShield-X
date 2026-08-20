@@ -67,7 +67,9 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
         "asn": osint_data.get("asn"),
         "hosting_provider": osint_data.get("hosting_provider"),
         "tld": osint_data.get("tld"),
-        "screenshot_url": osint_data.get("screenshot_url")
+        "screenshot_url": osint_data.get("screenshot_url"),
+        "brand": osint_data.get("brand"),
+        "certificate_details": osint_data.get("certificate_details")
     }
 
 from fastapi import Form

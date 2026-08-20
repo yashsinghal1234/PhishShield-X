@@ -20,6 +20,8 @@ class ScanResponse(BaseModel):
     hosting_provider: Optional[str] = None
     tld: Optional[str] = None
     screenshot_url: Optional[str] = None
+    brand: Optional[str] = None
+    certificate_details: Optional[str] = None
 
 class DetectionHistoryResponse(BaseModel):
     id: int
