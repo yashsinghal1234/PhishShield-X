@@ -256,10 +256,7 @@ export default function Dashboard() {
             <div className="text-3xl xl:text-4xl font-bold tracking-tight text-white">
               {Number(totalScansVal).toLocaleString()}
             </div>
-            <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#A6E0BE] mt-2">
-              <TrendingUp size={15} />
-              <span>+12.5% from last week</span>
-            </div>
+
           </div>
         </div>
 
@@ -269,9 +266,7 @@ export default function Dashboard() {
             <div className="h-10 w-10 rounded-full bg-[#FEF2F2] flex items-center justify-center text-danger">
               <Ban size={20} />
             </div>
-            <span className="inline-flex items-center gap-1 bg-[#FEF2F2] text-[#DC2626] px-2.5 py-1 rounded-lg text-xs font-semibold">
-              <TrendingDown size={14} /> 3.2%
-            </span>
+
           </div>
           <div className="mt-2">
             <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase">
@@ -289,9 +284,7 @@ export default function Dashboard() {
             <div className="h-10 w-10 rounded-full bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
               <TriangleAlert size={20} />
             </div>
-            <span className="inline-flex items-center gap-1 bg-[#F1F5F9] text-[#64748B] px-2.5 py-1 rounded-lg text-xs font-semibold">
-              <Minus size={14} /> 0.0%
-            </span>
+
           </div>
           <div className="mt-2">
             <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase">
@@ -309,9 +302,7 @@ export default function Dashboard() {
             <div className="h-10 w-10 rounded-full bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
               <ShieldCheck size={20} />
             </div>
-            <span className="inline-flex items-center gap-1 bg-[#F0FDF4] text-[#16A34A] px-2.5 py-1 rounded-lg text-xs font-semibold">
-              <TrendingUp size={14} /> 8.4%
-            </span>
+
           </div>
           <div className="mt-2">
             <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase">
