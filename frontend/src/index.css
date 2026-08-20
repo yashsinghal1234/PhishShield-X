@@ -35,3 +35,12 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-dark-800;
 }
+
+/* Remove default Recharts focus outlines */
+.recharts-wrapper, 
+.recharts-surface, 
+.recharts-sector,
+.recharts-pie,
+.recharts-responsive-container {
+  outline: none !important;
+}
