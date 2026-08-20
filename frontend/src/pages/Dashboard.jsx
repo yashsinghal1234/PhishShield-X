@@ -222,7 +222,7 @@ export default function Dashboard() {
         source: t.input_data || 'unknown-target.com',
         type: t.scan_type === 'email' ? 'Phishing' : t.scan_type === 'qr' ? 'Malware' : 'Phishing',
         severity: t.prediction === 'Phishing' ? 'High' : t.prediction === 'Suspicious' ? 'Medium' : 'Low',
-        status: t.prediction === 'Safe' ? 'Safe' : t.prediction === 'Suspicious' ? 'Quarantined' : 'Blocked'
+        status: t.prediction === 'Safe' ? 'Safe' : t.prediction === 'Suspicious' ? 'Flagged' : 'Blocked'
       }))
     : [];
 
@@ -434,9 +434,9 @@ export default function Dashboard() {
           </div>
 
           {/* Donut Chart with Progress Pill Caps */}
-          <div className="h-56 relative flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+          <div className="h-56 relative flex items-center justify-center outline-none focus:outline-none">
+            <ResponsiveContainer width="100%" height="100%" className="outline-none focus:outline-none">
+              <PieChart style={{ outline: 'none' }}>
                 <Pie
                   data={dayPieData}
                   cx="50%"
@@ -447,6 +447,7 @@ export default function Dashboard() {
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
+                  style={{ outline: 'none' }}
                   onMouseEnter={(_, index) => setHoveredSegment(dayPieData[index])}
                   onMouseLeave={() => setHoveredSegment(null)}
                 >
@@ -541,9 +542,9 @@ export default function Dashboard() {
                         <span className="inline-flex items-center gap-1 text-[#16A34A] font-semibold">
                           <CheckCircle2 size={14} /> Safe
                         </span>
-                      ) : row.status === 'Quarantined' ? (
-                        <span className="inline-flex items-center gap-1 text-[#64748B] font-semibold">
-                          <MinusCircle size={14} /> Quarantined
+                      ) : row.status === 'Flagged' ? (
+                        <span className="inline-flex items-center gap-1 text-[#F59E0B] font-semibold">
+                          <TriangleAlert size={14} /> Flagged
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[#DC2626] font-semibold">
