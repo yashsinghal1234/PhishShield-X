@@ -204,17 +204,10 @@ export default function Dashboard() {
   if (!stats) return <div className="text-[#64748B] p-8 font-medium">Loading Dashboard...</div>;
   if (stats.error) return <div className="text-[#DC2626] p-8 font-medium">Failed to connect to backend. Please check backend service.</div>;
 
-  const totalScansVal = stats.total_scans || 45231;
-  const phishingVal = stats.phishing_detected || 1204;
-  const suspiciousVal = stats.suspicious_detected || 342;
-  const safeVal = stats.safe_detected || 43685;
-
-  const defaultRecentThreats = [
-    { id: 1, source: 'secure-login-paypal-update.com', type: 'Phishing', severity: 'High', status: 'Blocked' },
-    { id: 2, source: '192.168.45.102', type: 'Malware', severity: 'Critical', status: 'Blocked' },
-    { id: 3, source: 'verify-account-apple.net', type: 'Phishing', severity: 'Medium', status: 'Quarantined' },
-    { id: 4, source: 'update-office365-portal.info', type: 'Spoofing', severity: 'High', status: 'Blocked' },
-  ];
+  const totalScansVal = stats.total_scans ?? 0;
+  const phishingVal = stats.phishing_detected ?? 0;
+  const suspiciousVal = stats.suspicious_detected ?? 0;
+  const safeVal = stats.safe_detected ?? 0;
 
   const recentThreatsList = stats.recent_threats && stats.recent_threats.length > 0
     ? stats.recent_threats.map((t, idx) => ({
@@ -224,7 +217,7 @@ export default function Dashboard() {
         severity: t.prediction === 'Phishing' ? 'High' : t.prediction === 'Suspicious' ? 'Medium' : 'Low',
         status: t.prediction === 'Safe' ? 'Safe' : 'Blocked'
       }))
-    : defaultRecentThreats;
+    : [];
 
   return (
     <div className="space-y-6 font-['Poppins'] animate-in fade-in duration-300">
