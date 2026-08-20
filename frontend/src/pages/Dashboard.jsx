@@ -284,7 +284,7 @@ export default function Dashboard() {
         {/* Threats Blocked Card */}
         <div className="rounded-3xl bg-white border border-[#E5E9EB] p-5.5 shadow-sm flex flex-col justify-between h-42">
           <div className="flex items-center justify-between">
-            <div className="h-10 w-10 rounded-full bg-[#FEF2F2] flex items-center justify-center text-[#EF4444]">
+            <div className="h-10 w-10 rounded-full bg-[#FEF2F2] flex items-center justify-center text-danger">
               <Ban size={20} />
             </div>
             <span className="inline-flex items-center gap-1 bg-[#FEF2F2] text-[#DC2626] px-2.5 py-1 rounded-lg text-xs font-semibold">
