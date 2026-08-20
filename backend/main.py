@@ -1,4 +1,7 @@
 from fastapi import FastAPI, Depends, UploadFile, File, HTTPException
+from fastapi.responses import Response, RedirectResponse
+import os
+import requests
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
@@ -71,6 +74,35 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
         "brand": osint_data.get("brand"),
         "certificate_details": osint_data.get("certificate_details")
     }
+
+@app.get("/api/detect/screenshot")
+def get_secure_screenshot(url: str):
+    """
+    Secure proxy endpoint to fetch screenshots without exposing API keys to the frontend.
+    Tries Scrapfly -> ScrapingBee -> MShots Fallback
+    """
+    scrapfly_key = os.environ.get("SCRAPFLY_API_KEY")
+    scrapingbee_key = os.environ.get("SCRAPINGBEE_API_KEY")
+    
+    try:
+        # Try Scrapfly
+        if scrapfly_key:
+            scrapfly_url = f"https://api.scrapfly.io/screenshot?key={scrapfly_key}&url={url}&format=png"
+            resp = requests.get(scrapfly_url, timeout=15)
+            if resp.status_code == 200:
+                return Response(content=resp.content, media_type="image/png")
+                
+        # Try ScrapingBee
+        if scrapingbee_key:
+            scrapingbee_url = f"https://app.scrapingbee.com/api/v1/?api_key={scrapingbee_key}&url={url}&screenshot=true"
+            resp = requests.get(scrapingbee_url, timeout=15)
+            if resp.status_code == 200:
+                return Response(content=resp.content, media_type="image/png")
+    except Exception as e:
+        print(f"Screenshot API error: {e}")
+        
+    # Fallback to free MShots
+    return RedirectResponse(url=f"https://s0.wordpress.com/mshots/v1/{url}?w=1024")
 
 from fastapi import Form
 from typing import Optional

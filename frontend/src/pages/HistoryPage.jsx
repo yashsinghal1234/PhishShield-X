@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import UserControls from '../components/UserControls';
 import { History as HistoryIcon, Search } from 'lucide-react';
 
 export default function HistoryPage() {
@@ -22,73 +23,79 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="flex justify-between items-end">
+    <div className="space-y-6 font-['Poppins'] animate-in fade-in duration-300 pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Detection History</h1>
-          <p className="text-gray-400">Review past scans and threat analysis logs.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#0F1720] mb-2">Detection History</h1>
+          <p className="text-[#64748B] font-medium">Review past scans and threat analysis logs.</p>
         </div>
-        <button 
-          onClick={fetchHistory}
-          className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-gray-200 rounded-lg transition-colors flex items-center"
-        >
-          <HistoryIcon size={18} className="mr-2" />
-          Refresh
-        </button>
+        
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={fetchHistory}
+            className="px-4 py-2 bg-white border border-[#E5E9EB] hover:bg-[#F8FAFC] text-[#0F1720] rounded-xl transition-colors flex items-center font-semibold shadow-sm"
+          >
+            <HistoryIcon size={18} className="mr-2 text-[#1F6A45]" />
+            Refresh
+          </button>
+          <UserControls />
+        </div>
       </div>
 
-      <div className="glass-panel overflow-hidden">
-        <div className="p-4 border-b border-dark-700 flex items-center bg-dark-900/50">
-          <Search className="text-gray-500 mr-3" size={20} />
+      <div className="rounded-3xl bg-white border border-[#E5E9EB] overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-[#E5E9EB] flex items-center bg-[#F8FAFC]">
+          <Search className="text-[#94A3B8] mr-3" size={20} />
           <input 
             type="text" 
             placeholder="Search history..." 
-            className="bg-transparent border-none focus:ring-0 text-gray-200 w-full placeholder-gray-500 outline-none"
+            className="bg-transparent border-none focus:ring-0 text-[#0F1720] w-full placeholder-[#94A3B8] outline-none font-medium"
           />
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-dark-800/50 text-gray-400 text-sm uppercase tracking-wider">
-                <th className="p-4 font-medium">Type</th>
-                <th className="p-4 font-medium">Target / Content</th>
-                <th className="p-4 font-medium">Prediction</th>
-                <th className="p-4 font-medium">Confidence</th>
-                <th className="p-4 font-medium">Date</th>
+              <tr className="bg-[#F8FAFC] text-[#64748B] text-xs uppercase tracking-wider border-b border-[#E5E9EB]">
+                <th className="p-4 font-bold">Type</th>
+                <th className="p-4 font-bold">Target / Content</th>
+                <th className="p-4 font-bold">Prediction</th>
+                <th className="p-4 font-bold">Confidence</th>
+                <th className="p-4 font-bold">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-dark-700">
+            <tbody className="divide-y divide-[#E5E9EB]">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">Loading history...</td>
+                  <td colSpan="5" className="p-8 text-center text-[#94A3B8] font-medium">Loading history...</td>
                 </tr>
               ) : history.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">No scans found.</td>
+                  <td colSpan="5" className="p-8 text-center text-[#94A3B8] font-medium">No scans found.</td>
                 </tr>
               ) : (
                 history.map((item) => (
-                  <tr key={item.id} className="hover:bg-dark-800/30 transition-colors">
+                  <tr key={item.id} className="hover:bg-[#F8FAFC] transition-colors">
                     <td className="p-4">
-                      <span className="text-xs px-2 py-1 bg-dark-700 text-gray-300 rounded uppercase font-semibold">
+                      <span className="text-xs px-2.5 py-1 bg-[#E2E8F0] text-[#475569] rounded-md uppercase font-bold">
                         {item.scan_type}
                       </span>
                     </td>
-                    <td className="p-4 text-gray-300 max-w-md truncate">
+                    <td className="p-4 text-[#0F1720] font-medium max-w-md truncate">
                       {item.input_data}
                     </td>
                     <td className="p-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.prediction === 'Phishing' ? 'bg-danger/10 text-danger' : item.prediction === 'Suspicious' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-safe/10 text-safe'
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                        item.prediction === 'Phishing' ? 'bg-[#FEF2F2] text-[#DC2626] border border-[#FECACA]' : 
+                        item.prediction === 'Suspicious' ? 'bg-[#FFFBEB] text-[#D97706] border border-[#FDE68A]' : 
+                        'bg-[#F0FDF4] text-[#16A34A] border border-[#BBF7D0]'
                       }`}>
                         {item.prediction}
                       </span>
                     </td>
-                    <td className="p-4 text-gray-300">
+                    <td className="p-4 text-[#334155] font-semibold">
                       {(item.confidence * 100).toFixed(1)}%
                     </td>
-                    <td className="p-4 text-gray-400 text-sm">
+                    <td className="p-4 text-[#64748B] text-sm font-medium">
                       {new Date(item.timestamp).toLocaleString()}
                     </td>
                   </tr>
