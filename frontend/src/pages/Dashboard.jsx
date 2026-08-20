@@ -194,9 +194,27 @@ export default function Dashboard() {
   if (stats.error) return <div className="text-[#DC2626] p-8 font-medium">Failed to connect to backend. Please check backend service.</div>;
 
   const totalScansVal = stats.total_scans ?? 0;
+  const totalScansTrend = stats.total_scans_trend ?? 0;
   const phishingVal = stats.phishing_detected ?? 0;
+  const phishingTrend = stats.phishing_trend ?? 0;
   const suspiciousVal = stats.suspicious_detected ?? 0;
+  const suspiciousTrend = stats.suspicious_trend ?? 0;
   const safeVal = stats.safe_detected ?? 0;
+  const safeTrend = stats.safe_trend ?? 0;
+  
+  const formatTrendBadge = (trend, inverse = false) => {
+    if (trend === 0) return { text: '0.0%', icon: <Minus size={14} />, classes: 'bg-[#F1F5F9] text-[#64748B]' };
+    const isPositive = trend > 0;
+    const text = `${isPositive ? '+' : ''}${trend}%`;
+    const icon = isPositive ? <TrendingUp size={14} /> : <TrendingDown size={14} />;
+    
+    // For threats, positive trend is BAD (red), negative trend is GOOD (green)
+    // For safe entries, positive trend is GOOD (green), negative trend is BAD (red)
+    let isGood = inverse ? !isPositive : isPositive;
+    
+    const classes = isGood ? 'bg-[#F0FDF4] text-[#16A34A]' : 'bg-[#FEF2F2] text-[#DC2626]';
+    return { text, icon, classes };
+  };
 
   const recentThreatsList = stats.recent_threats && stats.recent_threats.length > 0
     ? stats.recent_threats.map((t, idx) => ({
@@ -256,8 +274,10 @@ export default function Dashboard() {
             <div className="text-3xl xl:text-4xl font-bold tracking-tight text-white">
               {Number(totalScansVal).toLocaleString()}
             </div>
-
-          </div>
+            <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#A6E0BE] mt-2">
+              {totalScansTrend >= 0 ? <TrendingUp size={15} /> : <TrendingDown size={15} />}
+              <span>{totalScansTrend > 0 ? '+' : ''}{totalScansTrend}% from last week</span>
+            </div>          </div>
         </div>
 
         {/* Threats Blocked Card */}
@@ -266,8 +286,9 @@ export default function Dashboard() {
             <div className="h-10 w-10 rounded-full bg-[#FEF2F2] flex items-center justify-center text-danger">
               <Ban size={20} />
             </div>
-
-          </div>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${formatTrendBadge(phishingTrend, true).classes}`}>
+              {formatTrendBadge(phishingTrend, true).icon} {formatTrendBadge(phishingTrend, true).text}
+            </span>          </div>
           <div className="mt-2">
             <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase">
               THREATS BLOCKED
@@ -284,8 +305,9 @@ export default function Dashboard() {
             <div className="h-10 w-10 rounded-full bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
               <TriangleAlert size={20} />
             </div>
-
-          </div>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${formatTrendBadge(suspiciousTrend, true).classes}`}>
+              {formatTrendBadge(suspiciousTrend, true).icon} {formatTrendBadge(suspiciousTrend, true).text}
+            </span>          </div>
           <div className="mt-2">
             <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase">
               SUSPICIOUS ACTIVITY
@@ -302,8 +324,9 @@ export default function Dashboard() {
             <div className="h-10 w-10 rounded-full bg-[#DCFCE7] flex items-center justify-center text-[#16A34A]">
               <ShieldCheck size={20} />
             </div>
-
-          </div>
+            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold ${formatTrendBadge(safeTrend, false).classes}`}>
+              {formatTrendBadge(safeTrend, false).icon} {formatTrendBadge(safeTrend, false).text}
+            </span>          </div>
           <div className="mt-2">
             <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase">
               SAFE ENTRIES

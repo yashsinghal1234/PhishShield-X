@@ -29,7 +29,11 @@ class DetectionHistoryResponse(BaseModel):
 
 class DashboardStatsResponse(BaseModel):
     total_scans: int
+    total_scans_trend: float
     phishing_detected: int
+    phishing_trend: float
     suspicious_detected: int
+    suspicious_trend: float
     safe_detected: int
+    safe_trend: float
     recent_threats: List[DetectionHistoryResponse]

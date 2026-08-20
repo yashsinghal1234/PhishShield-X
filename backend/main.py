@@ -7,6 +7,7 @@ import numpy as np
 from pyzbar.pyzbar import decode
 from PIL import Image
 import io
+from datetime import datetime, timedelta
 
 import database, models, schemas, ml_services
 
@@ -119,18 +120,44 @@ def get_history(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     history = db.query(models.DetectionHistory).order_by(models.DetectionHistory.timestamp.desc()).offset(skip).limit(limit).all()
     return history
 
+def calculate_trend(current_count: int, previous_count: int) -> float:
+    if previous_count == 0:
+        return 100.0 if current_count > 0 else 0.0
+    return round(((current_count - previous_count) / previous_count) * 100, 1)
+
 @app.get("/api/stats", response_model=schemas.DashboardStatsResponse)
 def get_stats(db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    seven_days_ago = now - timedelta(days=7)
+    fourteen_days_ago = now - timedelta(days=14)
+
     total = db.query(models.DetectionHistory).count()
     phishing = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Phishing").count()
     suspicious = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Suspicious").count()
     safe = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Safe").count()
+    
+    # Current week
+    c_total = db.query(models.DetectionHistory).filter(models.DetectionHistory.timestamp >= seven_days_ago).count()
+    c_phishing = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Phishing", models.DetectionHistory.timestamp >= seven_days_ago).count()
+    c_suspicious = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Suspicious", models.DetectionHistory.timestamp >= seven_days_ago).count()
+    c_safe = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Safe", models.DetectionHistory.timestamp >= seven_days_ago).count()
+
+    # Previous week
+    p_total = db.query(models.DetectionHistory).filter(models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
+    p_phishing = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Phishing", models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
+    p_suspicious = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Suspicious", models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
+    p_safe = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Safe", models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
+
     recent = db.query(models.DetectionHistory).order_by(models.DetectionHistory.timestamp.desc()).limit(5).all()
     
     return {
         "total_scans": total,
+        "total_scans_trend": calculate_trend(c_total, p_total),
         "phishing_detected": phishing,
+        "phishing_trend": calculate_trend(c_phishing, p_phishing),
         "suspicious_detected": suspicious,
+        "suspicious_trend": calculate_trend(c_suspicious, p_suspicious),
         "safe_detected": safe,
+        "safe_trend": calculate_trend(c_safe, p_safe),
         "recent_threats": recent
     }
