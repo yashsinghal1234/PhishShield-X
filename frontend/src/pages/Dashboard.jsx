@@ -204,7 +204,7 @@ export default function Dashboard() {
         source: t.input_data || 'unknown-target.com',
         type: t.scan_type === 'email' ? 'Phishing' : t.scan_type === 'qr' ? 'Malware' : 'Phishing',
         severity: t.prediction === 'Phishing' ? 'High' : t.prediction === 'Suspicious' ? 'Medium' : 'Low',
-        status: t.prediction === 'Safe' ? 'Safe' : 'Blocked'
+        status: t.prediction === 'Safe' ? 'Safe' : t.prediction === 'Suspicious' ? 'Quarantined' : 'Blocked'
       }))
     : [];
 
