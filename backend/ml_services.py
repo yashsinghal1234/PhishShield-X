@@ -553,7 +553,7 @@ def get_osint_data(url: str) -> dict:
         "asn": None,
         "hosting_provider": None,
         "tld": tld,
-        "screenshot_url": f"https://image.thum.io/get/width/1024/crop/800/{url}"
+        "screenshot_url": f"https://s0.wordpress.com/mshots/v1/{url}?w=1024"
     }
     
     try:

@@ -103,22 +103,7 @@ function Sidebar() {
 
 function Header() {
   return (
-    <header className="mb-6 flex items-center justify-between gap-4">
-      {/* Search Input Bar */}
-      <div className="relative flex-1 max-w-xl">
-        <div className="flex items-center gap-2.5 rounded-full bg-white border border-[#E5E9EB] px-4 py-2.5 shadow-sm text-sm text-[#64748B] focus-within:border-[#1F6A45] focus-within:ring-1 focus-within:ring-[#1F6A45] transition-all">
-          <Search size={18} className="text-[#94A3B8]" />
-          <input
-            type="text"
-            placeholder="Search logs, alerts, settings..."
-            className="w-full bg-transparent text-[#0F1720] placeholder-[#94A3B8] focus:outline-none text-sm"
-          />
-          <kbd className="hidden sm:inline-flex items-center gap-1 rounded border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-0.5 text-[11px] font-mono font-semibold text-[#64748B]">
-            ⌘ K
-          </kbd>
-        </div>
-      </div>
-
+    <header className="mb-6 flex items-center justify-end gap-4">
       {/* Right User Controls */}
       <div className="flex items-center gap-3">
         <button
