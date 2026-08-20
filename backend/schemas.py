@@ -14,6 +14,12 @@ class ScanResponse(BaseModel):
     prediction: str
     confidence: float
     details: Optional[str] = None
+    ip_address: Optional[str] = None
+    location: Optional[str] = None
+    asn: Optional[str] = None
+    hosting_provider: Optional[str] = None
+    tld: Optional[str] = None
+    screenshot_url: Optional[str] = None
 
 class DetectionHistoryResponse(BaseModel):
     id: int

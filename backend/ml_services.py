@@ -540,3 +540,39 @@ def detect_qr_phishing(decoded_url: str, img=None) -> dict:
         "details": " | ".join(details)
     }
 
+def get_osint_data(url: str) -> dict:
+    parsed = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url)
+    domain = parsed.netloc.split(':')[0]
+    
+    parts = domain.split('.')
+    tld = parts[-1] if len(parts) > 1 else ""
+    
+    osint = {
+        "ip_address": None,
+        "location": None,
+        "asn": None,
+        "hosting_provider": None,
+        "tld": tld,
+        "screenshot_url": f"https://image.thum.io/get/width/1024/crop/800/{url}"
+    }
+    
+    try:
+        ip = socket.gethostbyname(domain)
+        osint["ip_address"] = ip
+        
+        geo_resp = requests.get(f"http://ip-api.com/json/{ip}", timeout=3)
+        if geo_resp.status_code == 200:
+            geo_data = geo_resp.json()
+            if geo_data.get("status") == "success":
+                osint["location"] = f"{geo_data.get('city', '')}, {geo_data.get('country', '')}".strip(", ")
+                isp_full = geo_data.get('isp', '')
+                osint["hosting_provider"] = isp_full.split(' ')[0] if isp_full else None
+                
+                as_info = geo_data.get("as", "")
+                if as_info:
+                    osint["asn"] = as_info.split(' ')[0].replace("AS", "")
+    except Exception as e:
+        print(f"OSINT error: {e}")
+        
+    return osint
+

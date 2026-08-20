@@ -53,13 +53,21 @@ def read_root():
 @app.post("/api/detect/url", response_model=schemas.ScanResponse)
 def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
     result = ml_services.detect_url_phishing(request.url)
+    osint_data = ml_services.get_osint_data(request.url)
+    
     saved = save_history(db, "url", request.url, result)
     return {
         "id": saved.id,
         "scan_type": "url",
         "prediction": result["prediction"],
         "confidence": result["confidence"],
-        "details": result["details"]
+        "details": result["details"],
+        "ip_address": osint_data.get("ip_address"),
+        "location": osint_data.get("location"),
+        "asn": osint_data.get("asn"),
+        "hosting_provider": osint_data.get("hosting_provider"),
+        "tld": osint_data.get("tld"),
+        "screenshot_url": osint_data.get("screenshot_url")
     }
 
 from fastapi import Form
