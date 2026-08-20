@@ -523,13 +523,17 @@ export default function Dashboard() {
                       </span>
                     </td>
                     <td className="py-3.5 pl-4 text-right">
-                      {row.status === 'Quarantined' ? (
+                      {row.status === 'Safe' ? (
+                        <span className="inline-flex items-center gap-1 text-[#16A34A] font-semibold">
+                          <CheckCircle2 size={14} /> Safe
+                        </span>
+                      ) : row.status === 'Quarantined' ? (
                         <span className="inline-flex items-center gap-1 text-[#64748B] font-semibold">
                           <MinusCircle size={14} /> Quarantined
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[#16A34A] font-semibold">
-                          <CheckCircle2 size={14} /> Blocked
+                        <span className="inline-flex items-center gap-1 text-[#DC2626] font-semibold">
+                          <Ban size={14} /> Blocked
                         </span>
                       )}
                     </td>
@@ -553,47 +557,30 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-4">
-            {/* Feed Event 1 */}
-            <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-full bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5">
-                <QrCode size={18} />
-              </div>
-              <div className="text-xs">
-                <span className="text-[#94A3B8] font-medium block">Just now</span>
-                <p className="text-[#0F1720] font-medium mt-0.5 leading-snug">
-                  Malicious QR code scanned by Agent-X22.
-                </p>
-                <div className="mt-1.5 inline-block bg-[#F8FAFC] border border-[#E2E8F0] px-2.5 py-1 rounded-md text-[11px] font-mono text-[#334155]">
-                  qr.malicious-site.com/payload
+            {history && history.length > 0 ? (
+              history.slice(0, 3).map((item, idx) => (
+                <div key={item.id || idx} className="flex items-start gap-3">
+                  <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                    item.prediction === 'Safe' ? 'bg-[#DCFCE7] text-[#16A34A]' : 'bg-[#FEF2F2] text-[#DC2626]'
+                  }`}>
+                    {item.scan_type === 'qr' ? <QrCode size={18} /> : item.scan_type === 'email' ? <Mail size={18} /> : <Globe size={18} />}
+                  </div>
+                  <div className="text-xs">
+                    <span className="text-[#94A3B8] font-medium block">
+                      {new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </span>
+                    <p className="text-[#0F1720] font-medium mt-0.5 leading-snug">
+                      {item.prediction === 'Safe' ? 'Safe ' : 'Malicious '}{item.scan_type} scanned.
+                    </p>
+                    <div className="mt-1.5 inline-block bg-[#F8FAFC] border border-[#E2E8F0] px-2.5 py-1 rounded-md text-[11px] font-mono text-[#334155] max-w-[220px] truncate overflow-hidden">
+                      {item.input_data || 'unknown source'}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Feed Event 2 */}
-            <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-full bg-[#FEF2F2] text-[#DC2626] flex items-center justify-center shrink-0 mt-0.5">
-                <Mail size={18} />
-              </div>
-              <div className="text-xs">
-                <span className="text-[#94A3B8] font-medium block">2 mins ago</span>
-                <p className="text-[#0F1720] font-medium mt-0.5 leading-snug">
-                  Phishing email intercepted by Exchange-Filter.
-                </p>
-              </div>
-            </div>
-
-            {/* Feed Event 3 */}
-            <div className="flex items-start gap-3">
-              <div className="h-9 w-9 rounded-full bg-[#CCFBF1] text-[#0D9488] flex items-center justify-center shrink-0 mt-0.5">
-                <Globe size={18} />
-              </div>
-              <div className="text-xs">
-                <span className="text-[#94A3B8] font-medium block">15 mins ago</span>
-                <p className="text-[#0F1720] font-medium mt-0.5 leading-snug">
-                  Suspicious traffic spike from IP Block 45.x.x.x blocked.
-                </p>
-              </div>
-            </div>
+              ))
+            ) : (
+              <div className="text-sm text-[#94A3B8] font-medium mt-4">No recent agent activity.</div>
+            )}
           </div>
         </div>
       </div>
