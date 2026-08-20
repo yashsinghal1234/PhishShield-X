@@ -125,16 +125,6 @@ const buildMonthlyData = (history) => {
   }));
 };
 
-// Realistic daily breakdown baseline matching Image 1 ("Mon" -> 67% Safe, 33% Suspicious, 0% Threat)
-const DEFAULT_WEEKLY_BARS = [
-  { label: 'Mon', value: 45, threats: 15, safe: 30, suspicious: 15, phishing: 0 },
-  { label: 'Tue', value: 72, threats: 24, safe: 48, suspicious: 18, phishing: 6 },
-  { label: 'Wed', value: 38, threats: 12, safe: 26, suspicious: 8, phishing: 4 },
-  { label: 'Thu', value: 110, threats: 50, safe: 60, suspicious: 30, phishing: 20 },
-  { label: 'Fri', value: 62, threats: 22, safe: 40, suspicious: 14, phishing: 8 },
-  { label: 'Sat', value: 95, threats: 30, safe: 65, suspicious: 20, phishing: 10 },
-  { label: 'Sun', value: 150, threats: 60, safe: 90, suspicious: 30, phishing: 30 },
-];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -166,7 +156,6 @@ export default function Dashboard() {
   }, []);
 
   const analysisData = useMemo(() => {
-    if (history.length === 0) return DEFAULT_WEEKLY_BARS;
     if (analysisMode === 'week') return buildMonthlyData(history);
     return buildWeeklyData(history);
   }, [analysisMode, history]);
