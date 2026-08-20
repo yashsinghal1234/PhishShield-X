@@ -36,7 +36,7 @@ export default function QrDetection() {
     formData.append('file', file);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/detect/qr', formData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/detect/qr`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setResult(response.data);

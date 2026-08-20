@@ -17,7 +17,7 @@ export default function UrlDetection() {
     setResult(null);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/detect/url', { url });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/detect/url`, { url });
       setResult(response.data);
     } catch (err) {
       setError('Failed to scan URL. Is the backend running?');

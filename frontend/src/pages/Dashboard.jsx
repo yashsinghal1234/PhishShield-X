@@ -145,8 +145,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     Promise.allSettled([
-      axios.get('http://localhost:8000/api/stats'),
-      axios.get('http://localhost:8000/api/history?limit=700')
+      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/stats`),
+      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/history?limit=700`)
     ])
       .then(([statsResult, historyResult]) => {
         if (statsResult.status === 'fulfilled') {
