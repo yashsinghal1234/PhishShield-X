@@ -76,35 +76,34 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
     }
 
 @app.get("/api/detect/screenshot")
-def get_secure_screenshot(url: str):
+async def get_secure_screenshot(url: str):
     """
-    Secure proxy endpoint to fetch screenshots without exposing API keys to the frontend.
-    Tries Scrapfly -> ScrapingBee -> MShots Fallback
+    Application-grade screenshot endpoint using Playwright headless browser.
     """
-    scrapfly_key = os.environ.get("SCRAPFLY_API_KEY")
-    scrapingbee_key = os.environ.get("SCRAPINGBEE_API_KEY")
+    from playwright.async_api import async_playwright
+    
+    target_url = url if url.startswith('http') else f"http://{url}"
     
     try:
-        # Try Scrapfly
-        if scrapfly_key:
-            scrapfly_url = f"https://api.scrapfly.io/screenshot?key={scrapfly_key}&url={url}&format=png"
-            resp = requests.get(scrapfly_url, timeout=15)
-            if resp.status_code == 200:
-                return Response(content=resp.content, media_type="image/png")
-                
-        # Try ScrapingBee
-        if scrapingbee_key:
-            scrapingbee_url = f"https://app.scrapingbee.com/api/v1/?api_key={scrapingbee_key}&url={url}&screenshot=true"
-            resp = requests.get(scrapingbee_url, timeout=15)
-            if resp.status_code == 200:
-                return Response(content=resp.content, media_type="image/png")
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page(
+                viewport={"width": 1024, "height": 800},
+                device_scale_factor=1
+            )
+            
+            # Navigate to the URL with a timeout
+            await page.goto(target_url, timeout=15000, wait_until="networkidle")
+            
+            # Take screenshot as bytes
+            screenshot_bytes = await page.screenshot(type="png", full_page=False)
+            
+            await browser.close()
+            
+            return Response(content=screenshot_bytes, media_type="image/png")
     except Exception as e:
-        print(f"Screenshot API error: {e}")
-        
-    # Fallback to free Thum.io
-    target_url = url if url.startswith('http') else f"http://{url}"
-    return RedirectResponse(url=f"https://image.thum.io/get/width/1024/crop/800/{target_url}")
-
+        print(f"Playwright screenshot error: {e}")
+        return Response(status_code=404)
 from fastapi import Form
 from typing import Optional
 
