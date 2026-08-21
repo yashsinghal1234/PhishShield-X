@@ -102,9 +102,8 @@ def get_secure_screenshot(url: str):
         print(f"Screenshot API error: {e}")
         
     # Fallback to free Thum.io
-    import urllib.parse
-    encoded_url = urllib.parse.quote(url, safe='')
-    return RedirectResponse(url=f"https://image.thum.io/get/width/1024/crop/800/{url}")
+    target_url = url if url.startswith('http') else f"http://{url}"
+    return RedirectResponse(url=f"https://image.thum.io/get/width/1024/crop/800/{target_url}")
 
 from fastapi import Form
 from typing import Optional
