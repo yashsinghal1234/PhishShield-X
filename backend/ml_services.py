@@ -561,7 +561,7 @@ def get_osint_data(url: str) -> dict:
         "asn": None,
         "hosting_provider": None,
         "tld": tld,
-        "screenshot_url": f"{api_base_url}/api/detect/screenshot?url={url}",
+        "screenshot_url": f"{api_base_url}/api/detect/screenshot?url={urllib.parse.quote(url, safe='')}",
         "brand": None,
         "certificate_details": None
     }

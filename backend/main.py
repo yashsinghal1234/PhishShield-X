@@ -101,8 +101,10 @@ def get_secure_screenshot(url: str):
     except Exception as e:
         print(f"Screenshot API error: {e}")
         
-    # Fallback to free MShots
-    return RedirectResponse(url=f"https://s0.wordpress.com/mshots/v1/{url}?w=1024")
+    # Fallback to free Thum.io
+    import urllib.parse
+    encoded_url = urllib.parse.quote(url, safe='')
+    return RedirectResponse(url=f"https://image.thum.io/get/width/1024/crop/800/{url}")
 
 from fastapi import Form
 from typing import Optional
