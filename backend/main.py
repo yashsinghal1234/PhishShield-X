@@ -213,21 +213,22 @@ async def scan_email(
 
 @app.post("/api/detect/qr", response_model=schemas.ScanResponse)
 async def scan_qr(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    if decode is None:
-        raise HTTPException(status_code=503, detail="QR decoding is unavailable on this machine (pyzbar DLL missing)")
     try:
+        from quishing_engine import robust_decode_qr
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        
-        decoded_objects = decode(img)
-        if not decoded_objects:
-            raise HTTPException(status_code=400, detail="No QR code found in image")
-        
-        qr_data = decoded_objects[0].data.decode('utf-8')
+
+        if img is None:
+            raise HTTPException(status_code=400, detail="Invalid image file provided.")
+
+        qr_data, enhanced_img = robust_decode_qr(img, pyzbar_decode_func=decode)
+        if not qr_data:
+            raise HTTPException(status_code=400, detail="No readable QR code found in image (checked multiple contrast/inverted variants).")
+
         result = ml_services.detect_qr_phishing(qr_data, img)
-        saved = save_history(db, "qr", f"Extracted URL: {qr_data}", result)
-        
+        saved = save_history(db, "qr", f"Extracted Payload: {qr_data[:120]}", result)
+
         return {
             "id": saved.id,
             "scan_type": "qr",
@@ -235,8 +236,10 @@ async def scan_qr(file: UploadFile = File(...), db: Session = Depends(get_db)):
             "confidence": result["confidence"],
             "details": result["details"]
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"QR Analysis Error: {str(e)}")
 
 @app.get("/api/history", response_model=List[schemas.DetectionHistoryResponse])
 def get_history(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):

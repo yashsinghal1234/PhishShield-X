@@ -457,103 +457,62 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
     except Exception as e:
         return {"prediction": "Error", "confidence": 0, "details": f"Failed to parse EML file: {str(e)}"}
 
-def detect_qr_phishing(decoded_url: str, img=None) -> dict:
+def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
     """
-    Multimodal Hybrid QR Phishing Detection.
-    Combines visual structural analysis with lexical URL payload analysis.
+    Multimodal Defense-in-Depth QR Phishing (Quishing) Engine.
+    Combines Computer Vision structural analysis, protocol risk profiling,
+    recursive multi-hop URL unrolling, and PhishNet-Hybrid deep semantic evaluation.
     """
+    from quishing_engine import (
+        analyze_qr_visual_structure,
+        analyze_payload_protocol,
+        recursively_unroll_url
+    )
+
     details = []
-    anomaly_score = 0.0
-    
-    # 1. Non-standard Payload Protocol Check
-    upper_url = decoded_url.upper()
-    is_standard_url = upper_url.startswith('HTTP://') or upper_url.startswith('HTTPS://')
-    
-    if not is_standard_url:
-        if upper_url.startswith('WIFI:') or upper_url.startswith('SMSTO:') or upper_url.startswith('TEL:') or upper_url.startswith('MAILTO:'):
-            anomaly_score += 0.4
-            details.append("Payload Anomaly: Non-standard protocol designed to trigger device actions (e.g., WIFI, SMS)")
-        elif upper_url.startswith('UPI://') or upper_url.startswith('BITCOIN:') or upper_url.startswith('ETHEREUM:') or upper_url.startswith('PAYPAL:'):
-            anomaly_score += 0.6
-            details.append("Payload Anomaly: Direct Financial/Payment request detected. High risk of theft if unverified.")
-        else:
-            anomaly_score += 0.2
-            details.append("Payload Anomaly: Unrecognized or missing URL protocol scheme")
-            
-    # 2. URL Shortener Check & Unrolling
-    final_url_to_analyze = decoded_url
-    try:
-        parsed = urllib.parse.urlparse(decoded_url if is_standard_url else 'http://' + decoded_url)
-        domain = parsed.netloc.lower()
-        shorteners = ['bit.ly', 'tinyurl.com', 't.co', 'goo.gl', 'ow.ly', 'is.gd', 'buff.ly', 'adf.ly', 'bit.do', 'mcaf.ee', 'su.pr']
-        
-        # We always attempt to unroll if it's a standard URL to catch custom shorteners
-        if is_standard_url:
-            try:
-                response = requests.head(decoded_url, allow_redirects=True, timeout=3)
-                if response.url != decoded_url:
-                    final_url_to_analyze = response.url
-                    # If it unrolled to a different domain, it's definitely a redirect/shortener
-                    if urllib.parse.urlparse(response.url).netloc.lower() != domain:
-                        anomaly_score += 0.35
-                        details.append(f"Payload Anomaly: URL Redirect/Shortener unrolled to {urllib.parse.urlparse(response.url).netloc}")
-            except Exception:
-                # If head request fails, fallback to checking hardcoded list
-                if any(shortener in domain for shortener in shorteners):
-                    anomaly_score += 0.35
-                    details.append("Payload Anomaly: Known URL Shortener detected.")
-    except Exception as e:
-        pass
-        
-    # 3. Base Payload Analysis
-    payload_result = detect_url_phishing(final_url_to_analyze)
-    if payload_result["prediction"] == "Safe":
-        base_confidence = 1.0 - payload_result["confidence"]
-    else:
-        base_confidence = payload_result["confidence"]
-    details.append(payload_result["details"])
-    
-    # 4. Visual Structural Analysis
+    quishing_anomaly_score = 0.0
+
+    # 1. Payload & Protocol Analysis
+    proto_info = analyze_payload_protocol(decoded_payload)
+    quishing_anomaly_score += proto_info["protocol_risk"]
+    if proto_info["anomalies"]:
+        details.extend(proto_info["anomalies"])
+
+    # 2. Visual Structural Integrity Analysis (OpenCV)
     if img is not None:
-        try:
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            _, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY_INV)
-            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            # Attackers use high ECL to embed large central logos. 
-            # Look for large continuous contours (excluding the 3 position squares).
-            total_area = img.shape[0] * img.shape[1]
-            large_contours = 0
-            
-            for cnt in contours:
-                area = cv2.contourArea(cnt)
-                if area > (total_area * 0.05): # Contour taking up > 5% of the image
-                    large_contours += 1
-                    
-            if large_contours > 3:
-                anomaly_score += 0.25
-                details.append("Visual Anomaly: Suspiciously large central structures detected (Possible malicious logo masking)")
-            
-            # Density check
-            black_pixels = np.sum(thresh == 255)
-            density = black_pixels / total_area
-            if density > 0.6 or density < 0.2:
-                anomaly_score += 0.15
-                details.append("Visual Anomaly: Abnormal module density (Potentially manipulated encoding)")
-                
-        except Exception as e:
-            details.append(f"Visual analysis failed: {str(e)}")
-            
-    # 5. Multimodal Fusion Engine
-    final_confidence = min(1.0, base_confidence + anomaly_score)
-    
+        visual_info = analyze_qr_visual_structure(img)
+        quishing_anomaly_score += visual_info["visual_risk_score"]
+        if visual_info["anomalies"]:
+            details.extend(visual_info["anomalies"])
+
+    # 3. Recursive URL Unrolling & Destination Analysis
+    if proto_info["target_url"]:
+        final_url, redirect_chain, redirect_risk = recursively_unroll_url(proto_info["target_url"])
+        quishing_anomaly_score += redirect_risk
+        if len(redirect_chain) > 1:
+            details.append(f"Cloaking Detected: QR shortener redirected through {len(redirect_chain)-1} hops to destination: {urllib.parse.urlparse(final_url).netloc}")
+
+        # 4. Deep URL Phishing Inference (PhishNet-Hybrid + 34D Features)
+        url_eval = detect_url_phishing(final_url)
+        if url_eval["prediction"] == "Safe":
+            base_confidence = 1.0 - url_eval["confidence"]
+        else:
+            base_confidence = url_eval["confidence"]
+        details.append(url_eval["details"])
+    else:
+        # Non-URL payload (e.g. WiFi, SMS, Payment)
+        base_confidence = 0.40 if proto_info["matched_scheme"] else 0.20
+
+    # 5. Multimodal Decision Fusion
+    final_confidence = min(0.99, base_confidence + quishing_anomaly_score)
+
     if final_confidence > 0.74:
         final_prediction = "Phishing"
     elif final_confidence > 0.40:
         final_prediction = "Suspicious"
     else:
         final_prediction = "Safe"
-        
+
     return {
         "prediction": final_prediction,
         "confidence": final_confidence if final_prediction != "Safe" else 1.0 - final_confidence,
