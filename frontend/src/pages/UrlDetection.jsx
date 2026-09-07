@@ -8,6 +8,7 @@ export default function UrlDetection() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [screenshotState, setScreenshotState] = useState('idle');
 
   const handleScan = async (e) => {
     e.preventDefault();
@@ -16,10 +17,12 @@ export default function UrlDetection() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setScreenshotState('idle');
 
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/detect/url`, { url });
       setResult(response.data);
+      setScreenshotState(response.data?.screenshot_url ? 'loading' : 'error');
     } catch (err) {
       setError('Failed to scan URL. Is the backend running?');
     } finally {
@@ -227,27 +230,29 @@ export default function UrlDetection() {
                 </a>
               </div>
               
-              <div className="flex-1 bg-[#F8FAFC] rounded-2xl overflow-hidden border border-[#E2E8F0] relative group flex items-center justify-center">
-                {result.screenshot_url ? (
-                  <img 
-                    src={result.screenshot_url} 
-                    alt="Website Screenshot" 
-                    className="w-full h-full object-cover object-top"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
+              <div className="flex-1 bg-[#F8FAFC] rounded-2xl overflow-hidden border border-[#E2E8F0] relative group flex items-center justify-center min-h-[220px]">
+                {result.screenshot_url && screenshotState !== 'error' ? (
+                  <>
+                    {screenshotState !== 'loaded' && (
+                      <div className="absolute inset-0 text-[#94A3B8] font-medium text-sm flex flex-col items-center justify-center gap-2 bg-[#F8FAFC]">
+                        <Loader2 className="h-8 w-8 animate-spin opacity-70" />
+                        Capturing page...
+                      </div>
+                    )}
+                    <img
+                      src={result.screenshot_url.startsWith('http') ? result.screenshot_url : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.screenshot_url.startsWith('/') ? '' : '/'}${result.screenshot_url}`}
+                      alt="Website Screenshot"
+                      className={`w-full h-full object-cover object-top ${screenshotState === 'loaded' ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={() => setScreenshotState('loaded')}
+                      onError={() => setScreenshotState('error')}
+                    />
+                  </>
                 ) : (
                   <div className="text-[#94A3B8] font-medium text-sm flex flex-col items-center gap-2">
                     <Camera className="h-8 w-8 opacity-50" />
                     Screenshot unavailable
                   </div>
                 )}
-                <div className="hidden absolute inset-0 text-[#94A3B8] font-medium text-sm flex-col items-center justify-center gap-2 bg-[#F8FAFC]">
-                  <Camera className="h-8 w-8 opacity-50" />
-                  Screenshot unavailable
-                </div>
               </div>
             </div>
 

@@ -547,21 +547,16 @@ def get_osint_data(url: str) -> dict:
     parts = domain.split('.')
     tld = parts[-1] if len(parts) > 1 else ""
     
-    # We assume the frontend is hosted on the same domain in production, or uses the VITE_API_URL.
-    # We can provide a relative path if they are on the same domain, or we can just pass the path
-    # and the frontend will append it to the API URL. The frontend's `<img>` tag doesn't automatically prepend VITE_API_URL.
-    # Wait, in development the frontend is on port 5173 and backend on 8000.
-    # The frontend needs the absolute URL. 
-    # Let's get the base URL from env or default to localhost:8000.
-    api_base_url = os.environ.get("API_BASE_URL", "http://localhost:8000")
-    
+    full_url = url if url.startswith(("http://", "https://")) else f"https://{url}"
+    screenshot_path = f"/api/detect/screenshot?url={urllib.parse.quote(full_url, safe='')}"
+
     osint = {
         "ip_address": None,
         "location": None,
         "asn": None,
         "hosting_provider": None,
         "tld": tld,
-        "screenshot_url": f"{api_base_url}/api/detect/screenshot?url={urllib.parse.quote(url, safe='')}",
+        "screenshot_url": screenshot_path,
         "brand": None,
         "certificate_details": None
     }

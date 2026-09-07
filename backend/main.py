@@ -1,16 +1,36 @@
-from fastapi import FastAPI, Depends, UploadFile, File, HTTPException
-from fastapi.responses import Response, RedirectResponse
+from fastapi import FastAPI, Depends, UploadFile, File, HTTPException, Form
+from fastapi.responses import Response
 import os
+import sys
+import asyncio
+import importlib.util
+from pathlib import Path
+
+# Playwright requires ProactorEventLoop on Windows
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import cv2
 import numpy as np
-from pyzbar.pyzbar import decode
 from PIL import Image
 import io
 from datetime import datetime, timedelta
+
+decode = None
+_pyzbar_spec = importlib.util.find_spec("pyzbar")
+if _pyzbar_spec and _pyzbar_spec.origin:
+    _pyzbar_dir = str(Path(_pyzbar_spec.origin).parent)
+    os.environ["PATH"] = _pyzbar_dir + os.pathsep + os.environ.get("PATH", "")
+    if hasattr(os, "add_dll_directory"):
+        os.add_dll_directory(_pyzbar_dir)
+try:
+    from pyzbar.pyzbar import decode
+except Exception as e:
+    print(f"pyzbar unavailable (QR decoding disabled): {e}")
 
 import database, models, schemas, ml_services
 
@@ -75,37 +95,96 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
         "certificate_details": osint_data.get("certificate_details")
     }
 
+def _normalize_page_url(url: str) -> str:
+    target = (url or "").strip()
+    if not target:
+        return ""
+    if not target.startswith(("http://", "https://")):
+        return f"https://{target}"
+    return target
+
+
+def _is_image_response(resp: requests.Response) -> bool:
+    content_type = resp.headers.get("content-type", "").lower()
+    return resp.status_code == 200 and ("image" in content_type or resp.content[:8] == b"\x89PNG\r\n\x1a\n")
+
+
+def _capture_with_playwright(target: str):
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+            )
+            try:
+                page = browser.new_page(
+                    viewport={"width": 1280, "height": 800},
+                    ignore_https_errors=True,
+                )
+                page.goto(target, wait_until="domcontentloaded", timeout=20000)
+                page.wait_for_timeout(1200)
+                return page.screenshot(type="png")
+            finally:
+                browser.close()
+    except Exception as e:
+        print(f"Playwright screenshot error: {e}")
+        return None
+
+
+def _fetch_remote_screenshot(target: str):
+    import urllib.parse
+
+    scrapfly_key = os.environ.get("SCRAPFLY_API_KEY")
+    scrapingbee_key = os.environ.get("SCRAPINGBEE_API_KEY")
+    encoded_url = urllib.parse.quote(target, safe="")
+
+    candidates = []
+    if scrapfly_key:
+        candidates.append(f"https://api.scrapfly.io/screenshot?key={scrapfly_key}&url={encoded_url}&format=png")
+    if scrapingbee_key:
+        candidates.append(
+            f"https://app.scrapingbee.com/api/v1/?api_key={scrapingbee_key}&url={encoded_url}&screenshot=true"
+        )
+    candidates.extend([
+        f"https://image.thum.io/get/width/1280/noanimate/{target}",
+        f"https://s0.wordpress.com/mshots/v1/{encoded_url}?w=1280",
+    ])
+
+    for candidate in candidates:
+        try:
+            resp = requests.get(candidate, timeout=20, allow_redirects=True)
+            if _is_image_response(resp):
+                return resp.content
+        except Exception as e:
+            print(f"Screenshot API error ({candidate}): {e}")
+    return None
+
+
 @app.get("/api/detect/screenshot")
 async def get_secure_screenshot(url: str):
     """
-    Application-grade screenshot endpoint using Playwright headless browser.
+    Capture a live page screenshot locally with Playwright, then fall back to
+    optional paid APIs and public screenshot services.
     """
-    from playwright.async_api import async_playwright
-    
-    target_url = url if url.startswith('http') else f"http://{url}"
-    
-    try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page(
-                viewport={"width": 1024, "height": 800},
-                device_scale_factor=1
-            )
-            
-            # Navigate to the URL with a timeout
-            await page.goto(target_url, timeout=15000, wait_until="networkidle")
-            
-            # Take screenshot as bytes
-            screenshot_bytes = await page.screenshot(type="png", full_page=False)
-            
-            await browser.close()
-            
-            return Response(content=screenshot_bytes, media_type="image/png")
-    except Exception as e:
-        print(f"Playwright screenshot error: {e}")
-        return Response(status_code=404)
-from fastapi import Form
-from typing import Optional
+    target = _normalize_page_url(url)
+    if not target:
+        raise HTTPException(status_code=400, detail="url is required")
+
+    loop = asyncio.get_running_loop()
+    png = await loop.run_in_executor(None, _capture_with_playwright, target)
+    if not png:
+        png = await loop.run_in_executor(None, _fetch_remote_screenshot, target)
+
+    if not png:
+        raise HTTPException(status_code=502, detail="Screenshot unavailable")
+
+    return Response(
+        content=png,
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=300"},
+    )
+
 
 @app.post("/api/detect/email", response_model=schemas.ScanResponse)
 async def scan_email(
@@ -134,6 +213,8 @@ async def scan_email(
 
 @app.post("/api/detect/qr", response_model=schemas.ScanResponse)
 async def scan_qr(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if decode is None:
+        raise HTTPException(status_code=503, detail="QR decoding is unavailable on this machine (pyzbar DLL missing)")
     try:
         contents = await file.read()
         nparr = np.frombuffer(contents, np.uint8)
