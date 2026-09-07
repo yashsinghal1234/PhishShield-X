@@ -200,29 +200,44 @@ def detect_url_phishing(url: str) -> dict:
                     "details": f"Typosquatting detected! Domain looks like '{safe_domain}' but is '{base_domain}' (HIGH RISK)"
                 }
 
-    # 1. Check ML Model first
+    # 1. Check ML Models (Deep Learning PhishNet-Hybrid + Tabular Feature Model)
     ml_is_phish = False
-    ml_confidence = 0.5 # Default middle ground if model fails
-    
+    ml_confidence = 0.5
+    deep_prob = None
+    rf_prob = None
+
     if deep_phish_model and tokenizer:
         try:
             from tensorflow.keras.preprocessing.sequence import pad_sequences
             sequences = tokenizer.texts_to_sequences([url])
-            X = pad_sequences(sequences, maxlen=200)
-            prob = float(deep_phish_model.predict(X, verbose=0)[0][0])
-            ml_is_phish = prob > 0.5
-            ml_confidence = prob if ml_is_phish else (1 - prob) # deep model outputs prob of phish
+            input_len = deep_phish_model.input_shape[1] if (hasattr(deep_phish_model, 'input_shape') and deep_phish_model.input_shape[1]) else 180
+            X_seq = pad_sequences(sequences, maxlen=input_len)
+            deep_prob = float(deep_phish_model.predict(X_seq, verbose=0)[0][0])
         except Exception as e:
-            print(f"Deep learning error: {e}")
-    elif url_model:
+            print(f"Deep learning inference error: {e}")
+
+    if url_model:
         try:
-            prob = url_model.predict_proba([url])[0][1]
-            ml_is_phish = prob > 0.5
-            ml_confidence = prob if ml_is_phish else (1 - prob)
-        except:
-            pass
-            
-    # 2. Ensemble Verification
+            rf_prob = float(url_model.predict_proba([url])[0][1])
+        except Exception as e:
+            print(f"Tabular model inference error: {e}")
+
+    # Weighted Ensemble
+    if deep_prob is not None and rf_prob is not None:
+        combined_prob = (0.60 * deep_prob) + (0.40 * rf_prob)
+    elif deep_prob is not None:
+        combined_prob = deep_prob
+    elif rf_prob is not None:
+        combined_prob = rf_prob
+    else:
+        combined_prob = 0.5
+
+    ml_is_phish = combined_prob > 0.5
+    ml_confidence = combined_prob if ml_is_phish else (1.0 - combined_prob)
+
+    # 2. Ensemble Verification with Threat Intel, Infrastructure & Heuristics
+    from visual_brand_engine import check_infrastructure_risk
+    infra_info = check_infrastructure_risk(url)
     age_info = check_domain_age(url)
     scrape_info = scrape_for_phishing(url)
     vt_info = check_virustotal(url)
@@ -251,6 +266,11 @@ def detect_url_phishing(url: str) -> dict:
         details.append(f"ML Model flagged URL ({ml_confidence*100:.1f}%)")
     else:
         details.append(f"ML Model marked Safe ({(1-ml_confidence)*100:.1f}%)")
+
+    # Infrastructure / Ephemeral Tunnel Penalties
+    if infra_info.get("is_tunnel_ddns"):
+        final_confidence = min(0.99, final_confidence + infra_info["risk_boost"])
+        details.append(f"Infrastructure Risk: Hosted on ephemeral tunnel/DDNS ({infra_info.get('matched_service')}) - HIGH RISK")
         
     if age_info["age_days"] is not None:
         days = age_info["age_days"]
