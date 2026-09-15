@@ -1,0 +1,383 @@
+{
+  "sahoo2017": [
+    {
+      "title": "Malicious URL Detection using Machine Learning: A Survey",
+      "authors": [
+        "Doyen Sahoo",
+        "Chenghao Liu",
+        "Steven C. H. Hoi"
+      ],
+      "year": 2017,
+      "venue": "arXiv (Cornell University)",
+      "volume": null,
+      "issue": null,
+      "page": null,
+      "doi": "https://doi.org/10.48550/arxiv.1701.07179"
+    },
+    {
+      "title": "Deep Learning Approach for Intelligent Intrusion Detection System",
+      "authors": [
+        "R. Vinayakumar",
+        "Mamoun Alazab",
+        "K. P. Soman",
+        "Prabaharan Poornachandran",
+        "Ameer Al-Nemrat",
+        "Sitalakshmi Venkatraman"
+      ],
+      "year": 2019,
+      "venue": "IEEE Access",
+      "volume": "7",
+      "issue": null,
+      "page": "41525-41550",
+      "doi": "https://doi.org/10.1109/access.2019.2895334"
+    },
+    {
+      "title": "A Survey on Hate Speech Detection using Natural Language Processing",
+      "authors": [
+        "Anna Grau Schmidt",
+        "Michael Wiegand"
+      ],
+      "year": 2017,
+      "venue": null,
+      "volume": null,
+      "issue": null,
+      "page": "1-10",
+      "doi": "https://doi.org/10.18653/v1/w17-1101"
+    }
+  ],
+  "charpentier2020": [
+    {
+      "title": "B-PINNs: Bayesian physics-informed neural networks for forward and inverse PDE problems with noisy data",
+      "authors": [
+        "Liu Yang",
+        "Xuhui Meng",
+        "George Em Karniadakis"
+      ],
+      "year": 2020,
+      "venue": "Journal of Computational Physics",
+      "volume": "425",
+      "issue": null,
+      "page": "109913-109913",
+      "doi": "https://doi.org/10.1016/j.jcp.2020.109913"
+    },
+    {
+      "title": "Dissociable Intrinsic Connectivity Networks for Salience Processing and Executive Control",
+      "authors": [
+        "William W. Seeley",
+        "Vinod Menon",
+        "Alan F. Schatzberg",
+        "Jennifer Keller",
+        "Gary H. Glover",
+        "Heather A. Kenna",
+        "Allan L. Reiss",
+        "Michael D. Greicius"
+      ],
+      "year": 2007,
+      "venue": "Journal of Neuroscience",
+      "volume": "27",
+      "issue": "9",
+      "page": "2349-2356",
+      "doi": "https://doi.org/10.1523/jneurosci.5587-06.2007"
+    },
+    {
+      "title": "A survey of uncertainty in deep neural networks",
+      "authors": [
+        "Jakob Gawlikowski",
+        "Cedrique Rovile Njieutcheu Tassi",
+        "Mohsin Ali",
+        "Jong‐Seok Lee",
+        "Matthias Humt",
+        "Jianxiang Feng",
+        "Anna Kruspe",
+        "Rudolph Triebel",
+        "Peter Jung",
+        "Ribana Roscher",
+        "Muhammad Shahzad",
+        "Wen Yang",
+        "Richard Bamler",
+        "Xiao Xiang Zhu"
+      ],
+      "year": 2023,
+      "venue": "Artificial Intelligence Review",
+      "volume": "56",
+      "issue": "S1",
+      "page": "1513-1589",
+      "doi": "https://doi.org/10.1007/s10462-023-10562-9"
+    }
+  ],
+  "ulmer2023": [
+    {
+      "title": "A survey on deep learning in medical image analysis",
+      "authors": [
+        "Geert Litjens",
+        "Thijs Kooi",
+        "Babak Ehteshami Bejnordi",
+        "Arnaud A. A. Setio",
+        "Francesco Ciompi",
+        "Mohsen Ghafoorian",
+        "Jeroen van der Laak",
+        "Bram van Ginneken",
+        "Clara I. Sá‎nchez"
+      ],
+      "year": 2017,
+      "venue": "Medical Image Analysis",
+      "volume": "42",
+      "issue": null,
+      "page": "60-88",
+      "doi": "https://doi.org/10.1016/j.media.2017.07.005"
+    },
+    {
+      "title": "Using Deep Learning for Image-Based Plant Disease Detection",
+      "authors": [
+        "Sharada P. Mohanty",
+        "David Hughes",
+        "Marcel Salathé"
+      ],
+      "year": 2016,
+      "venue": "Frontiers in Plant Science",
+      "volume": "7",
+      "issue": null,
+      "page": "1419-1419",
+      "doi": "https://doi.org/10.3389/fpls.2016.01419"
+    },
+    {
+      "title": "Deep learning in agriculture: A survey",
+      "authors": [
+        "Andreas Kamilaris",
+        "Francesc X. Prenafeta‐Boldú"
+      ],
+      "year": 2018,
+      "venue": "Computers and Electronics in Agriculture",
+      "volume": "147",
+      "issue": null,
+      "page": "70-90",
+      "doi": "https://doi.org/10.1016/j.compag.2018.02.016"
+    }
+  ],
+  "chiew2024_phishintention": [
+    {
+      "title": "VORTEX : Visual phishing detectiOns aRe Through EXplanations",
+      "authors": [
+        "Fabien Charmet",
+        "Tomohiro Morikawa",
+        "Akira Tanaka",
+        "Takeshi Takahashi"
+      ],
+      "year": 2024,
+      "venue": "ACM Transactions on Internet Technology",
+      "volume": "24",
+      "issue": "2",
+      "page": "1-24",
+      "doi": "https://doi.org/10.1145/3654665"
+    },
+    {
+      "title": "PhishAgent: A Robust Multimodal Agent for Phishing Webpage Detection",
+      "authors": [
+        "Tri Cao",
+        "Chenyu Huang",
+        "Yuexin Li",
+        "Huilin Wang",
+        "Amy He",
+        "Nay Oo",
+        "Bryan Hooi"
+      ],
+      "year": 2025,
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "volume": "39",
+      "issue": "27",
+      "page": "27869-27877",
+      "doi": "https://doi.org/10.1609/aaai.v39i27.35003"
+    },
+    {
+      "title": "Phishing in the Free Waters: A Study of Phishing Attacks Created using Free Website Building Services",
+      "authors": [
+        "Sayak Saha Roy",
+        "Unique Karanjit",
+        "Shirin Nilizadeh"
+      ],
+      "year": 2023,
+      "venue": null,
+      "volume": null,
+      "issue": null,
+      "page": "268-281",
+      "doi": "https://doi.org/10.1145/3618257.3624812"
+    }
+  ],
+  "chiew2024_tifs": [
+    {
+      "title": "KnowPhish: Large Language Models Meet Multimodal Knowledge Graphs for Enhancing Reference-Based Phishing Detection",
+      "authors": [
+        "Yuexin Li",
+        "C. F. Huang",
+        "Shumin Deng",
+        "Mei Lin Lock",
+        "Tri Cao",
+        "Nay Oo",
+        "Hoon Wei Lim",
+        "Bryan Hooi"
+      ],
+      "year": 2024,
+      "venue": "arXiv (Cornell University)",
+      "volume": null,
+      "issue": null,
+      "page": null,
+      "doi": "https://doi.org/10.48550/arxiv.2403.02253"
+    },
+    {
+      "title": "PhishAgent: A Robust Multimodal Agent for Phishing Webpage Detection",
+      "authors": [
+        "Tri Cao",
+        "Chenyu Huang",
+        "Yuexin Li",
+        "Huilin Wang",
+        "Amy He",
+        "Nay Oo",
+        "Bryan Hooi"
+      ],
+      "year": 2025,
+      "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+      "volume": "39",
+      "issue": "27",
+      "page": "27869-27877",
+      "doi": "https://doi.org/10.1609/aaai.v39i27.35003"
+    },
+    {
+      "title": "VORTEX : Visual phishing detectiOns aRe Through EXplanations",
+      "authors": [
+        "Fabien Charmet",
+        "Tomohiro Morikawa",
+        "Akira Tanaka",
+        "Takeshi Takahashi"
+      ],
+      "year": 2024,
+      "venue": "ACM Transactions on Internet Technology",
+      "volume": "24",
+      "issue": "2",
+      "page": "1-24",
+      "doi": "https://doi.org/10.1145/3654665"
+    }
+  ],
+  "trad2025": [
+    {
+      "title": "Tricked by the Square: Investigating the Rise and Reach of Quishing Attacks",
+      "authors": [
+        "Swaraj Tandel",
+        "Jiya Chordiya",
+        "Pratidnya S. Hegde Patil"
+      ],
+      "year": 2025,
+      "venue": "International Journal for Research in Applied Science and Engineering Technology",
+      "volume": "13",
+      "issue": "4",
+      "page": "1823-1837",
+      "doi": "https://doi.org/10.22214/ijraset.2025.68660"
+    },
+    {
+      "title": "QuishingShield: on-device multi-modal detection of quick response phishing",
+      "authors": [
+        "Shabour Banda",
+        "Maronge Musara",
+        "Mainford Mutandavari"
+      ],
+      "year": 2026,
+      "venue": "Computer Science and Information Technologies",
+      "volume": "7",
+      "issue": "3",
+      "page": "271-290",
+      "doi": "https://doi.org/10.11591/csit.v7i3.p271-290"
+    },
+    {
+      "title": "Quick Response Code Security Attacks and Countermeasures: A Systematic Literature Review",
+      "authors": [
+        "David Njuguna",
+        "John Gichuki Ndia"
+      ],
+      "year": 2025,
+      "venue": "Journal of Cyber Security",
+      "volume": "7",
+      "issue": "1",
+      "page": "1-20",
+      "doi": "https://doi.org/10.32604/jcs.2025.059398"
+    }
+  ],
+  "sadiq2025": [
+    {
+      "title": "Deep Learning for Phishing Detection: Taxonomy, Current Challenges and Future Directions",
+      "authors": [
+        "Nguyet Quang",
+        "Ali Selamat",
+        "Ondřej Krejcar",
+        "Enrique Herrera‐Viedma",
+        "Hamido Fujita"
+      ],
+      "year": 2022,
+      "venue": "IEEE Access",
+      "volume": "10",
+      "issue": null,
+      "page": "36429-36463",
+      "doi": "https://doi.org/10.1109/access.2022.3151903"
+    },
+    {
+      "title": "AI Meta-Learners and Extra-Trees Algorithm for the Detection of Phishing Websites",
+      "authors": [
+        "Yazan A. Alsariera",
+        "Victor Elijah Adeyemo",
+        "Abdullateef Oluwagbemiga Balogun",
+        "Ammar K. Alazzawi"
+      ],
+      "year": 2020,
+      "venue": "IEEE Access",
+      "volume": "8",
+      "issue": null,
+      "page": "142532-142542",
+      "doi": "https://doi.org/10.1109/access.2020.3013699"
+    },
+    {
+      "title": "Phishing Attacks Survey: Types, Vectors, and Technical Approaches",
+      "authors": [
+        "Rana Alabdan"
+      ],
+      "year": 2020,
+      "venue": "Future Internet",
+      "volume": "12",
+      "issue": "10",
+      "page": "168-168",
+      "doi": "https://doi.org/10.3390/fi12100168"
+    }
+  ],
+  "galadima2025": [
+    {
+      "title": "Efficient Malicious QR Code Detection System Using an Advanced Deep Learning Approach",
+      "authors": [
+        "Abdulaziz A. Alsulami",
+        "Qasem Abu Al‐Haija",
+        "Badraddin Alturki",
+        "Ayman Yafoz",
+        "Ali Alqahtani",
+        "Raed Alsini",
+        "Sami Saeed Binyamin"
+      ],
+      "year": 2025,
+      "venue": "Computer Modeling in Engineering & Sciences",
+      "volume": "145",
+      "issue": "1",
+      "page": "1117-1140",
+      "doi": "https://doi.org/10.32604/cmes.2025.070745"
+    },
+    {
+      "title": "Phishing in the age of distributed intelligence: taxonomies, detection strategies, and the emerging role of federated learning",
+      "authors": [
+        "Esraa Daoud",
+        "Javier Garcia-Blas",
+        "Sadi Alawadi",
+        "J. Carretero"
+      ],
+      "year": 2026,
+      "venue": "Progress in Artificial Intelligence",
+      "volume": null,
+      "issue": null,
+      "page": null,
+      "doi": "https://doi.org/10.1007/s13748-026-00448-6"
+    }
+  ]
+}

@@ -13,7 +13,13 @@ import io
 import urllib.parse
 from typing import Optional, Dict, Tuple
 
-# Authorized root domains for high-value impersonated brands
+# Authorized root domains for high-value impersonated brands.
+# NOTE & KNOWN LIMITATION:
+# AUTHORIZED_BRAND_DOMAINS provides curated blueprint matching for high-value targeted enterprise entities
+# (Microsoft, Google, Apple, PayPal, etc.) to prevent false brand impersonation flags on official properties.
+# It is an enumerated whitelist for critical targets rather than an exhaustive global directory of every
+# potential third-party affiliate, partner, or reseller. Unknown third-party partners rely on standard
+# multi-source consensus, domain reputation, and DOM analysis.
 AUTHORIZED_BRAND_DOMAINS = {
     "microsoft": ["microsoft.com", "live.com", "microsoftonline.com", "office.com", "azure.com", "msn.com", "bing.com"],
     "google": ["google.com", "accounts.google.com", "youtube.com", "gmail.com"],

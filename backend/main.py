@@ -85,6 +85,8 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
         "prediction": result["prediction"],
         "confidence": result["confidence"],
         "details": result["details"],
+        "friction_level": result.get("friction_level", "none"),
+        "advisory_message": result.get("advisory_message"),
         "ip_address": osint_data.get("ip_address"),
         "location": osint_data.get("location"),
         "asn": osint_data.get("asn"),
@@ -92,6 +94,7 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
         "tld": osint_data.get("tld"),
         "screenshot_url": osint_data.get("screenshot_url"),
         "brand": osint_data.get("brand"),
+        "ssl_issuer": osint_data.get("ssl_issuer"),
         "certificate_details": osint_data.get("certificate_details")
     }
 

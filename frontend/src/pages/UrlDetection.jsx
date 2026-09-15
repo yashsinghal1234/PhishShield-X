@@ -123,6 +123,34 @@ export default function UrlDetection() {
               </div>
             </div>
 
+            {/* Graduated Friction & Security Advisory Banner */}
+            {result.advisory_message && (
+              <div className={`p-4 rounded-2xl border flex items-start gap-3 shadow-sm ${
+                result.friction_level === 'advisory' ? 'bg-amber-50/80 border-amber-200/80 text-amber-900' :
+                result.friction_level === 'quarantine' ? 'bg-orange-50/80 border-orange-200/80 text-orange-900' :
+                result.friction_level === 'block' ? 'bg-rose-50/80 border-rose-200/80 text-rose-900' :
+                'bg-blue-50/80 border-blue-200/80 text-blue-900'
+              }`}>
+                <Info className={`h-5 w-5 shrink-0 mt-0.5 ${
+                  result.friction_level === 'advisory' ? 'text-amber-600' :
+                  result.friction_level === 'quarantine' ? 'text-orange-600' :
+                  result.friction_level === 'block' ? 'text-rose-600' :
+                  'text-blue-600'
+                }`} />
+                <div>
+                  <h4 className="text-sm font-bold tracking-tight">
+                    {result.friction_level === 'advisory' ? 'Security Advisory Notice' :
+                     result.friction_level === 'quarantine' ? 'Tier 2 Human-in-the-Loop Quarantine' :
+                     result.friction_level === 'block' ? 'Tier 1 Automated Defense Action' :
+                     'System Notice'}
+                  </h4>
+                  <p className="text-xs mt-0.5 opacity-90 leading-relaxed">
+                    {result.advisory_message}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Scan Results Details */}
             <div className="rounded-3xl bg-white border border-[#E5E9EB] p-6 shadow-sm">
               <h2 className="text-xl font-bold text-[#0F1720] mb-6 flex items-center gap-2">
@@ -147,10 +175,18 @@ export default function UrlDetection() {
                 </div>
 
                 <div>
-                  <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase block mb-1.5">Brand</span>
+                  <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase block mb-1.5">Target Brand</span>
                   <div className="flex items-center gap-2 text-[#0F1720] font-medium">
                     <Fingerprint className="h-4 w-4 text-[#94A3B8] shrink-0" />
-                    {result.brand || '--'}
+                    {result.brand || 'None (Generic Domain)'}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[12px] font-semibold tracking-wider text-[#64748B] uppercase block mb-1.5">SSL Issuer / CA</span>
+                  <div className="flex items-center gap-2 text-[#0F1720] font-medium">
+                    <ShieldCheck className="h-4 w-4 text-[#94A3B8] shrink-0" />
+                    {result.ssl_issuer || '--'}
                   </div>
                 </div>
 

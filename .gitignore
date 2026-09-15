@@ -3,11 +3,13 @@ backend/venv/
 backend/__pycache__/
 backend/*.pyc
 backend/.env
+*.db
 backend/phishshield.db
 backend/url_model.pkl
 backend/email_model.pkl
 backend/data/*.csv
 !backend/data/top_domains.txt
+backend/backend/
 
 # Node / Frontend
 frontend/node_modules/

@@ -77,6 +77,28 @@ def min_brand_distance(domain: str) -> tuple:
     return float(max_sim), is_typo
 
 
+def detect_target_brand(domain: str):
+    """
+    Identifies if domain is impersonating or matching a known target brand.
+    Returns brand name capitalized if detected, else None.
+    """
+    if not domain:
+        return None
+    domain_lower = domain.lower().replace("www.", "")
+    parts = domain_lower.split(".")
+    domain_stem = parts[0] if len(parts) <= 2 else ".".join(parts[:-1])
+    
+    for brand in TARGET_BRANDS:
+        if brand in domain_lower:
+            return brand.capitalize()
+        for token in re.split(r'[\.\-_]', domain_stem):
+            if len(token) >= 3:
+                sim = difflib.SequenceMatcher(None, token, brand).ratio()
+                if sim >= 0.78:
+                    return brand.capitalize()
+    return None
+
+
 class URLFeatureExtractor(BaseEstimator, TransformerMixin):
     """
     Advanced 34-Dimensional Cybersecurity Feature Extractor for Phishing URL Analysis.

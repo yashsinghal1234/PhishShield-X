@@ -14,6 +14,8 @@ class ScanResponse(BaseModel):
     prediction: str
     confidence: float
     details: Optional[str] = None
+    friction_level: Optional[str] = "none"
+    advisory_message: Optional[str] = None
     ip_address: Optional[str] = None
     location: Optional[str] = None
     asn: Optional[str] = None
@@ -21,6 +23,7 @@ class ScanResponse(BaseModel):
     tld: Optional[str] = None
     screenshot_url: Optional[str] = None
     brand: Optional[str] = None
+    ssl_issuer: Optional[str] = None
     certificate_details: Optional[str] = None
 
 class DetectionHistoryResponse(BaseModel):

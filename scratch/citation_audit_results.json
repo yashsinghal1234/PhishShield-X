@@ -1,0 +1,324 @@
+{
+  "trad2025": {
+    "title": "Deep Learning-based approach for Indian License Plate Recognition using Optical Character Recognition",
+    "authors": [
+      "Atharvraj Patil",
+      "Jayesh Ingale",
+      "Aditya Upadhye",
+      "Sakshi Jaiswal",
+      "Suhas Kakade",
+      "Abhishek Bhatt"
+    ],
+    "container": "2023 IEEE Guwahati Subsection Conference (GCON)",
+    "year": 2023,
+    "volume": null,
+    "issue": null,
+    "page": "1-5",
+    "doi": "10.1109/gcon58516.2023.10183391"
+  },
+  "sensoy2018": {
+    "title": "Evidential Fuzzy Rule-Based Machine Learning to Quantify Classification Uncertainty",
+    "authors": [
+      "Hiroki Shiraishi",
+      "Hisao Ishibuchi",
+      "Masaya Nakata"
+    ],
+    "container": "",
+    "year": 2025,
+    "volume": null,
+    "issue": null,
+    "page": null,
+    "doi": "10.36227/techrxiv.174900814.43483543/v1"
+  },
+  "cic2025": {
+    "title": "Towards a Reliable Intrusion Detection Benchmark Dataset",
+    "authors": [
+      "Iman Sharafaldin",
+      "Canadian Institute for Cybersecurity (CIC), UNB, Fredericton, Canada",
+      "Amirhossein Gharib",
+      "Canadian Institute for Cybersecurity (CIC), UNB, Fredericton, Canada",
+      "Arash Habibi Lashkari",
+      "Canadian Institute for Cybersecurity (CIC), UNB, Fredericton, Canada",
+      "Ali A. Ghorbani",
+      "Canadian Institute for Cybersecurity (CIC), UNB, Fredericton, Canada"
+    ],
+    "container": "Software Networking",
+    "year": 2017,
+    "volume": "2017",
+    "issue": "1",
+    "page": "177-200",
+    "doi": "10.13052/jsn2445-9739.2017.009"
+  },
+  "sadiq2025": {
+    "title": "Anti-Phishing framework based on Extended Visual Cryptography and QR code",
+    "authors": [
+      "Shubhangi Khairnar"
+    ],
+    "container": "International Journal of Computer Applications",
+    "year": 2016,
+    "volume": "142",
+    "issue": "5",
+    "page": "25-28",
+    "doi": "10.5120/ijca2016909794"
+  },
+  "galadima2025": {
+    "title": "Figure 8: Percentage of benign and malicious requests in the dataset.",
+    "authors": [],
+    "container": "",
+    "year": 2026,
+    "volume": null,
+    "issue": null,
+    "page": null,
+    "doi": "10.7717/peerj-cs.3572/fig-8"
+  },
+  "krombholz2014": {
+    "title": "QR Code Security: A Survey of Attacks and Challenges for Usable Security",
+    "authors": [
+      "Katharina Krombholz",
+      "Peter Fr\u00fchwirt",
+      "Peter Kieseberg",
+      "Ioannis Kapsalis",
+      "Markus Huber",
+      "Edgar Weippl"
+    ],
+    "container": "Lecture Notes in Computer Science",
+    "year": 2014,
+    "volume": null,
+    "issue": null,
+    "page": "79-90",
+    "doi": "10.1007/978-3-319-07620-1_8"
+  },
+  "vidas2013": {
+    "title": "QRishing: The Susceptibility of Smartphone Users to QR Code Phishing Attacks",
+    "authors": [
+      "Timothy Vidas",
+      "Emmanuel Owusu",
+      "Shuai Wang",
+      "Cheng Zeng",
+      "Lorrie Faith Cranor",
+      "Nicolas Christin"
+    ],
+    "container": "Lecture Notes in Computer Science",
+    "year": 2013,
+    "volume": null,
+    "issue": null,
+    "page": "52-69",
+    "doi": "10.1007/978-3-642-41320-9_4"
+  },
+  "peter2023": {
+    "title": "QR Code Security: Mitigating the Issue of Quishing (QR Code Phishing)",
+    "authors": [
+      "Godwin Awuah Amoah",
+      "Hayfron-Acquah J.B."
+    ],
+    "container": "International Journal of Computer Applications",
+    "year": 2022,
+    "volume": "184",
+    "issue": "33",
+    "page": "34-39",
+    "doi": "10.5120/ijca2022922425"
+  },
+  "alaubidy2024": {
+    "title": "Inviolable e-Question paper via QR code Watermarking and Visual Cryptography",
+    "authors": [
+      "Aniket Agrawal",
+      "Kamalakanta Sethi",
+      "Padmalochan Bera"
+    ],
+    "container": "2021 IEEE International Conference on Advanced Networks and Telecommunications Systems (ANTS)",
+    "year": 2021,
+    "volume": null,
+    "issue": null,
+    "page": "266-271",
+    "doi": "10.1109/ants52808.2021.9936948"
+  },
+  "lin2021": {
+    "title": "PhisNet: Deep learning-based Hybrid and Ensemble Multi-level Approach for the detection of phishing websites",
+    "authors": [
+      "Jayesh Soni",
+      "Nagarajan Prabakar",
+      "Himanshu Upadhyay"
+    ],
+    "container": "",
+    "year": 2024,
+    "volume": null,
+    "issue": null,
+    "page": null,
+    "doi": "10.21203/rs.3.rs-4283476/v1"
+  },
+  "abdelnabi2020": {
+    "title": "VisualPhishNet: Zero-Day Phishing Website Detection by Visual Similarity",
+    "authors": [
+      "Sahar Abdelnabi",
+      "Katharina Krombholz",
+      "Mario Fritz"
+    ],
+    "container": "Proceedings of the 2020 ACM SIGSAC Conference on Computer and Communications Security",
+    "year": 2020,
+    "volume": null,
+    "issue": null,
+    "page": "1681-1698",
+    "doi": "10.1145/3372297.3417233"
+  },
+  "chiew2024": {
+    "title": "Visual Semantic Knowledge Discovery for Multimodal Intent Recognition",
+    "authors": [
+      "Yaoyang Cheng"
+    ],
+    "container": "IEEE Access",
+    "year": 2025,
+    "volume": "13",
+    "issue": null,
+    "page": "213151-213166",
+    "doi": "10.1109/access.2025.3642324"
+  },
+  "sahoo2017": {
+    "title": "Malicious URL Detection Using Machine Learning",
+    "authors": [],
+    "container": "international journal of food and nutritional sciences",
+    "year": 2023,
+    "volume": "11",
+    "issue": "12",
+    "page": null,
+    "doi": "10.48047/ijfans/v11/i12/218"
+  },
+  "guo2017": {
+    "title": "KLSANet: Key local semantic alignment Network for few-shot image classification",
+    "authors": [
+      "Zhe Sun",
+      "Wang Zheng",
+      "Pengfei Guo"
+    ],
+    "container": "Neural Networks",
+    "year": 2024,
+    "volume": "178",
+    "issue": null,
+    "page": "106456",
+    "doi": "10.1016/j.neunet.2024.106456"
+  },
+  "malinin2018": {
+    "title": "Ensemble Approaches for Uncertainty in Spoken Language Assessment",
+    "authors": [
+      "Xixin Wu",
+      "Kate M. Knill",
+      "Mark J.F. Gales",
+      "Andrey Malinin"
+    ],
+    "container": "Interspeech 2020",
+    "year": 2020,
+    "volume": null,
+    "issue": null,
+    "page": "3860-3864",
+    "doi": "10.21437/interspeech.2020-2238"
+  },
+  "charpentier2020": {
+    "title": "Normalizing Flow based Uncertainty Estimation for Deep Regression Analysis",
+    "authors": [
+      "Baobing Zhang",
+      "Wanxin Sui",
+      "Zhengwen Huang",
+      "Maozhen Li"
+    ],
+    "container": "",
+    "year": 2023,
+    "volume": null,
+    "issue": null,
+    "page": null,
+    "doi": "10.36227/techrxiv.22324951.v1"
+  },
+  "hendrycks2019": {
+    "title": "Deep Support Vector Data Description with Outlier Exposure for Anomaly Detection",
+    "authors": [
+      "Guowei Yang",
+      "MIN GAO",
+      "Minghua Wan"
+    ],
+    "container": "",
+    "year": 2024,
+    "volume": null,
+    "issue": null,
+    "page": null,
+    "doi": "10.2139/ssrn.4790485"
+  },
+  "bao2021": {
+    "title": "Evidential Deep Learning for Open Set Action Recognition",
+    "authors": [
+      "Wentao Bao",
+      "Qi Yu",
+      "Yu Kong"
+    ],
+    "container": "2021 IEEE/CVF International Conference on Computer Vision (ICCV)",
+    "year": 2021,
+    "volume": null,
+    "issue": null,
+    "page": "13329-13338",
+    "doi": "10.1109/iccv48922.2021.01310"
+  },
+  "ulmer2023": {
+    "title": "Hyper-opinion Evidential Deep Learning for Out-of-Distribution Detection",
+    "authors": [
+      "Jingen Qu",
+      "Yufei Chen",
+      "Xiaodong Yue",
+      "Wei Fu",
+      "Qiguang Huang"
+    ],
+    "container": "Advances in Neural Information Processing Systems 37",
+    "year": 2024,
+    "volume": null,
+    "issue": null,
+    "page": "84645-84668",
+    "doi": "10.52202/079017-2687"
+  },
+  "biggio2012": {
+    "title": "Towards Poisoning of Federated Support Vector Machines with Data Poisoning Attacks",
+    "authors": [
+      "Israt Mouri",
+      "Muhammad Ridowan",
+      "Muhammad Adnan"
+    ],
+    "container": "Proceedings of the 13th International Conference on Cloud Computing and Services Science",
+    "year": 2023,
+    "volume": null,
+    "issue": null,
+    "page": "24-33",
+    "doi": "10.5220/0011825800003488"
+  },
+  "carlini2023": {
+    "title": "Poisoning Web-Scale Training Datasets is Practical",
+    "authors": [
+      "Nicholas Carlini",
+      "Matthew Jagielski",
+      "Christopher A. Choquette-Choo",
+      "Daniel Paleka",
+      "Will Pearce",
+      "Hyrum Anderson",
+      "Andreas Terzis",
+      "Kurt Thomas",
+      "Florian Tram\u00e8r"
+    ],
+    "container": "2024 IEEE Symposium on Security and Privacy (SP)",
+    "year": 2024,
+    "volume": null,
+    "issue": null,
+    "page": "407-425",
+    "doi": "10.1109/sp54263.2024.00179"
+  },
+  "ratner2017": {
+    "title": "Snorkel",
+    "authors": [
+      "Alexander Ratner",
+      "Stephen H. Bach",
+      "Henry Ehrenberg",
+      "Jason Fries",
+      "Sen Wu",
+      "Christopher R\u00e9"
+    ],
+    "container": "Proceedings of the VLDB Endowment",
+    "year": 2017,
+    "volume": "11",
+    "issue": "3",
+    "page": "269-282",
+    "doi": "10.14778/3157794.3157797"
+  }
+}

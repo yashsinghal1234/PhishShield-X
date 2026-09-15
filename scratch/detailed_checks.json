@@ -1,0 +1,95 @@
+{
+  "charpentier2020": null,
+  "ulmer2023": {
+    "title": "Experimental Standards for Deep Learning in Natural Language Processing Research",
+    "authors": [
+      "Dennis Ulmer",
+      "Elisa Bassignana",
+      "Max Müller-Eberstein",
+      "Daniel Varab",
+      "Mike Zhang",
+      "Rob van der Goot",
+      "Christian Hardmeier",
+      "Barbara Plank"
+    ],
+    "year": 2022,
+    "venue": null,
+    "volume": null,
+    "issue": null,
+    "pages": "2673-2692",
+    "doi": "https://doi.org/10.18653/v1/2022.findings-emnlp.196"
+  },
+  "ulmer_prior_posterior": {
+    "title": "Using resting state functional connectivity to unravel networks of tinnitus",
+    "authors": [
+      "Fatima T. Husain",
+      "Sara A. Schmidt"
+    ],
+    "year": 2013,
+    "venue": "Hearing Research",
+    "volume": "307",
+    "issue": null,
+    "pages": "153-162",
+    "doi": "https://doi.org/10.1016/j.heares.2013.07.010"
+  },
+  "liu2024_phishintention": {
+    "title": "VORTEX : Visual phishing detectiOns aRe Through EXplanations",
+    "authors": [
+      "Fabien Charmet",
+      "Tomohiro Morikawa",
+      "Akira Tanaka",
+      "Takeshi Takahashi"
+    ],
+    "year": 2024,
+    "venue": "ACM Transactions on Internet Technology",
+    "volume": "24",
+    "issue": "2",
+    "pages": "1-24",
+    "doi": "https://doi.org/10.1145/3654665"
+  },
+  "sahoo2017": {
+    "title": "Radar: Residual Analysis for Anomaly Detection in Attributed Networks",
+    "authors": [
+      "Jundong Li",
+      "Harsh Dani",
+      "Xia Hu",
+      "Huan Liu"
+    ],
+    "year": 2017,
+    "venue": null,
+    "volume": null,
+    "issue": null,
+    "pages": "2152-2158",
+    "doi": "https://doi.org/10.24963/ijcai.2017/299"
+  },
+  "peter2023": {
+    "title": "Uncovering the Cloak: A Systematic Review of Techniques Used to Conceal Phishing Websites",
+    "authors": [
+      "Wenhao Li",
+      "Selvakumar Manickam",
+      "Shams Ul Arfeen Laghari",
+      "Yung-Wey Chong"
+    ],
+    "year": 2023,
+    "venue": "IEEE Access",
+    "volume": "11",
+    "issue": null,
+    "pages": "71925-71939",
+    "doi": "https://doi.org/10.1109/access.2023.3293063"
+  },
+  "alaubidy2024": {
+    "title": "A Watermarking Technique to Secure Printed Matrix Barcode—Application for Anti-Counterfeit Packaging",
+    "authors": [
+      "Hoai Phuong Nguyen",
+      "Florent Retraint",
+      "Frédéric Morain-Nicolier",
+      "Angès Delahaies"
+    ],
+    "year": 2019,
+    "venue": "IEEE Access",
+    "volume": "7",
+    "issue": null,
+    "pages": "131839-131850",
+    "doi": "https://doi.org/10.1109/access.2019.2937465"
+  }
+}

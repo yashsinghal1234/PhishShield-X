@@ -1,0 +1,301 @@
+{
+  "krombholz2014": {
+    "title": "QR Code Security: A Survey of Attacks and Challenges for Usable Security",
+    "authors": [
+      "Katharina Krombholz",
+      "Peter Frühwirt",
+      "Peter Kieseberg",
+      "Ioannis Kapsalis",
+      "Markus Huber",
+      "Edgar Weippl"
+    ],
+    "container": "Lecture Notes in Computer Science",
+    "year": 2014,
+    "volume": null,
+    "issue": null,
+    "page": "79-90",
+    "doi": "10.1007/978-3-319-07620-1_8"
+  },
+  "vidas2013": {
+    "title": "QRishing: The Susceptibility of Smartphone Users to QR Code Phishing Attacks",
+    "authors": [
+      "Timothy Vidas",
+      "Emmanuel Owusu",
+      "Shuai Wang",
+      "Cheng Zeng",
+      "Lorrie Faith Cranor",
+      "Nicolas Christin"
+    ],
+    "container": "Lecture Notes in Computer Science",
+    "year": 2013,
+    "volume": null,
+    "issue": null,
+    "page": "52-69",
+    "doi": "10.1007/978-3-642-41320-9_4"
+  },
+  "abdelnabi2020": {
+    "title": "VisualPhishNet: Zero-Day Phishing Website Detection by Visual Similarity",
+    "authors": [
+      "Sahar Abdelnabi",
+      "Katharina Krombholz",
+      "Mario Fritz"
+    ],
+    "container": "Proceedings of the 2020 ACM SIGSAC Conference on Computer and Communications Security",
+    "year": 2020,
+    "volume": null,
+    "issue": null,
+    "page": "1681-1698",
+    "doi": "10.1145/3372297.3417233"
+  },
+  "sahoo2017": {
+    "error": "HTTP Error 404: Not Found"
+  },
+  "carlini2023": {
+    "title": "Poisoning Web-Scale Training Datasets is Practical",
+    "authors": [
+      "Nicholas Carlini",
+      "Matthew Jagielski",
+      "Christopher A. Choquette-Choo",
+      "Daniel Paleka",
+      "Will Pearce",
+      "Hyrum Anderson",
+      "Andreas Terzis",
+      "Kurt Thomas",
+      "Florian Tramèr"
+    ],
+    "container": "2024 IEEE Symposium on Security and Privacy (SP)",
+    "year": 2024,
+    "volume": null,
+    "issue": null,
+    "page": "407-425",
+    "doi": "10.1109/sp54263.2024.00179"
+  },
+  "ratner2017": {
+    "title": "Snorkel",
+    "authors": [
+      "Alexander Ratner",
+      "Stephen H. Bach",
+      "Henry Ehrenberg",
+      "Jason Fries",
+      "Sen Wu",
+      "Christopher Ré"
+    ],
+    "container": "Proceedings of the VLDB Endowment",
+    "year": 2017,
+    "volume": "11",
+    "issue": "3",
+    "page": "269-282",
+    "doi": "10.14778/3157794.3157797"
+  },
+  "bao2021": {
+    "title": "Evidential Deep Learning for Open Set Action Recognition",
+    "authors": [
+      "Wentao Bao",
+      "Qi Yu",
+      "Yu Kong"
+    ],
+    "container": "2021 IEEE/CVF International Conference on Computer Vision (ICCV)",
+    "year": 2021,
+    "volume": null,
+    "issue": null,
+    "page": "13329-13338",
+    "doi": "10.1109/iccv48922.2021.01310"
+  },
+  "galadima2025": {
+    "error": "HTTP Error 404: Not Found"
+  },
+  "sensoy2018": [
+    {
+      "title": "Evidential Deep Learning to Quantify Classification Uncertainty",
+      "authors": [
+        "Murat Şensoy",
+        "Lance Kaplan",
+        "Melih Kandemir"
+      ],
+      "year": 2018,
+      "venue": "arXiv (Cornell University)",
+      "doi": "https://doi.org/10.48550/arxiv.1806.01768"
+    },
+    {
+      "title": "Evidential Deep Learning to Quantify Classification Uncertainty",
+      "authors": [
+        "Murat Şensoy",
+        "Lance Kaplan",
+        "Melih Kandemir"
+      ],
+      "year": 2018,
+      "venue": "University of Southern Denmark Research Portal (University of Southern Denmark)",
+      "doi": null
+    },
+    {
+      "title": "TEDL: A Two-stage Evidential Deep Learning Method for Classification Uncertainty Quantification",
+      "authors": [
+        "Xue Li",
+        "Wei Shen",
+        "Denis Charles"
+      ],
+      "year": 2022,
+      "venue": "arXiv (Cornell University)",
+      "doi": "https://doi.org/10.48550/arxiv.2209.05522"
+    }
+  ],
+  "guo2017": [
+    {
+      "title": "On Calibration of Modern Neural Networks",
+      "authors": [
+        "Chuan Guo",
+        "Geoff Pleiss",
+        "Yu Sun",
+        "Kilian Q. Weinberger"
+      ],
+      "year": 2017,
+      "venue": "arXiv (Cornell University)",
+      "doi": "https://doi.org/10.48550/arxiv.1706.04599"
+    },
+    {
+      "title": "On calibration of modern neural networks",
+      "authors": [
+        "Chuan Guo",
+        "Geoff Pleiss",
+        "Yu Sun",
+        "Kilian Q. Weinberger"
+      ],
+      "year": 2017,
+      "venue": "International Conference on Machine Learning",
+      "doi": null
+    },
+    {
+      "title": "Revisiting the Calibration of Modern Neural Networks",
+      "authors": [
+        "Matthias Minderer",
+        "Josip Djolonga",
+        "Rob Romijnders",
+        "Frances Ann Hubis",
+        "Xiaohua Zhai",
+        "Neil Houlsby",
+        "Dustin Tran",
+        "Mario Lučić"
+      ],
+      "year": 2021,
+      "venue": "arXiv (Cornell University)",
+      "doi": "https://doi.org/10.48550/arxiv.2106.07998"
+    }
+  ],
+  "malinin2018": [
+    {
+      "title": "Predictive Uncertainty Estimation via Prior Networks",
+      "authors": [
+        "Andrey Malinin",
+        "Mark Gales"
+      ],
+      "year": 2018,
+      "venue": "arXiv (Cornell University)",
+      "doi": "https://doi.org/10.48550/arxiv.1802.10501"
+    },
+    {
+      "title": "Predictive Uncertainty Estimation via Prior Networks",
+      "authors": [
+        "Andrey Malinin",
+        "Mark Gales"
+      ],
+      "year": 2018,
+      "venue": "Apollo (University of Cambridge)",
+      "doi": "https://doi.org/10.17863/cam.35237"
+    }
+  ],
+  "charpentier2020": [],
+  "hendrycks2019": [
+    {
+      "title": "Deep Anomaly Detection with Outlier Exposure",
+      "authors": [
+        "Dan Hendrycks",
+        "Mantas Mazeika",
+        "Thomas G. Dietterich"
+      ],
+      "year": 2018,
+      "venue": "arXiv (Cornell University)",
+      "doi": "https://doi.org/10.48550/arxiv.1812.04606"
+    },
+    {
+      "title": "Deep support vector data description of anomaly detection with positive class edge outlier exposure and maximum double hypersphere interval",
+      "authors": [
+        "Guowei Yang",
+        "Di Xu",
+        "Minghua Wan",
+        "Xuan Liu",
+        "Min Gao",
+        "Haiyong Chen"
+      ],
+      "year": 2025,
+      "venue": null,
+      "doi": "https://doi.org/10.1117/12.3056095"
+    },
+    {
+      "title": "Deep Support Vector Data Description with Outlier Exposure for Anomaly Detection",
+      "authors": [
+        "Guowei Yang",
+        "Min Gao",
+        "Minghua Wan"
+      ],
+      "year": 2024,
+      "venue": "SSRN Electronic Journal",
+      "doi": "https://doi.org/10.2139/ssrn.4790485"
+    }
+  ],
+  "biggio2012": [
+    {
+      "title": "Poisoning Attacks against Support Vector Machines",
+      "authors": [
+        "Battista Biggio",
+        "Blaine Nelson",
+        "Pavel Laskov"
+      ],
+      "year": 2012,
+      "venue": "arXiv (Cornell University)",
+      "doi": "https://doi.org/10.48550/arxiv.1206.6389"
+    },
+    {
+      "title": "Poisoning Attacks against Support Vector Machines",
+      "authors": [
+        "Battista Biggio",
+        "Blaine Nelson",
+        "Pavel Laskov"
+      ],
+      "year": 2012,
+      "venue": "arXiv (Cornell University)",
+      "doi": null
+    },
+    {
+      "title": "Defending Support Vector Machines Against Data Poisoning Attacks",
+      "authors": [
+        "Sandamal Weerasinghe",
+        "Tansu Alpcan",
+        "Sarah Erfani",
+        "Christopher Leckie"
+      ],
+      "year": 2021,
+      "venue": "IEEE Transactions on Information Forensics and Security",
+      "doi": "https://doi.org/10.1109/tifs.2021.3058771"
+    }
+  ],
+  "ulmer2023": [],
+  "lin2021": [
+    {
+      "title": "Phishpedia: A Hybrid Deep Learning Based Approach to Visually Identify Phishing Webpages",
+      "authors": [
+        "Yun Lin",
+        "Ruofan Liu",
+        "Dinil Mon Divakaran",
+        "Jun Yang Ng",
+        "Qing Zhou Chan",
+        "Yiwen Lu",
+        "Yuxuan Si",
+        "Fan Zhang",
+        "Jin Song Dong"
+      ],
+      "year": 2021,
+      "venue": "Griffith Research Online",
+      "doi": null
+    }
+  ]
+}

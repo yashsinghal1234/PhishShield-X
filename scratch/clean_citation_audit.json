@@ -1,0 +1,187 @@
+[
+  {
+    "key": "krombholz2014",
+    "title": "QR Code Security: A Survey of Attacks and Challenges for Usable Security",
+    "authors": [
+      "Katharina Krombholz",
+      "Peter Frühwirt",
+      "Peter Kieseberg",
+      "Ioannis Kapsalis",
+      "Markus Huber",
+      "Edgar Weippl"
+    ],
+    "year": 2014,
+    "venue": "Lecture notes in computer science",
+    "doi": "https://doi.org/10.1007/978-3-319-07620-1_8"
+  },
+  {
+    "key": "vidas2013",
+    "title": "QRishing: The Susceptibility of Smartphone Users to QR Code Phishing Attacks",
+    "authors": [
+      "Timothy Vidas",
+      "Emmanuel Owusu",
+      "Shuai Wang",
+      "Cheng Zeng",
+      "Lorrie Faith Cranor",
+      "Nicolas Christin"
+    ],
+    "year": 2013,
+    "venue": "Lecture notes in computer science",
+    "doi": "https://doi.org/10.1007/978-3-642-41320-9_4"
+  },
+  {
+    "key": "lin2021",
+    "title": "Phishpedia: A Hybrid Deep Learning Based Approach to Visually Identify Phishing Webpages",
+    "authors": [
+      "Yun Lin",
+      "Ruofan Liu",
+      "Dinil Mon Divakaran",
+      "Jun Yang Ng",
+      "Qing Zhou Chan",
+      "Yiwen Lu",
+      "Yuxuan Si",
+      "Fan Zhang",
+      "Jin Song Dong"
+    ],
+    "year": 2021,
+    "venue": "Griffith Research Online",
+    "doi": null
+  },
+  {
+    "key": "abdelnabi2020",
+    "title": "VisualPhishNet: Zero-Day Phishing Website Detection by Visual Similarity",
+    "authors": [
+      "Sahar Abdelnabi",
+      "Katharina Krombholz",
+      "Mario Fritz"
+    ],
+    "year": 2020,
+    "venue": "",
+    "doi": "https://doi.org/10.1145/3372297.3417233"
+  },
+  {
+    "key": "sahoo2017",
+    "title": "An inability to reproduce",
+    "authors": [
+      "Samuel Greengard"
+    ],
+    "year": 2019,
+    "venue": "Communications of the ACM",
+    "doi": "https://doi.org/10.1145/3344289"
+  },
+  {
+    "key": "malinin2018",
+    "title": "A survey of uncertainty in deep neural networks",
+    "authors": [
+      "Jakob Gawlikowski",
+      "Cedrique Rovile Njieutcheu Tassi",
+      "Mohsin Ali",
+      "Jong‐Seok Lee",
+      "Matthias Humt",
+      "Jianxiang Feng",
+      "Anna Kruspe",
+      "Rudolph Triebel",
+      "Peter Jung",
+      "Ribana Roscher",
+      "Muhammad Shahzad",
+      "Wen Yang",
+      "Richard Bamler",
+      "Xiao Xiang Zhu"
+    ],
+    "year": 2023,
+    "venue": "Artificial Intelligence Review",
+    "doi": "https://doi.org/10.1007/s10462-023-10562-9"
+  },
+  {
+    "key": "charpentier2020",
+    "title": "A review of uncertainty quantification in deep learning: Techniques, applications and challenges",
+    "authors": [
+      "Moloud Abdar",
+      "Farhad Pourpanah",
+      "Sadiq Hussain",
+      "Dana Rezazadegan",
+      "Li Liu",
+      "Mohammad Ghavamzadeh",
+      "Paul Fieguth",
+      "Xiaochun Cao",
+      "Abbas Khosravi",
+      "U. Rajendra Acharya",
+      "Vladimir Makarenkov",
+      "Saeid Nahavandi"
+    ],
+    "year": 2021,
+    "venue": "Information Fusion",
+    "doi": "https://doi.org/10.1016/j.inffus.2021.05.008"
+  },
+  {
+    "key": "hendrycks2019",
+    "title": "A Unifying Review of Deep and Shallow Anomaly Detection",
+    "authors": [
+      "Lukas Ruff",
+      "Jacob R. Kauffmann",
+      "Robert A. Vandermeulen",
+      "Gregoire Montavon",
+      "Wojciech Samek",
+      "Marius Kloft",
+      "Thomas G. Dietterich",
+      "Klaus-Robert Muller"
+    ],
+    "year": 2021,
+    "venue": "Proceedings of the IEEE",
+    "doi": "https://doi.org/10.1109/jproc.2021.3052449"
+  },
+  {
+    "key": "ulmer2023",
+    "title": "Trustworthy clinical AI solutions: A unified review of uncertainty quantification in Deep Learning models for medical image analysis",
+    "authors": [
+      "Benjamin Lambert",
+      "Florence Forbes",
+      "Senan Doyle",
+      "Harmonie Dehaene",
+      "Michel Dojat"
+    ],
+    "year": 2024,
+    "venue": "Artificial Intelligence in Medicine",
+    "doi": "https://doi.org/10.1016/j.artmed.2024.102830"
+  },
+  {
+    "key": "carlini2023",
+    "title": "Analyzing Leakage of Personally Identifiable Information in Language Models",
+    "authors": [
+      "Nils Lukas",
+      "Ahmed Salem",
+      "Robert B. Sim",
+      "Shruti Tople",
+      "Lukas Wutschitz",
+      "Santiago Zanella-Béguelin"
+    ],
+    "year": 2023,
+    "venue": "",
+    "doi": "https://doi.org/10.1109/sp46215.2023.10179300"
+  },
+  {
+    "key": "ratner2017",
+    "title": "Snorkel",
+    "authors": [
+      "Alexander Ratner",
+      "Stephen H. Bach",
+      "Henry R. Ehrenberg",
+      "Jason Fries",
+      "Sen Wu",
+      "Christopher Ré"
+    ],
+    "year": 2017,
+    "venue": "Proceedings of the VLDB Endowment",
+    "doi": "https://doi.org/10.14778/3157794.3157797"
+  },
+  {
+    "key": "galadima2025",
+    "title": "Dataset of 1000 Images of Malicious and Benign QR codes 2025",
+    "authors": [
+      "Galadima, Sefiya"
+    ],
+    "year": 2025,
+    "venue": "Mendeley Data",
+    "doi": "https://doi.org/10.17632/cmhh7744sp.1"
+  }
+]
