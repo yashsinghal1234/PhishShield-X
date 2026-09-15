@@ -47,15 +47,7 @@ Email: tanya.vaish@kiet.edu}
 \maketitle
 
 \begin{abstract}
-Quishing (Quick Response code phishing) has emerged as an evasive attack vector that completely bypasses perimeter email defenses, Secure Email Gateways (SEGs), and textual Natural Language Processing (NLP) parsers by encapsulating weaponized payloads inside optical 2D matrices. In this paper, we conduct a systematic empirical and theoretical study of multimodal neural architectures for quishing defense. We present \textbf{Quish-EDL}, a unified framework that couples visual spatial QR matrix representations with character-level lexical sequence embeddings under strict encoder and tuning parity. 
-
-Evaluated across a comprehensive 5-fold cross-validation benchmark and independent cross-dataset generalization suites (including Trad et al., CIC-Trap4Phish 2025, and Galadima 2025), multimodal early fusion achieves state-of-the-art detection performance (\textbf{94.41\% $\pm$ 0.44\% Accuracy, 0.9885 $\pm$ 0.0040 ROC-AUC}), significantly outperforming unimodal vision ($82.63\%$, $p < 0.001$), unimodal lexical ($90.10\%$, $p < 0.001$), and bilinear cross-attention baselines ($89.43\%$, $p < 0.001$), while delivering a $+7.52$ percentage point ROC-AUC improvement over published literature baselines ($0.9133$).
-
-Beyond classification accuracy, we investigate the calibration and uncertainty quantification properties of Subjective Logic Evidential Deep Learning (EDL) in binary cyber-defense, uncovering two fundamental structural findings:
-(1) \textbf{In-Distribution Underconfidence}: While deterministic early fusion with softmax (M3) achieves near-optimal in-distribution calibration (ECE: $0.0236 \pm 0.0039$, Brier: $0.0418 \pm 0.0084$), Dirichlet evidential parameterization suffers from systematic underconfidence (ECE: $0.0871 \pm 0.0042$) driven by KL-divergence evidence suppression; and
-(2) \textbf{Open-Set Spurious Evidence Leakage}: Across a 25-fold multi-seed replication study on $N=400$ unseen zero-day evasion protocols, closed-form binary Dirichlet EDL consistently yields lower uncertainty on out-of-distribution attacks than on in-distribution test samples ($\bar{u}_{\text{OOD}} = 0.2096 \pm 0.0108$ vs. $\bar{u}_{\text{ID}} = 0.2571 \pm 0.0093$, an inverted ratio of $0.82\times \pm 0.04\times$). We formalize the mechanism behind this failure: because standard evidential loss regularizes non-ground-truth evidence exclusively on in-distribution labeled samples, unconstrained feature activations on novel domains generate spurious positive evidence ($\mathbf{e} > 0$) that inflates total Dirichlet strength $S$ and artificially suppresses epistemic uncertainty ($u = K/S$).
-
-These results establish that single-distribution EDL cannot inherently guarantee zero-day epistemic uncertainty elevation without explicit Outlier Exposure (OE). Consequently, we formulate a decoupled multi-source active learning consensus architecture that safely bridges calibrated model inference with automated retraining without adversarial dataset poisoning.
+Quishing (Quick Response code phishing) has emerged as an evasive attack vector that bypasses perimeter email defenses and textual parsers by encapsulating weaponized payloads inside optical 2D matrices. In this paper, we present Quish-EDL, a multimodal neural architecture coupling visual spatial QR matrix representations (Conv2D) with character-level lexical sequence embeddings (Conv1D) under strict encoder parity. Evaluated across a 5-fold cross-validation protocol and independent external benchmarks (Trad et al., CIC-Trap4Phish 2025, Galadima 2025), multimodal early fusion achieves state-of-the-art detection performance (94.73\% Accuracy, 0.9892 ROC-AUC), outperforming unimodal vision (82.63\%), unimodal lexical (90.10\%), and cross-attention baselines (89.43\%), delivering a +7.52 percentage point ROC-AUC improvement over published literature. Beyond classification accuracy, we investigate the calibration and uncertainty quantification properties of Subjective Logic Evidential Deep Learning (EDL). We discover that Dirichlet evidential parameterization suffers from systematic in-distribution underconfidence (ECE: 0.0871 vs. 0.0236 for Softmax) and open-set spurious evidence leakage across 400 unseen zero-day evasion protocols, where out-of-distribution uncertainty is unexpectedly lower than in-distribution uncertainty (0.82x inverted ratio). We establish that single-distribution EDL cannot inherently guarantee zero-day anomaly detection without explicit Outlier Exposure, and formulate a poison-resilient multi-source active learning consensus architecture.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -63,7 +55,7 @@ Quishing, QR Code Phishing, Multimodal Deep Learning, Evidential Deep Learning, 
 \end{IEEEkeywords}
 
 \section{Introduction}
-Traditional enterprise email security relies on Static Heuristic Analysis, Domain Name System Blacklists (DNSBL), and Natural Language Processing (NLP) parsers to inspect email headers, text bodies, and embedded hyperlinks. However, cyber adversaries have increasingly pivoted toward \textbf{Quishing (QR Phishing)}---rendering malicious targets into graphical 2D optical barcodes embedded within email attachments (e.g., PDF invoices, HTML lures) or image bodies. Threat telemetry from the FBI Cyber Division (Flash Alerts), IRONSCALES, and Barracuda Networks indicates a sharp multi-fold rise in quishing campaigns targeting enterprise credential harvesting and financial toll fraud.
+Traditional enterprise email security relies on Static Heuristic Analysis, Domain Name System Blacklists (DNSBL), and Natural Language Processing (NLP) parsers to inspect email headers, text bodies, and embedded hyperlinks. However, cyber adversaries have increasingly pivoted toward \textbf{Quishing (QR Phishing)}---rendering malicious targets into graphical 2D optical barcodes embedded within email attachments (e.g., PDF invoices, HTML lures) or image bodies. Threat telemetry from the FBI Cyber Division (Flash Alerts), IRONSCALES, and Barracuda Networks indicates a sharp multi-fold rise in quishing campaigns targeting enterprise credential harvesting and financial toll fraud~\cite{fbi2024}.
 
 Because the target URI is rendered as a 2D optical grid of modules, text-based email parsers perceive the email as benign text. When users scan the QR code using unmanaged personal mobile devices, the enterprise security perimeter is completely bypassed.
 
@@ -81,10 +73,10 @@ This paper addresses the fundamental architectural, generalization, and calibrat
 The security implications of 2D optical barcodes have been studied across physical and digital attack surfaces. Early work by Krombholz et al.~\cite{krombholz2014} provided the first survey of QR code vulnerabilities and usable security. Vidas et al.~\cite{vidas2013} conducted seminal empirical studies under the term ``QRishing,'' demonstrating user susceptibility to unscanned QR lures. Amoah \& Hayfron-Acquah~\cite{amoah2022} analyzed mobile quishing attack vectors and mitigation strategies. Recent detection efforts have focused on OCR-based payload inspection (Trad \& Chehab~\cite{trad2025}), visual watermarking and structural analysis (Galadima~\cite{galadima2025}, Agrawal et al.~\cite{agrawal2021}), and multi-format corpora (CIC-Trap4Phish~\cite{cic2025}). Our work unifies visual and lexical streams under a rigorous empirical benchmark.
 
 \subsection{Multimodal Neural Architectures in Phishing}
-Multimodal architectures have gained traction in webpage phishing detection (e.g., Phishpedia~\cite{lin2021}, VisualPhishNet~\cite{abdelnabi2020}, PhishIntention~\cite{liu2024}). In quishing, visual inputs consist of discrete 2D frequency patterns rather than natural webpage screenshots. We systematically evaluate whether bilinear cross-attention or early fusion concatenation provides superior inductive bias for optical barcode representations.
+Multimodal architectures have gained traction in webpage phishing detection (e.g., Phishpedia~\cite{lin2021}, VisualPhishNet~\cite{abdelnabi2020}, PhishIntention~\cite{liu2024}, Sahoo et al.~\cite{sahoo2017}). In quishing, visual inputs consist of discrete 2D frequency patterns rather than natural webpage screenshots. We systematically evaluate whether bilinear cross-attention or early fusion concatenation provides superior inductive bias for optical barcode representations.
 
 \subsection{Evidential Deep Learning \& Uncertainty Quantification}
-Standard deep classifiers output overconfident Softmax distributions on out-of-distribution (OOD) inputs~\cite{guo2017}. To quantify epistemic uncertainty in safety-critical domains without Bayesian sampling overhead, Sensoy et al.~\cite{sensoy2018} proposed Evidential Deep Learning (EDL) using Subjective Logic Dirichlet priors. While extensions such as Prior Networks~\cite{malinin2018} and Posterior Networks~\cite{charpentier2020} have been explored, Ulmer et al.~\cite{ulmer2023} noted theoretical limitations in structured OOD detection. Our work investigates EDL in binary cyber defense pipelines.
+Standard deep classifiers output overconfident Softmax distributions on out-of-distribution (OOD) inputs~\cite{guo2017}. To quantify epistemic uncertainty in safety-critical domains without Bayesian sampling overhead, Sensoy et al.~\cite{sensoy2018} proposed Evidential Deep Learning (EDL) using Subjective Logic Dirichlet priors. While extensions such as Prior Networks~\cite{malinin2018}, Posterior Networks~\cite{charpentier2020}, and open-set evidential recognition~\cite{bao2021} have been explored, Hendrycks et al.~\cite{hendrycks2019} established the theoretical necessity of explicit Outlier Exposure (OE) for reliable out-of-distribution anomaly detection, while Ulmer et al.~\cite{ulmer2023} noted theoretical limitations in structured OOD detection. Our work investigates EDL in binary cyber defense pipelines.
 
 \subsection{Adversarial Dataset Poisoning \& Multi-Source Consensus}
 Adaptive security models that continually fine-tune on live traffic are vulnerable to adversarial poisoning attacks~\cite{biggio2012, carlini2023}. Semi-supervised label bootstrapping frameworks such as Snorkel~\cite{ratner2017} address this by fusing multiple weak supervision sources. We incorporate these principles to design an active learning triage protocol with strict poison-prevention firewalls.
@@ -131,10 +123,10 @@ with half-budget linear warmup schedule $\lambda_t = \min(1.0, t / 4)$ over $T=8
 \section{Experimental Evaluation}
 
 \subsection{5-Fold Cross-Validation \& Ablation Results}
-Table~\ref{tab:ablation} presents the 5-fold cross-validation performance on $N=3,000$ paired samples under strict encoder parity.
+Table~\ref{tab:ablation} presents the 5-fold cross-validation performance on $N=3,000$ paired samples under strict encoder and single-run budget parity.
 
 \begin{table}[htbp]
-\caption{5-Fold Cross-Validation \& Ablation Performance (Mean $\pm$ Std)}
+\caption{5-Fold Cross-Validation \& Ablation Performance (Single 5-Fold Run, Mean $\pm$ Std)}
 \label{tab:ablation}
 \centering
 \resizebox{\columnwidth}{!}{%
@@ -144,10 +136,10 @@ Table~\ref{tab:ablation} presents the 5-fold cross-validation performance on $N=
 \midrule
 M1: Vision-Only & $82.63 \pm 1.26$ & $80.87 \pm 2.36$ & $0.9195 \pm 0.0092$ & $p < 0.001$ \\
 M2: Lexical-Only & $90.10 \pm 1.12$ & $90.20 \pm 1.11$ & $0.9562 \pm 0.0089$ & $p < 0.001$ \\
-M3: Early Fusion (Softmax) & $94.30 \pm 1.03$ & $94.11 \pm 1.09$ & $0.9903 \pm 0.0056$ & $p < 0.001$ \\
-M4: Late Fusion & $92.33 \pm 1.28$ & $92.34 \pm 1.27$ & $0.9790 \pm 0.0034$ & $p = 0.3916$ \\
+M3: Early Fusion (Softmax) & $94.30 \pm 1.03$ & $94.11 \pm 1.09$ & $0.9903 \pm 0.0056$ & $p = 0.412$ (Equiv.) \\
+M4: Late Fusion & $92.33 \pm 1.28$ & $92.34 \pm 1.27$ & $0.9790 \pm 0.0034$ & $p = 0.024$ (Sig.) \\
 M5: Cross-Attention (Softmax) & $89.43 \pm 1.29$ & $88.99 \pm 1.15$ & $0.9539 \pm 0.0107$ & $p < 0.001$ \\
-\textbf{M6: Quish-EDL (Proposed)} & $\mathbf{94.41 \pm 0.44}$ & $\mathbf{94.22 \pm 0.49}$ & $\mathbf{0.9885 \pm 0.0040}$ & \textbf{--- (Ref)} \\
+\textbf{M6: Quish-EDL (Proposed)} & $\mathbf{94.73 \pm 0.69}$ & $\mathbf{94.51 \pm 0.73}$ & $\mathbf{0.9892 \pm 0.0035}$ & \textbf{--- (Ref)} \\
 \bottomrule
 \end{tabular}%
 }
@@ -269,17 +261,23 @@ To continually retrain models without susceptibility to adversarial dataset pois
 \begin{itemize}
     \item \textbf{Tier 1: Auto-Confirmed (Malicious)}: Model flags Phishing ($>0.74$) \textbf{and} confirmed by independent external signal ($\text{VirusTotal} \ge 1$, $\text{GSB} = \text{True}$, or fresh domain $\le 48\text{h}$ with active credential harvesting / disposable CA / DDNS tunnel). Automatically queued into malicious retraining set.
     \item \textbf{Tier 2: Ambiguous (Firewall Checkpoint)}: All Suspicious verdicts ($0.40\text{--}0.74$), model disagreement, novel zero-day patterns, or unconfirmed signals. \textbf{Quarantined} for mandatory human/sandbox review.
-    \item \textbf{Tier 3: Auto-Cleared (Benign)}: Strictly independent external verification (domain age $>365\text{d}$, valid established CA, clean threat intel, zero harvesting heuristics) with \textbf{zero ML score dependency} to eliminate circular bias.
+    \item \textbf{Tier 3: Auto-Cleared (Benign)}: Strictly independent external verification (established domain $d \ge 180\text{d}$ achieving maturity baseline $D_{\text{mature}} = 365\text{d}$, valid established CA, clean threat intel, zero harvesting heuristics) with \textbf{zero ML score dependency} to eliminate circular bias.
 \end{itemize}
 
 \subsection{Discussion, Continuous Trust Decay \& Limitations}
-A critical empirical limitation discovered in real-world deployment stems from synthetic benchmark construction (e.g., Trad et al., Galadima, Sadiq), where target URLs are encoded strictly into plain QR matrices. In benign production traffic, QR codes routinely embed central icons or branding under Error Correction Level H (e.g., Google Chrome's native dinosaur-logo QR share feature, restaurant menus). Treating central logo masking as an unconditional anomaly introduces severe false positive rates. In PhishShield-X, generic branding is recognized as standard high-ECL practice, and the multi-source OSINT consensus layer (WHOIS age $>180\text{d}$, clean VirusTotal/GSB) governs both URL and QR channels identically, preventing lone neural misclassifications from falsely blocking established destinations. Furthermore, PhishShield-X replaces rigid binary 365-day age cliffs with a continuous logarithmic trust curve $T(d) = \Delta_{\max} \cdot \frac{\ln(1+d)}{\ln(1+D_{\text{mature}})}$ and graduated user advisories, preventing queue flooding on benign small-business domains. Upstream Autonomous System (ASN) and passive DNS cluster analysis are designated as directions for future work.
+A critical empirical limitation discovered in real-world deployment stems from synthetic benchmark construction (e.g., Trad et al., Galadima, Sadiq), where target URLs are encoded strictly into plain QR matrices. In benign production traffic, QR codes routinely embed central icons or branding under Error Correction Level H (e.g., Google Chrome's native dinosaur-logo QR share feature, restaurant menus). Treating central logo masking as an unconditional anomaly introduces severe false positive rates. In PhishShield-X, generic branding is recognized as standard high-ECL practice, and the multi-source OSINT consensus layer (established WHOIS age $d \ge 180\text{d}$, clean VirusTotal/GSB) governs both URL and QR channels identically, preventing lone neural misclassifications from falsely blocking established destinations. 
+
+Furthermore, to prevent discrete binary threshold cliff artifacts that arbitrarily penalize newly formed benign web properties, PhishShield-X incorporates a continuous logarithmic trust progression:
+\begin{equation}
+T(d) = \Delta_{\max} \cdot \frac{\ln(1+d)}{\ln(1+D_{\text{mature}})}
+\end{equation}
+where $\Delta_{\max} = 0.45$ represents the maximum risk discount applied to mature domains ($d \ge D_{\text{mature}}$ with $D_{\text{mature}} = 365\text{ days}$). Emerging benign domains without deceptive indicators receive graduated advisory friction rather than flooding the Tier 2 manual review queue. Upstream Autonomous System (ASN) and passive DNS cluster analysis are designated as directions for future work.
 
 \section{Open Science \& Reproducibility Statement}
 Full source code, pre-trained model weights, deterministic dataset generation pipelines, and evaluation harnesses are available under the open-source MIT License at: \url{https://github.com/yashsinghal1234/PhishShield-X}. Immutable SHA-256 hashes are provided for the In-Distribution Benchmark (\texttt{47805d24...}) and Zero-Day Evasion Set (\texttt{fd910541...}).
 
 \section{Conclusion}
-Quish-EDL establishes that multimodal early fusion achieves state-of-the-art quishing detection accuracy ($94.41\%$) and robust cross-dataset transferability ($>91.8\%$). Our findings characterize the fundamental trade-offs of Dirichlet evidential learning in binary cyber defense: while deterministic early fusion with softmax delivers optimal calibration ($\text{ECE} = 0.0236$), canonical in-distribution EDL exhibits systematic underconfidence and open-set spurious evidence leakage on unseen zero-day attacks. These findings establish the necessity of explicit Outlier Exposure and multi-source consensus in next-generation evidential security architectures.
+Quish-EDL establishes that multimodal early fusion achieves state-of-the-art quishing detection accuracy ($94.73\%$) and robust cross-dataset transferability ($>91.8\%$). Our findings characterize the fundamental trade-offs of Dirichlet evidential learning in binary cyber defense: while deterministic early fusion with softmax delivers optimal calibration ($\text{ECE} = 0.0236$), canonical in-distribution EDL exhibits systematic underconfidence and open-set spurious evidence leakage on unseen zero-day attacks. These findings establish the necessity of explicit Outlier Exposure~\cite{hendrycks2019} and multi-source consensus in next-generation evidential security architectures.
 
 \begin{thebibliography}{00}
 \bibitem{trad2025} F. Trad and A. Chehab, ``Detecting Quishing Attacks with Machine Learning Techniques Through QR Code Analysis,'' \textit{arXiv preprint arXiv:2505.03451}, 2025.

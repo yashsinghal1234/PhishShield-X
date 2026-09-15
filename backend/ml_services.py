@@ -264,28 +264,28 @@ def detect_url_phishing(url: str) -> dict:
                 "advisory_message": None
             }
 
-    # 0.5. Check Typosquatting using eTLD+1 root domain stems across distinct organizations
-    # Sibling subdomains sharing the same eTLD+1 root (e.g. partner.microsoft.com and weather.microsoft.com)
-    # are organizational siblings, while something.co.uk and fake.co.uk are correctly treated as distinct roots.
+    # 0.5. Check Typosquatting against High-Value Targeted Brands
+    # Uses curated TARGET_BRANDS list rather than iterating over subdomains in top_domains to avoid false positives
     ext_base = tldextract.extract(domain_netloc)
     stem_base = ext_base.domain.lower() if ext_base.domain else ""
     
     if len(stem_base) >= 4:
-        for safe_domain in top_domains:
-            # Sibling subdomains or parent domains sharing the organizational root are never typosquats
-            if domain_netloc == safe_domain or domain_netloc.endswith("." + safe_domain) or domain_etld1 == safe_domain:
+        from features import TARGET_BRANDS
+        for target_brand in TARGET_BRANDS:
+            if stem_base == target_brand:
                 continue
-            safe_stem = safe_domain.split(".")[0].lower()
-            if stem_base != safe_stem and len(safe_stem) >= 4 and abs(len(stem_base) - len(safe_stem)) <= 2:
-                sim = difflib.SequenceMatcher(None, stem_base, safe_stem).ratio()
-                if 0.82 < sim < 1.0:
-                    return {
-                        "prediction": "Phishing",
-                        "confidence": 0.95,
-                        "details": f"Typosquatting detected! Domain '{domain_netloc}' impersonates reputable asset '{safe_domain}' (HIGH RISK)",
-                        "friction_level": "block",
-                        "advisory_message": f"Tier 1 Automated Block: Typosquatting impersonation attack targeting '{safe_domain}'."
-                    }
+            if abs(len(stem_base) - len(target_brand)) <= 2 and len(target_brand) >= 4:
+                sim = difflib.SequenceMatcher(None, stem_base, target_brand).ratio()
+                if sim >= 0.85:
+                    auth_list = AUTHORIZED_BRAND_DOMAINS.get(target_brand, [f"{target_brand}.com"])
+                    if not any(domain_netloc == a or domain_netloc.endswith("." + a) or domain_etld1 == a for a in auth_list):
+                        return {
+                            "prediction": "Phishing",
+                            "confidence": 0.95,
+                            "details": f"Typosquatting detected! Domain '{domain_netloc}' impersonates high-value brand '{target_brand}' (HIGH RISK)",
+                            "friction_level": "block",
+                            "advisory_message": f"Tier 1 Automated Block: Typosquatting impersonation attack targeting '{target_brand}'."
+                        }
 
     # 1. Ensemble ML Prediction (Deep PhishNet-Hybrid + Tabular Feature Model)
     deep_prob = None
