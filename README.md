@@ -247,11 +247,12 @@ The web dashboard will be accessible at: `http://localhost:5173`.
 
 ---
 
-## 👥 Authors & Affiliations
+## 👥 Authors & Mentorship
 * **Yash Singhal** (`yash.2428cs1806@kiet.edu`)
 * **Saurav Singh** (`saurav.2428cs1961@kiet.edu`)
 * **Shubham** (`shubham.cs@kiet.edu`)
 * **Tanya Vaish** (`tanya.vaish@kiet.edu`)
+* **Prof. Rahul** (*Faculty Mentor & Project Guide*, `rahul@kiet.edu`)
 
 *Department of Computer Science, KIET Group of Institutions, Ghaziabad, Delhi-NCR, India.*
 
@@ -264,9 +265,10 @@ If you use **Quish-EDL** or **PhishShield-X** in your academic research, please 
 ```bibtex
 @article{quish_edl_2026,
   title={Quish-EDL: Multimodal Visual-Lexical Neural Architecture and Empirical Limits of Evidential Uncertainty in QR-Phishing Detection},
-  author={Singhal, Yash and Singh, Saurav and Shubham and Vaish, Tanya},
+  author={Singhal, Yash and Singh, Saurav and Shubham and Vaish, Tanya and Rahul, Prof.},
   journal={arXiv preprint},
   year={2026}
 }
 ```
+
 
