@@ -69,9 +69,13 @@ def save_history(db: Session, scan_type: str, input_data: str, result: dict):
     db.refresh(history_entry)
     return history_entry
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def read_root():
-    return {"message": "Welcome to PhishShield-X API"}
+    return {"message": "Welcome to PhishShield-X API", "status": "healthy"}
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+def health_check():
+    return {"status": "ok"}
 
 @app.post("/api/detect/url", response_model=schemas.ScanResponse)
 def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
