@@ -142,34 +142,46 @@ def check_domain_age(url: str) -> dict:
         domain = urllib.parse.urlparse(url).netloc
         if not domain:
             domain = url.split('/')[0]
-            
-        w = whois.whois(domain)
-        creation_date = w.creation_date
-        if type(creation_date) is list:
-            creation_date = creation_date[0]
-            
-        if creation_date:
-            if isinstance(creation_date, str):
-                from dateutil import parser
-                try:
-                    creation_date = parser.parse(creation_date)
-                except:
-                    pass
-            if hasattr(creation_date, 'tzinfo') and creation_date.tzinfo is not None:
-                creation_date = creation_date.replace(tzinfo=None)
-            
-            age_days = (datetime.now() - creation_date).days
-            return {"age_days": age_days, "error": None}
+        domain = domain.split(':')[0]
+
+        # Query root registered domain (eTLD+1) first so WHOIS does not fail on cloud subdomains (e.g. *.vercel.app)
+        target = extract_etld_plus_one(domain) or domain
+        w = None
+        try:
+            w = whois.whois(target)
+        except Exception:
+            try:
+                w = whois.whois(domain)
+            except Exception:
+                pass
+
+        if w:
+            creation_date = w.creation_date
+            if type(creation_date) is list:
+                creation_date = creation_date[0]
+                
+            if creation_date:
+                if isinstance(creation_date, str):
+                    from dateutil import parser
+                    try:
+                        creation_date = parser.parse(creation_date)
+                    except:
+                        pass
+                if hasattr(creation_date, 'tzinfo') and creation_date.tzinfo is not None:
+                    creation_date = creation_date.replace(tzinfo=None)
+                
+                age_days = (datetime.now() - creation_date).days
+                return {"age_days": age_days, "error": None}
         return {"age_days": None, "error": "Creation date not found"}
     except Exception as e:
         return {"age_days": None, "error": str(e)}
 
 def scrape_for_phishing(url: str) -> dict:
-    # A simple heuristic web scraper
+    # A heuristic web scraper with structural DOM inspection
     try:
         domain = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url).netloc.split(':')[0]
         if not resolve_domain_ip(domain):
-            return {"score": 0, "error": "Domain does not resolve"}
+            return {"score": 0, "has_password_field": False, "has_hidden_iframe": False, "error": "Domain does not resolve"}
 
         if not url.startswith('http'):
             url = 'http://' + url
@@ -180,16 +192,21 @@ def scrape_for_phishing(url: str) -> dict:
         # Heuristics:
         # 1. Asking for password
         has_password_field = len(soup.find_all('input', type='password')) > 0
-        # 2. Hidden iframes
+        # 2. Hidden iframes (often used in credential harvesting clickjacking)
         has_hidden_iframe = len(soup.find_all('iframe', style=lambda value: value and 'display:none' in value.replace(' ', ''))) > 0
         
         score = 0
         if has_password_field: score += 1
         if has_hidden_iframe: score += 1
         
-        return {"score": score, "error": None}
+        return {
+            "score": score,
+            "has_password_field": has_password_field,
+            "has_hidden_iframe": has_hidden_iframe,
+            "error": None
+        }
     except Exception as e:
-        return {"score": 0, "error": str(e)}
+        return {"score": 0, "has_password_field": False, "has_hidden_iframe": False, "error": str(e)}
 
 @cached(cache=vt_cache)
 def check_virustotal(url: str) -> dict:
@@ -481,13 +498,19 @@ def detect_url_phishing(url: str) -> dict:
                 risk_score = min(0.99, risk_score + 0.10)
                 details.append("Uses a short-lived/free SSL certificate on unestablished domain")
 
-    if scrape_info["score"] > 0:
-        risk_score = min(0.99, risk_score + 0.30 * scrape_info["score"])
-        details.append(f"Scraper found {scrape_info['score']} suspicious credential harvesting elements")
+    if scrape_info.get("has_hidden_iframe"):
+        risk_score = min(0.99, risk_score + 0.35)
+        details.append("Scraper detected hidden iframe (Suspicious credential trapping)")
+    elif is_unauthorized_brand_lure and scrape_info.get("has_password_field"):
+        risk_score = min(0.99, risk_score + 0.30)
+        details.append("Scraper found credential harvesting password input on unauthorized brand domain (HIGH RISK)")
+    elif scrape_info.get("has_password_field") and (has_high_risk_tld or infra_info.get("is_tunnel_ddns")):
+        risk_score = min(0.99, risk_score + 0.25)
+        details.append("Scraper found credential inputs on suspicious/high-abuse infrastructure")
 
     # 2.7 Multi-Source Consensus Adjudication
     # State 1: Confirmed Clean Override — ONLY if domain is verified reputable (>180d) AND clean across all feeds AND not impersonating
-    if is_confirmed_reputable and vt_info.get("malicious", -1) == 0 and not gsb_info.get("malicious") and scrape_info.get("score") == 0 and not is_unauthorized_brand_lure:
+    if is_confirmed_reputable and vt_info.get("malicious", -1) == 0 and not gsb_info.get("malicious") and not is_unauthorized_brand_lure and not scrape_info.get("has_hidden_iframe"):
         risk_score = max(0.01, risk_score - 0.50)
         details.append("Reputation Consensus Override: Well-established domain (>180d) and clean multi-source history overruled ML suspicion (Safe)")
     elif not is_confirmed_reputable and vt_info.get("malicious", -1) == 0 and not gsb_info.get("malicious"):
@@ -497,22 +520,41 @@ def detect_url_phishing(url: str) -> dict:
             details.append("Zero-Day / Unrated Domain: Clean blacklist feeds are uncorroborated on unestablished domain; upholding brand phishing detection (Phishing/Blocked)")
         elif is_brand_adjacent_ambiguity:
             details.append("Brand-Adjacent Domain: Unrated domain referencing brand name without scam indicators; routed to Tier 2 Quarantine")
-        elif not detected_brand and tld not in HIGH_RISK_TLDS and not infra_info.get("is_tunnel_ddns") and not has_scam_keyword:
-            # Brand-neutral fresh/unrated domain with 0 harvesting elements and 0 blacklist hits
-            if scrape_info.get("score") == 0:
-                if ml_is_phish:
-                    # De-escalate uncorroborated lexical ML suspicion (e.g. hyphenated names or long paths in small business sites)
-                    # to Safe when DOM structure, threat feeds, TLD, and keyword checks are all cleanly negative.
-                    risk_score = 0.15
-                    details.append("Brand-Neutral Domain: Clean multi-source threat feeds, zero brand lures, and clean DOM; uncorroborated lexical ML suspicion resolved to Safe (85.0%)")
+        elif not detected_brand and tld not in HIGH_RISK_TLDS and not infra_info.get("is_tunnel_ddns"):
+            # Predatory financial/phishing lure keywords
+            PREDATORY_LURE_KEYWORDS = {
+                "free", "bonus", "reward", "wallet", "recover", "unlock",
+                "urgent", "suspended", "prize", "lottery", "crypto", "airdrop", "claim"
+            }
+            has_predatory_keyword = any(kw in url_lower for kw in PREDATORY_LURE_KEYWORDS)
+
+            REPUTABLE_PAAS_PROVIDERS = {
+                "vercel.app", "netlify.app", "github.io", "pages.dev", "web.app",
+                "firebaseapp.com", "onrender.com", "render.com", "herokuapp.com", "gitlab.io"
+            }
+            is_reputable_paas = domain_etld1 in REPUTABLE_PAAS_PROVIDERS
+
+            if not has_predatory_keyword:
+                if not scrape_info.get("has_hidden_iframe"):
+                    if is_reputable_paas:
+                        # Authentic student / developer / SaaS project application on verified cloud host (e.g. Vercel, Netlify)
+                        risk_score = 0.08
+                        details.append(f"Brand-Neutral Application: Verified cloud developer platform ({domain_etld1}); clean threat intelligence with zero brand impersonation (Safe 92.0%)")
+                    elif scrape_info.get("score", 0) == 0:
+                        risk_score = 0.10
+                        details.append("Brand-Neutral Domain: Clean multi-source threat feeds, zero brand lures, and clean DOM; ML suspicion resolved to Safe (90.0%)")
+                    else:
+                        # Brand-neutral domain with a standard login form
+                        risk_score = 0.15
+                        details.append("Brand-Neutral Application: Standard authentication portal with zero brand lures and clean threat feeds (Safe 85.0%)")
                 else:
-                    risk_score = min(risk_score, 0.10)
-                    details.append("Brand-Neutral Domain: Threat feeds clean; ML and heuristics confirm Safe")
+                    # Deceptive DOM structural anomaly (hidden iframe)
+                    risk_score = 0.55
+                    details.append("Brand-Neutral Domain: Deceptive DOM structural elements (hidden iframe); routed to Tier 2 Quarantine")
             else:
-                # If fresh/unrated domain contains unexpected DOM elements (e.g. password fields or hidden iframes)
-                # without an overt brand match, quarantine at Tier 2 for human review
-                risk_score = 0.52
-                details.append("Brand-Neutral Domain: Unrated domain with suspicious DOM structural elements; routed to Tier 2 Quarantine")
+                # Unrated domain with predatory financial lure keywords
+                risk_score = 0.65
+                details.append("Brand-Neutral Domain: Unrated domain with predatory lure keywords; routed to Tier 2 Quarantine")
 
     # 2.8 Graduated Friction Response Tiers
     if risk_score > 0.74:
