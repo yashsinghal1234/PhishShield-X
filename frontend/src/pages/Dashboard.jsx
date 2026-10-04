@@ -127,9 +127,91 @@ const buildMonthlyData = (history) => {
 };
 
 
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6 font-['Poppins'] animate-pulse">
+      {/* Top Title Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="h-8 w-44 bg-slate-200 rounded-xl" />
+          <div className="h-4 w-72 bg-slate-100 rounded-lg mt-2" />
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-28 bg-slate-200 rounded-xl" />
+          <div className="h-10 w-32 bg-slate-200 rounded-xl" />
+        </div>
+      </div>
+
+      {/* 4 Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-3xl bg-white border border-[#E5E9EB] p-5.5 h-42 flex flex-col justify-between shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="h-4 w-24 bg-slate-200 rounded" />
+              <div className="h-10 w-10 bg-slate-100 rounded-full" />
+            </div>
+            <div>
+              <div className="h-8 w-20 bg-slate-200 rounded-lg" />
+              <div className="h-4 w-32 bg-slate-100 rounded mt-2" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 rounded-3xl bg-white border border-[#E5E9EB] p-6 h-80 shadow-sm flex flex-col justify-between">
+          <div className="h-6 w-40 bg-slate-200 rounded" />
+          <div className="h-56 bg-slate-100 rounded-2xl" />
+        </div>
+        <div className="rounded-3xl bg-white border border-[#E5E9EB] p-6 h-80 shadow-sm flex flex-col justify-between">
+          <div className="h-6 w-36 bg-slate-200 rounded" />
+          <div className="h-48 w-48 bg-slate-100 rounded-full mx-auto my-auto" />
+        </div>
+      </div>
+
+      {/* Bottom Table Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 rounded-3xl bg-white border border-[#E5E9EB] p-6 h-64 shadow-sm">
+          <div className="h-6 w-36 bg-slate-200 rounded mb-4" />
+          <div className="space-y-3">
+            {[1, 2, 3].map((r) => (
+              <div key={r} className="h-10 bg-slate-100 rounded-xl" />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-3xl bg-white border border-[#E5E9EB] p-6 h-64 shadow-sm">
+          <div className="h-6 w-36 bg-slate-200 rounded mb-4" />
+          <div className="space-y-3">
+            {[1, 2, 3].map((r) => (
+              <div key={r} className="h-10 bg-slate-100 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
-  const [history, setHistory] = useState([]);
+  const [stats, setStats] = useState(() => {
+    try {
+      const cached = localStorage.getItem('phishshield_cached_stats');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [history, setHistory] = useState(() => {
+    try {
+      const cached = localStorage.getItem('phishshield_cached_history');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [analysisMode, setAnalysisMode] = useState('day');
   const [selectedDayLabel, setSelectedDayLabel] = useState(null);
   const [hoveredSegment, setHoveredSegment] = useState(null);
@@ -137,22 +219,29 @@ export default function Dashboard() {
   useEffect(() => {
     Promise.allSettled([
       axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/stats`),
-      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/history?limit=700`)
+      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/history?limit=100`)
     ])
       .then(([statsResult, historyResult]) => {
         if (statsResult.status === 'fulfilled') {
           setStats(statsResult.value.data);
-        } else {
+          try {
+            localStorage.setItem('phishshield_cached_stats', JSON.stringify(statsResult.value.data));
+          } catch {}
+        } else if (!stats) {
           throw statsResult.reason;
         }
 
         if (historyResult.status === 'fulfilled') {
-          setHistory(Array.isArray(historyResult.value.data) ? historyResult.value.data : []);
+          const hData = Array.isArray(historyResult.value.data) ? historyResult.value.data : [];
+          setHistory(hData);
+          try {
+            localStorage.setItem('phishshield_cached_history', JSON.stringify(hData));
+          } catch {}
         }
       })
       .catch((err) => {
         console.error("Could not fetch stats", err);
-        setStats({ error: true });
+        if (!stats) setStats({ error: true });
       });
   }, []);
 
@@ -191,7 +280,7 @@ export default function Dashboard() {
     return [...dayPieData].sort((a, b) => b.value - a.value)[0];
   }, [hoveredSegment, dayPieData]);
 
-  if (!stats) return <div className="text-[#64748B] p-8 font-medium">Loading Dashboard...</div>;
+  if (!stats) return <DashboardSkeleton />;
   if (stats.error) return <div className="text-[#DC2626] p-8 font-medium">Failed to connect to backend. Please check backend service.</div>;
 
   const totalScansVal = stats.total_scans ?? 0;

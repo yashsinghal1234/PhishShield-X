@@ -13,6 +13,7 @@ if sys.platform == "win32":
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import func, case
 from typing import List, Optional
 import cv2
 import numpy as np
@@ -38,6 +39,12 @@ import database, models, schemas, ml_services
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(title="PhishShield-X API", version="0.1.0")
+
+@app.on_event("startup")
+def startup_event():
+    """Warm up machine learning models in a non-blocking background daemon thread."""
+    import threading
+    threading.Thread(target=ml_services.load_ai_models, daemon=True).start()
 
 # Allow frontend to connect
 app.add_middleware(
@@ -264,22 +271,38 @@ def get_stats(db: Session = Depends(get_db)):
     seven_days_ago = now - timedelta(days=7)
     fourteen_days_ago = now - timedelta(days=14)
 
-    total = db.query(models.DetectionHistory).count()
-    phishing = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Phishing").count()
-    suspicious = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Suspicious").count()
-    safe = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Safe").count()
-    
-    # Current week
-    c_total = db.query(models.DetectionHistory).filter(models.DetectionHistory.timestamp >= seven_days_ago).count()
-    c_phishing = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Phishing", models.DetectionHistory.timestamp >= seven_days_ago).count()
-    c_suspicious = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Suspicious", models.DetectionHistory.timestamp >= seven_days_ago).count()
-    c_safe = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Safe", models.DetectionHistory.timestamp >= seven_days_ago).count()
+    # Single-pass aggregation query for ultra-fast response
+    stats_agg = db.query(
+        func.count(models.DetectionHistory.id).label("total"),
+        func.sum(case((models.DetectionHistory.prediction == "Phishing", 1), else_=0)).label("phishing"),
+        func.sum(case((models.DetectionHistory.prediction == "Suspicious", 1), else_=0)).label("suspicious"),
+        func.sum(case((models.DetectionHistory.prediction == "Safe", 1), else_=0)).label("safe"),
+        # Current 7 days
+        func.sum(case((models.DetectionHistory.timestamp >= seven_days_ago, 1), else_=0)).label("c_total"),
+        func.sum(case(((models.DetectionHistory.prediction == "Phishing") & (models.DetectionHistory.timestamp >= seven_days_ago), 1), else_=0)).label("c_phishing"),
+        func.sum(case(((models.DetectionHistory.prediction == "Suspicious") & (models.DetectionHistory.timestamp >= seven_days_ago), 1), else_=0)).label("c_suspicious"),
+        func.sum(case(((models.DetectionHistory.prediction == "Safe") & (models.DetectionHistory.timestamp >= seven_days_ago), 1), else_=0)).label("c_safe"),
+        # Previous 7-14 days
+        func.sum(case(((models.DetectionHistory.timestamp >= fourteen_days_ago) & (models.DetectionHistory.timestamp < seven_days_ago), 1), else_=0)).label("p_total"),
+        func.sum(case(((models.DetectionHistory.prediction == "Phishing") & (models.DetectionHistory.timestamp >= fourteen_days_ago) & (models.DetectionHistory.timestamp < seven_days_ago), 1), else_=0)).label("p_phishing"),
+        func.sum(case(((models.DetectionHistory.prediction == "Suspicious") & (models.DetectionHistory.timestamp >= fourteen_days_ago) & (models.DetectionHistory.timestamp < seven_days_ago), 1), else_=0)).label("p_suspicious"),
+        func.sum(case(((models.DetectionHistory.prediction == "Safe") & (models.DetectionHistory.timestamp >= fourteen_days_ago) & (models.DetectionHistory.timestamp < seven_days_ago), 1), else_=0)).label("p_safe")
+    ).first()
 
-    # Previous week
-    p_total = db.query(models.DetectionHistory).filter(models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
-    p_phishing = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Phishing", models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
-    p_suspicious = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Suspicious", models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
-    p_safe = db.query(models.DetectionHistory).filter(models.DetectionHistory.prediction == "Safe", models.DetectionHistory.timestamp >= fourteen_days_ago, models.DetectionHistory.timestamp < seven_days_ago).count()
+    total = int(stats_agg.total or 0)
+    phishing = int(stats_agg.phishing or 0)
+    suspicious = int(stats_agg.suspicious or 0)
+    safe = int(stats_agg.safe or 0)
+
+    c_total = int(stats_agg.c_total or 0)
+    c_phishing = int(stats_agg.c_phishing or 0)
+    c_suspicious = int(stats_agg.c_suspicious or 0)
+    c_safe = int(stats_agg.c_safe or 0)
+
+    p_total = int(stats_agg.p_total or 0)
+    p_phishing = int(stats_agg.p_phishing or 0)
+    p_suspicious = int(stats_agg.p_suspicious or 0)
+    p_safe = int(stats_agg.p_safe or 0)
 
     recent = db.query(models.DetectionHistory).order_by(models.DetectionHistory.timestamp.desc()).limit(5).all()
     

@@ -31,45 +31,89 @@ ssl_cache = TTLCache(maxsize=2000, ttl=300)
 
 load_dotenv()
 
-# Load models if they exist
+import threading
+
+# Global model state
 email_model = None
 url_model = None
+deep_phish_model = None
+tokenizer = None
+m3_early_fusion_model = None
 top_domains = set()
 
-try:
-    if os.path.exists("email_model.pkl"):
-        email_model = joblib.load("email_model.pkl")
-    if os.path.exists("url_model.pkl"):
-        from features import URLFeatureExtractor # Needs to be imported for joblib to unpickle
-        url_model = joblib.load("url_model.pkl")
-        
-    # Load deep learning models
-    deep_phish_model = None
-    tokenizer = None
-    if os.path.exists("deep_phish_model.h5"):
-        import tensorflow as tf
-        deep_phish_model = tf.keras.models.load_model("deep_phish_model.h5")
-    if os.path.exists("tokenizer.pkl"):
-        with open("tokenizer.pkl", "rb") as handle:
-            tokenizer = pickle.load(handle)
-    
-    m3_early_fusion_model = None
-    if os.path.exists("m3_early_fusion_weights.weights.h5"):
-        try:
-            from quishing_engine import build_m3_early_fusion_model
-            m3_early_fusion_model = build_m3_early_fusion_model()
-            m3_early_fusion_model.load_weights("m3_early_fusion_weights.weights.h5")
-            print("Loaded M3 (Multimodal Early Fusion + Softmax) Production Neural Weights successfully!")
-        except Exception as me:
-            print(f"Error loading M3 Early Fusion model: {me}")
-    
-    # Load whitelist
-    if os.path.exists("data/top_domains.txt"):
-        with open("data/top_domains.txt", "r") as f:
+_models_loaded = False
+_model_lock = threading.Lock()
+
+# Load whitelist fast at import (<0.005s)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_top_domains_path = os.path.join(BASE_DIR, "data", "top_domains.txt")
+if os.path.exists(_top_domains_path):
+    try:
+        with open(_top_domains_path, "r", encoding="utf-8") as f:
             for line in f:
                 top_domains.add(line.strip().lower())
-except Exception as e:
-    print(f"Error loading models or whitelist: {e}")
+    except Exception as e:
+        print(f"Error reading top_domains whitelist: {e}")
+
+def load_ai_models():
+    """Background or lazy loader for heavy ML and Deep Learning models."""
+    global email_model, url_model, deep_phish_model, tokenizer, m3_early_fusion_model, _models_loaded
+    with _model_lock:
+        if _models_loaded:
+            return
+        
+        # 1. URL Random Forest Model (84MB)
+        url_model_path = os.path.join(BASE_DIR, "url_model.pkl")
+        if os.path.exists(url_model_path) and url_model is None:
+            try:
+                from features import URLFeatureExtractor
+                url_model = joblib.load(url_model_path)
+            except Exception as e:
+                print(f"Error loading url_model.pkl: {e}")
+
+        # 2. Email Logistic Regression Model
+        email_model_path = os.path.join(BASE_DIR, "email_model.pkl")
+        if os.path.exists(email_model_path) and email_model is None:
+            try:
+                email_model = joblib.load(email_model_path)
+            except Exception as e:
+                print(f"Error loading email_model.pkl: {e}")
+
+        # 3. URL Character Tokenizer
+        tokenizer_path = os.path.join(BASE_DIR, "tokenizer.pkl")
+        if os.path.exists(tokenizer_path) and tokenizer is None:
+            try:
+                with open(tokenizer_path, "rb") as handle:
+                    tokenizer = pickle.load(handle)
+            except Exception as e:
+                print(f"Error loading tokenizer.pkl: {e}")
+
+        # 4. Deep PhishNet Model
+        deep_path = os.path.join(BASE_DIR, "deep_phish_model.h5")
+        if os.path.exists(deep_path) and deep_phish_model is None:
+            try:
+                import tensorflow as tf
+                deep_phish_model = tf.keras.models.load_model(deep_path)
+            except Exception as e:
+                print(f"Error loading deep_phish_model.h5: {e}")
+
+        # 5. M3 Multimodal Early Fusion Model
+        m3_weights_path = os.path.join(BASE_DIR, "m3_early_fusion_weights.weights.h5")
+        if os.path.exists(m3_weights_path) and m3_early_fusion_model is None:
+            try:
+                from quishing_engine import build_m3_early_fusion_model
+                m3_early_fusion_model = build_m3_early_fusion_model()
+                m3_early_fusion_model.load_weights(m3_weights_path)
+                print("Loaded M3 (Multimodal Early Fusion + Softmax) Production Neural Weights successfully!")
+            except Exception as e:
+                print(f"Error loading M3 Early Fusion model: {e}")
+
+        _models_loaded = True
+
+def ensure_models_loaded():
+    """Ensure heavy AI models are loaded before running detection inference."""
+    if not _models_loaded:
+        load_ai_models()
 
 def extract_etld_plus_one(domain_str: str) -> str:
     """
@@ -288,6 +332,7 @@ def detect_url_phishing(url: str) -> dict:
                         }
 
     # 1. Ensemble ML Prediction (Deep PhishNet-Hybrid + Tabular Feature Model)
+    ensure_models_loaded()
     deep_prob = None
     rf_prob = None
 
@@ -512,6 +557,7 @@ def detect_url_phishing(url: str) -> dict:
     }
 
 def detect_email_phishing(content: str) -> dict:
+    ensure_models_loaded()
     if email_model:
         try:
             prob = email_model.predict_proba([content])[0][1]
@@ -660,6 +706,9 @@ def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
 
     details = []
     quishing_anomaly_score = 0.0
+
+    # 0. Ensure neural weights & models are loaded
+    ensure_models_loaded()
 
     # 1. M3 Multimodal Early Fusion (Vision + Lexical -> Softmax, Calibrated ECE 0.0236)
     m3_res = evaluate_m3_early_fusion(img, decoded_payload, model=m3_early_fusion_model, tokenizer=tokenizer)

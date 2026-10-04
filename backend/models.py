@@ -8,7 +8,7 @@ class DetectionHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     scan_type = Column(String, index=True) # url, email, qr
     input_data = Column(Text) # the url, email snippet, or qr decoded content
-    prediction = Column(String) # Safe or Phishing
+    prediction = Column(String, index=True) # Safe or Phishing
     confidence = Column(Float)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
     details = Column(Text, nullable=True) # for XAI explanations later
