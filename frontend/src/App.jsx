@@ -102,6 +102,12 @@ function Sidebar() {
 }
 
 function App() {
+  React.useEffect(() => {
+    // Proactively warm up cloud backend (e.g. Render spin-up) on initial site entry
+    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    fetch(`${backendUrl}/health`, { mode: 'no-cors' }).catch(() => {});
+  }, []);
+
   return (
     <Router>
       <div className="min-h-screen bg-[#F4F7F6] text-[#0F1720] font-['Poppins']">

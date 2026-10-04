@@ -12,12 +12,8 @@ export default function UserControls() {
         <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-[#DC2626] ring-2 ring-white" />
       </button>
 
-      <div className="h-10 w-10 rounded-full overflow-hidden border border-[#E5E9EB] shadow-sm">
-        <img
-          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80"
-          alt="User profile"
-          className="h-full w-full object-cover"
-        />
+      <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-[#1F6A45] to-[#34845B] text-white flex items-center justify-center font-bold text-xs shadow-sm border border-[#E5E9EB]">
+        YS
       </div>
     </div>
   );
