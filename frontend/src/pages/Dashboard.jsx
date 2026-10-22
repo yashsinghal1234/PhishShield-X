@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Calendar,
   Download,
+  Puzzle,
   MoreHorizontal,
   SlidersHorizontal,
   CheckCircle2,
@@ -373,6 +374,16 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-3">
+          <a
+            href="/phishshield-extension-v1.1.0.zip"
+            download="PhishShield-EDL-Extension-v1.1.0.zip"
+            className="flex items-center gap-2 rounded-xl bg-white border border-[#1F6A45]/30 px-4 py-2.5 text-sm font-medium text-[#1F6A45] shadow-sm hover:bg-[#EAF5F0] transition-colors cursor-pointer"
+            title="Download the PhishShield-EDL browser extension (Manifest V3)"
+          >
+            <Puzzle size={16} />
+            <span>Get Extension</span>
+          </a>
+
           <button
             type="button"
             className="flex items-center gap-2 rounded-xl bg-white border border-[#E5E9EB] px-4 py-2.5 text-sm font-medium text-[#334155] shadow-sm hover:bg-[#F8FAFC] transition-colors"

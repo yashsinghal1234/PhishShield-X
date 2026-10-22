@@ -1,7 +1,23 @@
 // PhishShield-EDL Extension Background Service Worker (Manifest V3)
 // Usable Security Architecture: eTLD+1 Tiered-TTL Caching, Habituation Reduction & Override Guardrails
-const API_BASE = "http://localhost:8000";
 const BLOCKED_PAGE = chrome.runtime.getURL("blocked.html");
+
+const API_BASE_LOCAL = "http://localhost:8000";
+const API_BASE_CLOUD = "https://phishshield-x.onrender.com";
+let resolvedApiBase = null;
+
+// Resolve once per service-worker lifetime: prefer a locally running backend;
+// fall back to the deployed Render gateway (also warms up the free-tier instance).
+async function getApiBase() {
+  if (resolvedApiBase) return resolvedApiBase;
+  try {
+    const res = await fetch(`${API_BASE_LOCAL}/health`, { signal: AbortSignal.timeout(1500) });
+    resolvedApiBase = res.ok ? API_BASE_LOCAL : API_BASE_CLOUD;
+  } catch {
+    resolvedApiBase = API_BASE_CLOUD;
+  }
+  return resolvedApiBase;
+}
 
 // Redirect a tab to the Tier-1 interstitial. The verdict record is persisted
 // under `block_<urlHash>` so blocked.js can render forensic details after the
@@ -251,7 +267,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
       chrome.action.setBadgeBackgroundColor({ tabId: tabId, color: "#EF4444" });
       chrome.action.setBadgeText({ tabId: tabId, text: "PHISH" });
       // Telemetry for blocked cache-hit visit (campaign repeat traffic)
-      fetch(`${API_BASE}/api/extension/log`, {
+      fetch(`${await getApiBase()}/api/extension/log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -299,7 +315,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
 
     // Telemetry log cached visit (proves 70-80% fatigue reduction in field study)
     if (cachedEntry.ttl_tier !== "tier3_safe" || isOverrideActive) {
-      fetch(`${API_BASE}/api/extension/log`, {
+      fetch(`${await getApiBase()}/api/extension/log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -324,7 +340,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
   // 4. Cache Miss — Query Evidential Backend
   const t0 = performance.now();
   try {
-    const res = await fetch(`${API_BASE}/api/detect/url`, {
+    const res = await fetch(`${await getApiBase()}/api/detect/url`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url: url })
@@ -386,7 +402,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
     }
 
     // Telemetry log for field evaluation
-    fetch(`${API_BASE}/api/extension/log`, {
+    fetch(`${await getApiBase()}/api/extension/log`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -444,7 +460,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             // Multimodal backend verification (M3 serving head)
             const formData = new FormData();
             formData.append("file", blob, "auto_qr.png");
-            const api = await fetch(`${API_BASE}/api/detect/qr`, {
+            const api = await fetch(`${await getApiBase()}/api/detect/qr`, {
               method: "POST",
               body: formData
             });
@@ -454,7 +470,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const phish = data.prediction === "Phishing";
 
             const srcHash = (await sha256(cand.src)).slice(0, 12);
-            await fetch(`${API_BASE}/api/extension/log`, {
+            await fetch(`${await getApiBase()}/api/extension/log`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -505,7 +521,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "REPORT_FALSE_POSITIVE") {
     (async () => {
       try {
-        await fetch(`${API_BASE}/api/extension/log`, {
+        await fetch(`${await getApiBase()}/api/extension/log`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -555,7 +571,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
 
         // Log override to backend telemetry
-        await fetch(`${API_BASE}/api/extension/log`, {
+        await fetch(`${await getApiBase()}/api/extension/log`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -599,7 +615,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       const blob = await res.blob();
       const formData = new FormData();
       formData.append("file", blob, "scanned_qr.png");
-      const scanRes = await fetch(`${API_BASE}/api/detect/qr`, {
+      const scanRes = await fetch(`${await getApiBase()}/api/detect/qr`, {
         method: "POST",
         body: formData
       });

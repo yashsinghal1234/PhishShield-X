@@ -11,6 +11,14 @@ import requests
 import re
 from typing import Dict, Tuple, Optional, List
 
+# Optional high-robustness decode engines (graceful degradation if unavailable):
+# zxing-cpp ships as a prebuilt wheel (no native DLL dependencies) and handles
+# stylized / logo-masked / transparent QR symbologies particularly well.
+try:
+    import zxingcpp as _ZXINGCPP
+except Exception:
+    _ZXINGCPP = None
+
 # Schemes frequently weaponized in Quishing attacks
 HIGH_RISK_SCHEMES = {
     "WIFI": "Rogue Wi-Fi Access Point Exploitation",
@@ -48,10 +56,23 @@ def preprocess_image_variants(img: np.ndarray) -> List[np.ndarray]:
     2. Scaled / CLAHE Contrast (handles blurry / compressed captures)
     3. Otsu & Adaptive Thresholding (handles logo-masked / uneven lighting)
     4. Inverted dark-mode variants (handles white-on-black QR codes)
+    5. Alpha-transparency compositing (handles transparent-background stylized QRs)
     """
     variants = []
     if img is None:
         return variants
+
+    # Primary 0: Transparent-background PNGs (qrfun / QR-monkey exports) — the
+    # alpha channel carries the "white" of the QR, compositing onto white makes
+    # the symbols decodable.
+    if img.ndim == 3 and img.shape[2] == 4:
+        try:
+            alpha = img[:, :, 3:4].astype(np.float32) / 255.0
+            rgb = img[:, :, :3].astype(np.float32)
+            merged = (rgb * alpha + 255.0 * (1.0 - alpha)).astype(np.uint8)
+            variants.append(merged)
+        except Exception:
+            pass
 
     raw_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
     h, w = raw_gray.shape[:2]
@@ -72,6 +93,17 @@ def preprocess_image_variants(img: np.ndarray) -> List[np.ndarray]:
     _, otsu = cv2.threshold(padded_white, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     variants.append(otsu)
 
+    # Priority 2b: Morphological closing (bridges dotted/round-module stylized QRs).
+    # NOTE: OpenCV treats white as foreground, and QR ink is black — so closing
+    # the ink requires inverting before/after the morphological close.
+    try:
+        close_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        ink_island = cv2.bitwise_not(otsu)
+        closed_ink = cv2.morphologyEx(ink_island, cv2.MORPH_CLOSE, close_kernel, iterations=2)
+        variants.append(cv2.bitwise_not(closed_ink))
+    except Exception:
+        pass
+
     adapt = cv2.adaptiveThreshold(padded_white, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 21, 5)
     variants.append(adapt)
 
@@ -91,13 +123,27 @@ def preprocess_image_variants(img: np.ndarray) -> List[np.ndarray]:
 def robust_decode_qr(img: np.ndarray, pyzbar_decode_func=None) -> Tuple[Optional[str], Optional[np.ndarray]]:
     """
     Robust Multi-Engine QR Decoder.
-    Tries Pyzbar first, then OpenCV QRCodeDetectorAruco (resilient to central logo occlusions),
-    and standard OpenCV QRCodeDetector across all quiet-zone padded and enhanced image variants.
+    Strategy order across all quiet-zone padded and enhanced variants:
+      1. zxing-cpp (prebuilt wheel, no native DLL deps, strong on stylized QRs)
+      2. Pyzbar (if the native zbar DLL loads on this machine)
+      3. OpenCV QRCodeDetectorAruco (resilient to central logo occlusions), then standard QRCodeDetector
     """
     if img is None:
         return None, None
 
     variants = preprocess_image_variants(img)
+
+    # Strategy 0: zxing-cpp across all enhanced variants
+    if _ZXINGCPP is not None:
+        for var in variants:
+            try:
+                results = _ZXINGCPP.read_barcodes(var, try_downscale=True)
+                if results:
+                    data = results[0].text
+                    if data and len(data.strip()) > 0:
+                        return data.strip(), var
+            except Exception:
+                continue
 
     # Strategy 1: PyZbar across all enhanced variants
     if pyzbar_decode_func is not None:

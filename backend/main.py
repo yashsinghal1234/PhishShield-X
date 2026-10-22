@@ -248,6 +248,13 @@ async def scan_qr(file: UploadFile = File(...), db: Session = Depends(get_db)):
 
         qr_data, enhanced_img = robust_decode_qr(img, pyzbar_decode_func=decode)
         if not qr_data:
+            # Second pass: preserve the alpha channel — stylized QR generators
+            # (qrfun/QR-monkey etc.) often export PNGs with transparent
+            # backgrounds where the alpha channel effectively IS the QR's white.
+            raw = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+            if raw is not None:
+                qr_data, enhanced_img = robust_decode_qr(raw, pyzbar_decode_func=decode)
+        if not qr_data:
             raise HTTPException(status_code=400, detail="No readable QR code found in image (checked multiple contrast/inverted variants).")
 
         result = ml_services.detect_qr_phishing(qr_data, img)
