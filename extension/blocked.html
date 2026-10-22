@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blocked by PhishShield-EDL</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(ellipse at top, #1b1035 0%, var(--bg) 55%);
+      color: var(--text);
+      padding: 24px;
+    }
+    .card {
+      max-width: 560px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      border-radius: 16px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+    }
+    .icon {
+      width: 72px;
+      height: 72px;
+      margin-bottom: 4px;
+      filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.45));
+    }
+    h1 {
+      font-size: 24px;
+      margin: 8px 0 4px;
+      color: var(--danger);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .url-chip {
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--warn);
+      word-break: break-all;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .advisory {
+      background: rgba(239, 68, 68, 0.10);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .metric {
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 6px;
+    }
+    .metric .val { font-size: 15px; font-weight: 700; }
+    .metric .lbl {
+      font-size: 9px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 3px;
+    }
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    button {
+      padding: 11px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-safe {
+      background: #10b981;
+      border: 1px solid #10b981;
+      color: #052e1a;
+    }
+    .btn-safe:hover { background: #34d399; }
+    .btn-report {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-report:hover { border-color: var(--muted); color: var(--text); }
+    .guardrail-note {
+      margin-top: 18px;
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img class="icon" src="icons/icon128.png" alt="PhishShield-EDL">
+    <h1 id="block-title">Threat Blocked</h1>
+    <div class="subtitle" id="block-subtitle">PhishShield-EDL prevented access to this page.</div>
+
+    <div class="url-chip" id="blocked-url">Loading…</div>
+
+    <div class="advisory" id="advisory">
+      The evidential deep learning engine classified this destination as a confirmed phishing threat with Tier-1 certainty.
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="val" id="m-conf">--</div>
+        <div class="lbl">Confidence</div>
+      </div>
+      <div class="metric">
+        <div class="val" id="m-u">--</div>
+        <div class="lbl">Uncertainty (u)</div>
+      </div>
+      <div class="metric">
+        <div class="val" id="m-s">--</div>
+        <div class="lbl">Dirichlet (S)</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-safe" id="btn-back">← Back to Safety</button>
+      <button class="btn-report" id="btn-report">Report Misclassification</button>
+    </div>
+
+    <div class="guardrail-note">
+      Tier-1 malicious blocks are non-overridable by policy (poison-resilient guardrail design).
+      Anonymous SHA-256 telemetry is logged for field reliability evaluation only.
+    </div>
+  </div>
+  <script src="blocked.js"></script>
+</body>
+</html>

@@ -193,6 +193,7 @@ Evaluated across a full **5-Fold Stratified Cross-Validation Protocol** with str
 | **Computer Vision** | OpenCV (cv2), PyZbar, CLAHE contrast equalization, Perceptual dHash |
 | **Threat Intel / OSINT** | VirusTotal v3 REST API, Google Safe Browsing v4, Python-WHOIS, SSL Sockets |
 | **Browser Automation** | Playwright headless Chromium for real-time live page rendering |
+| **Browser Extension** | Chrome/Edge Manifest V3, Vanilla JS Service Worker, Content Scripts, OffscreenCanvas QR signature detection, chrome.notifications |
 | **Containerization** | Docker, Docker Compose |
 
 ---
@@ -233,6 +234,19 @@ npm run dev
 ```
 
 The web dashboard will be accessible at: `http://localhost:5173`.
+
+### 4. Browser Extension (Chrome / Edge — Manifest V3)
+1. Open `chrome://extensions` and enable **Developer mode**.
+2. Click **Load unpacked** and select the `extension/` folder.
+3. Keep the FastAPI backend running on port 8000 (`API_BASE` is configured in `extension/background.js`). Without it, the shield degrades silently (no badges).
+
+**Extension capabilities:**
+* **Passive real-time URL verdicts** — every top-level navigation is scanned; toolbar badge shows `OK` / `UNC` / `PHISH` with eTLD+1 tiered-TTL caching (7d safe / 4h uncertain / 24h phish) to reduce alert fatigue.
+* **Tier-1 block interstitial** — confirmed phishing (`tier1_phish`) redirects to a non-overridable forensic block page (`blocked.html`) exposing prediction, confidence, epistemic uncertainty (u), Dirichlet strength (S), and a "Report Misclassification" feedback channel logged to `/api/extension/log`.
+* **On-page warning banner** (`banner.js` content script) — Tier-2 evidentially uncertain sites show a habituation-aware top banner with a guardrailed **24h snooze** override; Tier-1 blocks are never overridable.
+* **Right-click QR scanning** — context-menu scan of any image via the M3 multimodal backend, surfaced as a system notification with confidence + uncertainty.
+* **Automatic passive QR defense (core Quishing U.S.P.)** — as the user browses, `qr_auto_scan.js` harvests square-ish images/canvases, the background worker filters them via a client-side QR finder-pattern signature (1:1:3:1:1 run-length test on OffscreenCanvas, no network cost for normal images), and only QR-like payloads hit the M3 multimodal backend. A phishing QR embedded in a webmail body or page triggers the red `PHISH` badge, a sticky system notification ("Do NOT scan this QR with your phone"), a page-scoped alert in the popup, and `auto_qr_phishing` / `auto_qr_safe` telemetry for field precision/recall evaluation — all before the user ever lifts their phone to scan.
+* **Field ECE telemetry** — anonymous SHA-256 hashed visit/override logs written by the backend to `backend/logs/extension_field_ece.log` for the usability study.
 
 ---
 

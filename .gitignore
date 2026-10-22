@@ -11,6 +11,15 @@ backend/data/*.csv
 !backend/data/top_domains.txt
 backend/backend/
 
+# Extension field telemetry (IRB: hashed field-study logs stay local)
+backend/logs/
+
+# Training data caches (regenerable, heavyweight — do not push)
+backend/*.npz
+
+# Chrome extension build artifacts (none needed — plain JS, loaded unpacked)
+extension/*.zip
+
 # Node / Frontend
 frontend/node_modules/
 frontend/dist/
