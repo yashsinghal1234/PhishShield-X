@@ -16,6 +16,9 @@ class ScanResponse(BaseModel):
     details: Optional[str] = None
     friction_level: Optional[str] = "none"
     advisory_message: Optional[str] = None
+    edl_uncertainty: Optional[float] = None
+    edl_strength: Optional[float] = None
+    edl_prob: Optional[float] = None
     ip_address: Optional[str] = None
     location: Optional[str] = None
     asn: Optional[str] = None
@@ -25,6 +28,23 @@ class ScanResponse(BaseModel):
     brand: Optional[str] = None
     ssl_issuer: Optional[str] = None
     certificate_details: Optional[str] = None
+
+class ExtensionLogRequest(BaseModel):
+    url_hash: str
+    domain_hash: Optional[str] = None
+    u: Optional[float] = None
+    S: Optional[float] = None
+    edl_uncertainty: Optional[float] = None
+    edl_strength: Optional[float] = None
+    latency_ms: Optional[float] = None
+    prediction: Optional[str] = None
+    confidence: Optional[float] = None
+    action: Optional[str] = "scanned"
+    user_override: bool = False
+    cache_hit: bool = False
+    ttl_tier: Optional[str] = None
+    snoozed: bool = False
+    override_reused: bool = False
 
 class DetectionHistoryResponse(BaseModel):
     id: int

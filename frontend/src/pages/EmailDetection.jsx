@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import UserControls from '../components/UserControls';
-import { Mail, AlertTriangle, ShieldCheck, Loader2, UploadCloud } from 'lucide-react';
+import { Mail, AlertTriangle, ShieldCheck, Loader2, UploadCloud, Activity } from 'lucide-react';
 
 export default function EmailDetection() {
   const [content, setContent] = useState('');
@@ -157,6 +157,70 @@ export default function EmailDetection() {
                   <h4 className="text-sm font-bold text-[#334155] mb-1.5 uppercase tracking-wider">Analysis Details</h4>
                   <p className="text-[#475569] font-medium leading-relaxed">{result.details}</p>
                 </div>
+
+                {/* Evidential Deep Learning (EDL) Telemetry Card */}
+                {(result.edl_uncertainty !== undefined && result.edl_uncertainty !== null) && (
+                  <div className="mt-4 rounded-2xl bg-[#0F1720] text-white p-5 border border-[#1E293B]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                      <div className="flex items-center gap-2">
+                        <Activity className="h-4 w-4 text-indigo-400" />
+                        <h4 className="text-sm font-bold text-white tracking-tight">
+                          Evidential Deep Learning Telemetry (Email-EDL E6)
+                        </h4>
+                      </div>
+                      <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-semibold uppercase tracking-wider ${
+                        result.edl_uncertainty < 0.35 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                        result.edl_uncertainty <= 0.70 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                        'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                      }`}>
+                        {result.edl_uncertainty < 0.35 ? 'In-Distribution' :
+                         result.edl_uncertainty <= 0.70 ? 'Distributional Drift' :
+                         'Zero-Day Anomaly Alert'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="bg-[#1E293B]/60 rounded-xl p-3 border border-[#334155]/40">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                          Epistemic Uncertainty (u)
+                        </span>
+                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                          <span className={`text-xl font-bold font-mono ${
+                            result.edl_uncertainty < 0.35 ? 'text-emerald-400' :
+                            result.edl_uncertainty <= 0.70 ? 'text-amber-400' :
+                            'text-purple-400'
+                          }`}>
+                            {result.edl_uncertainty.toFixed(4)}
+                          </span>
+                          <span className="text-[10px] text-slate-400">/ 1.0</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-[#1E293B]/60 rounded-xl p-3 border border-[#334155]/40">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                          Dirichlet Evidence (S)
+                        </span>
+                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                          <span className="text-xl font-bold font-mono text-cyan-400">
+                            {result.edl_strength ? result.edl_strength.toFixed(2) : '--'}
+                          </span>
+                          <span className="text-[10px] text-slate-400">units</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-[#1E293B]/60 rounded-xl p-3 border border-[#334155]/40">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
+                          Cosine-EDL Risk (p_edl)
+                        </span>
+                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                          <span className="text-xl font-bold font-mono text-indigo-300">
+                            {result.edl_prob !== undefined && result.edl_prob !== null ? `${(result.edl_prob * 100).toFixed(1)}%` : '--'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

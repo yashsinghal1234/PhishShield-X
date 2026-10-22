@@ -90,6 +90,7 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
     osint_data = ml_services.get_osint_data(request.url)
     
     saved = save_history(db, "url", request.url, result)
+    shadow = result.get("shadow_telemetry") or {}
     return {
         "id": saved.id,
         "scan_type": "url",
@@ -106,7 +107,10 @@ def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
         "screenshot_url": osint_data.get("screenshot_url"),
         "brand": osint_data.get("brand"),
         "ssl_issuer": osint_data.get("ssl_issuer"),
-        "certificate_details": osint_data.get("certificate_details")
+        "certificate_details": osint_data.get("certificate_details"),
+        "edl_uncertainty": shadow.get("edl_uncertainty") if shadow.get("edl_uncertainty") is not None else shadow.get("u"),
+        "edl_strength": shadow.get("edl_strength") if shadow.get("edl_strength") is not None else shadow.get("S"),
+        "edl_prob": shadow.get("edl_prob")
     }
 
 def _normalize_page_url(url: str) -> str:
@@ -217,12 +221,18 @@ async def scan_email(
         raise HTTPException(status_code=400, detail="Must provide either a file or text content")
         
     saved = save_history(db, "email", input_data, result)
+    shadow = result.get("shadow_telemetry", {})
     return {
         "id": saved.id,
         "scan_type": "email",
         "prediction": result["prediction"],
         "confidence": result["confidence"],
-        "details": result["details"]
+        "details": result["details"],
+        "friction_level": result.get("friction_level", "none"),
+        "advisory_message": result.get("advisory_message"),
+        "edl_uncertainty": shadow.get("edl_uncertainty") if shadow.get("edl_uncertainty") is not None else shadow.get("u"),
+        "edl_strength": shadow.get("edl_strength") if shadow.get("edl_strength") is not None else shadow.get("S"),
+        "edl_prob": shadow.get("edl_prob")
     }
 
 @app.post("/api/detect/qr", response_model=schemas.ScanResponse)
@@ -317,3 +327,21 @@ def get_stats(db: Session = Depends(get_db)):
         "safe_trend": calculate_trend(c_safe, p_safe),
         "recent_threats": recent
     }
+
+@app.post("/api/extension/log")
+def log_extension_telemetry(req: schemas.ExtensionLogRequest):
+    import json
+    log_dir = os.path.join(os.path.dirname(__file__), "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, "extension_field_ece.log")
+    payload = req.dict()
+    if payload.get("u") is None and payload.get("edl_uncertainty") is not None:
+        payload["u"] = payload["edl_uncertainty"]
+    if payload.get("S") is None and payload.get("edl_strength") is not None:
+        payload["S"] = payload["edl_strength"]
+    payload["server_timestamp"] = datetime.utcnow().isoformat()
+    with open(log_file, "a", encoding="utf-8") as f:
+        f.write(json.dumps(payload) + "\n")
+    return {"status": "logged", "hash": req.url_hash}
+
+

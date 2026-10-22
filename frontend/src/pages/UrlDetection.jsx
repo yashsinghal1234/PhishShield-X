@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import UserControls from '../components/UserControls';
-import { Link2, AlertTriangle, ShieldCheck, Loader2, Globe, Server, MapPin, Calendar, Camera, Info, Copy, ExternalLink, Network, Database, Fingerprint } from 'lucide-react';
+import { Link2, AlertTriangle, ShieldCheck, Loader2, Globe, Server, MapPin, Calendar, Camera, Info, Copy, ExternalLink, Network, Database, Fingerprint, Activity } from 'lucide-react';
 
 export default function UrlDetection() {
   const [url, setUrl] = useState('');
@@ -147,6 +147,98 @@ export default function UrlDetection() {
                   <p className="text-xs mt-0.5 opacity-90 leading-relaxed">
                     {result.advisory_message}
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* Evidential Deep Learning (EDL) Telemetry Card */}
+            {(result.edl_uncertainty !== undefined && result.edl_uncertainty !== null) && (
+              <div className="rounded-3xl bg-[#0F1720] text-white p-6 shadow-md border border-[#1E293B]">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+                      <Activity className="h-5 w-5 text-indigo-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
+                        Evidential Deep Learning Telemetry
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                          PhishShield-EDL U6
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Second-order Dirichlet epistemic uncertainty & Dirichlet strength estimation
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-xs px-3 py-1.5 rounded-full font-semibold uppercase tracking-wider ${
+                    result.edl_uncertainty < 0.35 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                    result.edl_uncertainty <= 0.70 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                    'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                  }`}>
+                    {result.edl_uncertainty < 0.35 ? 'In-Distribution (Familiar)' :
+                     result.edl_uncertainty <= 0.70 ? 'Distributional Drift' :
+                     'Zero-Day Epistemic Alert'}
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  <div className="bg-[#1E293B]/60 rounded-2xl p-4 border border-[#334155]/40">
+                    <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase block mb-1">
+                      Epistemic Uncertainty (u = 2/S)
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-2xl font-bold font-mono ${
+                        result.edl_uncertainty < 0.35 ? 'text-emerald-400' :
+                        result.edl_uncertainty <= 0.70 ? 'text-amber-400' :
+                        'text-purple-400'
+                      }`}>
+                        {result.edl_uncertainty.toFixed(4)}
+                      </span>
+                      <span className="text-xs text-slate-400">/ 1.000</span>
+                    </div>
+                    <div className="w-full bg-slate-800/80 rounded-full h-1.5 mt-2.5 overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          result.edl_uncertainty < 0.35 ? 'bg-emerald-400' :
+                          result.edl_uncertainty <= 0.70 ? 'bg-amber-400' :
+                          'bg-purple-400'
+                        }`}
+                        style={{ width: `${Math.min(100, Math.max(5, result.edl_uncertainty * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-[#1E293B]/60 rounded-2xl p-4 border border-[#334155]/40">
+                    <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase block mb-1">
+                      Dirichlet Strength (S = Σ αₖ)
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold font-mono text-cyan-400">
+                        {result.edl_strength ? result.edl_strength.toFixed(2) : '--'}
+                      </span>
+                      <span className="text-xs text-slate-400">evidence units</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2 leading-tight">
+                      {result.edl_strength && result.edl_strength > 5.0 ? 'Strong empirical evidence base (S ≫ 2.0)' :
+                       result.edl_strength && result.edl_strength > 2.5 ? 'Moderate empirical support' :
+                       'Uninformative prior boundary (S ≈ 2.0)'}
+                    </p>
+                  </div>
+
+                  <div className="bg-[#1E293B]/60 rounded-2xl p-4 border border-[#334155]/40">
+                    <span className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase block mb-1">
+                      Cosine EDL Risk (p_edl)
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold font-mono text-indigo-300">
+                        {result.edl_prob !== undefined && result.edl_prob !== null ? `${(result.edl_prob * 100).toFixed(1)}%` : '--'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2 leading-tight">
+                      Cosine margin head with Outlier Exposure
+                    </p>
+                  </div>
                 </div>
               </div>
             )}

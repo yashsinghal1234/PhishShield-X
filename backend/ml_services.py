@@ -1,5 +1,7 @@
 import random
 import math
+import time
+import hashlib
 import joblib
 import os
 import whois
@@ -39,6 +41,10 @@ url_model = None
 deep_phish_model = None
 tokenizer = None
 m3_early_fusion_model = None
+url_edl_shadow_model = None
+url_edl_shadow_scaler = None
+email_edl_shadow_model = None
+email_edl_shadow_scaler = None
 top_domains = set()
 
 _models_loaded = False
@@ -57,7 +63,8 @@ if os.path.exists(_top_domains_path):
 
 def load_ai_models():
     """Background or lazy loader for heavy ML and Deep Learning models."""
-    global email_model, url_model, deep_phish_model, tokenizer, m3_early_fusion_model, _models_loaded
+    global email_model, url_model, deep_phish_model, tokenizer, m3_early_fusion_model
+    global url_edl_shadow_model, url_edl_shadow_scaler, email_edl_shadow_model, email_edl_shadow_scaler, _models_loaded
     with _model_lock:
         if _models_loaded:
             return
@@ -107,6 +114,47 @@ def load_ai_models():
                 print("Loaded M3 (Multimodal Early Fusion + Softmax) Production Neural Weights successfully!")
             except Exception as e:
                 print(f"Error loading M3 Early Fusion model: {e}")
+
+        # 6. URL-EDL Shadow Evaluation Model (Behind Flag)
+        ENABLE_URL_EDL_SHADOW = os.getenv("ENABLE_URL_EDL_SHADOW", "true").lower() in ("true", "1", "yes")
+        url_edl_weights_path = os.path.join(BASE_DIR, "url_edl_weights.weights.h5")
+        if ENABLE_URL_EDL_SHADOW and os.path.exists(url_edl_weights_path) and url_edl_shadow_model is None:
+            try:
+                from url_edl import build_url_edl_model
+                url_edl_shadow_model = build_url_edl_model(head_type='cosine')
+                url_edl_shadow_model.load_weights(url_edl_weights_path)
+                
+                cache_path = os.path.join(BASE_DIR, "url_data_cache_6000.npz")
+                if os.path.exists(cache_path):
+                    from sklearn.preprocessing import StandardScaler
+                    data = np.load(cache_path, allow_pickle=True)
+                    scaler = StandardScaler()
+                    scaler.fit(data["X_tab"])
+                    url_edl_shadow_scaler = scaler
+                print("Loaded URL-EDL Shadow Evaluation Model successfully!")
+            except Exception as e:
+                print(f"Error loading URL-EDL Shadow model: {e}")
+
+        # 7. Email-EDL Shadow Evaluation Model (Behind Flag)
+        ENABLE_EMAIL_EDL_SHADOW = os.getenv("ENABLE_EMAIL_EDL_SHADOW", "true").lower() in ("true", "1", "yes")
+        email_edl_weights_path = os.path.join(BASE_DIR, "email_edl_weights.weights.h5")
+        if ENABLE_EMAIL_EDL_SHADOW and os.path.exists(email_edl_weights_path) and email_edl_shadow_model is None:
+            try:
+                from email_edl import build_email_models
+                _, _, _, _, m_e6 = build_email_models(epoch_var=None, total_epochs=8)
+                m_e6.load_weights(email_edl_weights_path)
+                email_edl_shadow_model = m_e6
+                
+                cache_path = os.path.join(BASE_DIR, "email_features_10000.npz")
+                if os.path.exists(cache_path):
+                    from sklearn.preprocessing import StandardScaler
+                    data = np.load(cache_path, allow_pickle=True)
+                    scaler = StandardScaler()
+                    scaler.fit(data["X_tab"])
+                    email_edl_shadow_scaler = scaler
+                print("Loaded Email-EDL Shadow Evaluation Model successfully!")
+            except Exception as e:
+                print(f"Error loading Email-EDL Shadow model: {e}")
 
         _models_loaded = True
 
@@ -383,6 +431,60 @@ def detect_url_phishing(url: str) -> dict:
     ml_confidence = combined_prob if ml_is_phish else (1.0 - combined_prob)
     risk_score = combined_prob  # Base probability of phishing (0.0 to 1.0)
 
+    # --- Shadow Serving Evaluation: URL-EDL (Telemetry & Field Study) ---
+    shadow_telemetry = None
+    if url_edl_shadow_model is not None and tokenizer is not None:
+        try:
+            import time
+            import hashlib
+            t0 = time.perf_counter()
+            
+            # 1. Lexical sequence
+            seq = tokenizer.texts_to_sequences([url])
+            from tensorflow.keras.preprocessing.sequence import pad_sequences
+            X_seq_edl = pad_sequences(seq, maxlen=180)
+            
+            # 2. 34-D tabular features
+            from features import URLFeatureExtractor
+            raw_tab = URLFeatureExtractor().transform([url])
+            if url_edl_shadow_scaler is not None:
+                X_tab_edl = url_edl_shadow_scaler.transform(raw_tab)
+            else:
+                X_tab_edl = raw_tab
+                
+            # 3. Model forward pass
+            alpha_pred = url_edl_shadow_model([X_seq_edl, X_tab_edl], training=False).numpy()[0]
+            S = float(np.sum(alpha_pred))
+            u = float(2.0 / S) if S > 0 else 1.0
+            p_edl = float(alpha_pred[1] / S) if S > 0 else 0.5
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            
+            url_hash = hashlib.sha256(url.encode('utf-8')).hexdigest()[:12]
+            shadow_telemetry = {
+                "url_hash": url_hash,
+                "rf_prob": round(rf_prob, 4) if rf_prob is not None else None,
+                "deep_prob": round(deep_prob, 4) if deep_prob is not None else None,
+                "combined_prob": round(combined_prob, 4),
+                "edl_prob": round(p_edl, 4),
+                "edl_uncertainty": round(u, 4),
+                "edl_strength": round(S, 4),
+                "u": round(u, 4),
+                "S": round(S, 4),
+                "latency_ms": round(lat_ms, 2)
+            }
+            
+            # Non-blocking file logging for field ECE audit
+            log_dir = os.path.join(BASE_DIR, "logs")
+            os.makedirs(log_dir, exist_ok=True)
+            log_file = os.path.join(log_dir, "shadow_url_edl.log")
+            with open(log_file, "a", encoding="utf-8") as f_log:
+                rf_str = f"{rf_prob:.4f}" if rf_prob is not None else "None"
+                deep_str = f"{deep_prob:.4f}" if deep_prob is not None else "None"
+                f_log.write(f"{datetime.utcnow().isoformat()},{url_hash},{rf_str},{deep_str},{p_edl:.4f},{u:.4f},{S:.4f},{lat_ms:.2f}\n")
+        except Exception as e:
+            # Shadow evaluation must never block live serving
+            pass
+
     # 2. Multi-Signal OSINT, Threat Intel, Infrastructure & Brand Analysis
     infra_info = check_infrastructure_risk(url)
     age_info = check_domain_age(url)
@@ -590,46 +692,95 @@ def detect_url_phishing(url: str) -> dict:
     else:
         details.append("Google Safe Browsing: Safe")
 
-    return {
+    response = {
         "prediction": final_prediction,
         "confidence": reported_confidence,
         "details": " | ".join(details),
         "friction_level": friction_level,
         "advisory_message": advisory_message
     }
+    if shadow_telemetry is not None:
+        response["shadow_telemetry"] = shadow_telemetry
+    return response
 
-def detect_email_phishing(content: str) -> dict:
+def detect_email_phishing(content: str, subject: str = "", sender: str = "") -> dict:
     ensure_models_loaded()
+    legacy_prob = None
     if email_model:
         try:
-            prob = email_model.predict_proba([content])[0][1]
-            is_phish = prob > 0.5
-            return {
-                "prediction": "Phishing" if is_phish else "Safe",
-                "confidence": prob if is_phish else (1 - prob),
-                "details": "Predicted using trained TF-IDF Logistic Regression model."
-            }
+            legacy_prob = float(email_model.predict_proba([content])[0][1])
+            is_phish = legacy_prob > 0.5
+            prediction = "Phishing" if is_phish else "Safe"
+            confidence = legacy_prob if is_phish else (1.0 - legacy_prob)
+            details = "Predicted using trained TF-IDF Logistic Regression model."
         except Exception as e:
-             return {"prediction": "Error", "confidence": 0, "details": str(e)}
-
-    # Dummy fallback
-    suspicious_keywords = ["urgent", "account suspended", "click here", "password", "invoice"]
-    is_suspicious = any(kw in content.lower() for kw in suspicious_keywords)
-    
-    if is_suspicious:
-        confidence = random.uniform(0.85, 0.99)
-        prediction = "Phishing"
-        details = "WARNING: No real model found. Using DUMMY keyword matcher."
+            return {"prediction": "Error", "confidence": 0, "details": str(e)}
     else:
-        confidence = random.uniform(0.70, 0.95)
-        prediction = "Safe"
-        details = "WARNING: No real model found. Using DUMMY keyword matcher."
+        # Heuristic fallback
+        suspicious_keywords = ["urgent", "account suspended", "click here", "password", "invoice"]
+        is_suspicious = any(kw in content.lower() for kw in suspicious_keywords)
+        if is_suspicious:
+            confidence = random.uniform(0.85, 0.99)
+            legacy_prob = confidence
+            prediction = "Phishing"
+            details = "Urgency / credential harvesting keyword pattern matched."
+        else:
+            confidence = random.uniform(0.70, 0.95)
+            legacy_prob = 1.0 - confidence
+            prediction = "Safe"
+            details = "No urgent phishing keywords detected."
 
-    return {
+    # 2. Email-EDL Shadow Evaluation (Non-blocking, Behind Flag)
+    shadow_telemetry = None
+    ENABLE_EMAIL_EDL_SHADOW = os.getenv("ENABLE_EMAIL_EDL_SHADOW", "true").lower() in ("true", "1", "yes")
+    if ENABLE_EMAIL_EDL_SHADOW and email_edl_shadow_model is not None:
+        try:
+            t0 = time.perf_counter()
+            from email_edl import extract_email_tabular_features, tokenize_email_body
+            raw_tab = extract_email_tabular_features([subject], [content], [sender])
+            if email_edl_shadow_scaler is not None:
+                X_tab_edl = email_edl_shadow_scaler.transform(raw_tab)
+            else:
+                X_tab_edl = raw_tab
+            X_seq_edl = tokenize_email_body([content], max_len=256)
+            
+            alpha_pred = email_edl_shadow_model([X_seq_edl, X_tab_edl], training=False).numpy()[0]
+            S = float(np.sum(alpha_pred))
+            u = float(2.0 / S) if S > 0 else 1.0
+            p_edl = float(alpha_pred[1] / S) if S > 0 else 0.5
+            lat_ms = (time.perf_counter() - t0) * 1000.0
+            
+            email_hash = hashlib.sha256(content.encode('utf-8', errors='ignore')).hexdigest()[:12]
+            shadow_telemetry = {
+                "email_hash": email_hash,
+                "legacy_prob": round(legacy_prob, 4) if legacy_prob is not None else None,
+                "edl_prob": round(p_edl, 4),
+                "edl_uncertainty": round(u, 4),
+                "edl_strength": round(S, 4),
+                "u": round(u, 4),
+                "S": round(S, 4),
+                "latency_ms": round(lat_ms, 2)
+            }
+            
+            # Non-blocking file logging for field ECE audit
+            log_dir = os.path.join(BASE_DIR, "logs")
+            os.makedirs(log_dir, exist_ok=True)
+            log_file = os.path.join(log_dir, "shadow_email_edl.log")
+            with open(log_file, "a", encoding="utf-8") as f_log:
+                leg_str = f"{legacy_prob:.4f}" if legacy_prob is not None else "None"
+                f_log.write(f"{datetime.utcnow().isoformat()},{email_hash},{leg_str},{p_edl:.4f},{u:.4f},{S:.4f},{lat_ms:.2f}\n")
+        except Exception:
+            # Shadow evaluation must never block live serving
+            pass
+
+    response = {
         "prediction": prediction,
         "confidence": confidence,
         "details": details
     }
+    if shadow_telemetry is not None:
+        response["shadow_telemetry"] = shadow_telemetry
+    return response
 
 def detect_eml_phishing(file_bytes: bytes) -> dict:
     import email
@@ -671,22 +822,79 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
             anomaly_score += 0.5
             details.append(f"Header Anomaly: 'From' domain ({from_domain}) does not match 'Return-Path' ({return_domain}). Classic spoofing tactic.")
             
-        # 3. Body Extraction for ML
-        body_content = ""
+        # 3. Robust Multipart / Base64 / HTML Body & Payload Extraction
+        body_parts = []
+        extracted_urls = []
+        
+        def decode_payload_bytes(payload_raw, charset=None) -> str:
+            if not payload_raw:
+                return ""
+            if isinstance(payload_raw, str):
+                return payload_raw
+            encodings = [charset] if charset else []
+            encodings.extend(['utf-8', 'latin-1', 'windows-1252', 'ascii'])
+            for enc in encodings:
+                if not enc:
+                    continue
+                try:
+                    return payload_raw.decode(enc, errors='strict')
+                except (UnicodeDecodeError, LookupError):
+                    continue
+            return payload_raw.decode('utf-8', errors='replace')
+
         if msg.is_multipart():
             for part in msg.walk():
-                content_type = part.get_content_type()
-                if content_type == 'text/plain' or content_type == 'text/html':
-                    try:
-                        body_content += part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8', errors='ignore')
-                    except:
-                        pass
-        else:
-            try:
-                body_content = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8', errors='ignore')
-            except:
-                pass
+                ctype = part.get_content_type().lower()
+                c_disp = str(part.get('Content-Disposition', '')).lower()
                 
+                # Check for risky attachment extensions
+                fname = part.get_filename() or ''
+                if fname:
+                    fname_lower = fname.lower()
+                    if any(fname_lower.endswith(ext) for ext in ['.exe', '.scr', '.vbs', '.js', '.bat', '.iso', '.htm', '.html']):
+                        details.append(f"Attachment Anomaly: Suspicious executable/script attachment detected ({fname})")
+                        anomaly_score += 0.4
+                
+                if 'attachment' in c_disp and not ctype.startswith('text/'):
+                    continue
+                    
+                if ctype == 'text/plain':
+                    raw_bytes = part.get_payload(decode=True)
+                    text = decode_payload_bytes(raw_bytes, part.get_content_charset())
+                    if text.strip():
+                        body_parts.append(text.strip())
+                elif ctype == 'text/html':
+                    raw_bytes = part.get_payload(decode=True)
+                    html_text = decode_payload_bytes(raw_bytes, part.get_content_charset())
+                    if html_text.strip():
+                        try:
+                            soup = BeautifulSoup(html_text, 'html.parser')
+                            for a_tag in soup.find_all('a', href=True):
+                                href = a_tag['href'].strip()
+                                if href.startswith(('http://', 'https://')):
+                                    extracted_urls.append(href)
+                            clean_text = soup.get_text(separator=' ', strip=True)
+                            body_parts.append(clean_text)
+                        except Exception:
+                            body_parts.append(html_text.strip())
+        else:
+            ctype = msg.get_content_type().lower()
+            raw_bytes = msg.get_payload(decode=True)
+            text = decode_payload_bytes(raw_bytes, msg.get_content_charset())
+            if ctype == 'text/html':
+                try:
+                    soup = BeautifulSoup(text, 'html.parser')
+                    for a_tag in soup.find_all('a', href=True):
+                        href = a_tag['href'].strip()
+                        if href.startswith(('http://', 'https://')):
+                            extracted_urls.append(href)
+                    text = soup.get_text(separator=' ', strip=True)
+                except Exception:
+                    pass
+            if text.strip():
+                body_parts.append(text.strip())
+
+        body_content = "\n\n".join(body_parts).strip()
         if not body_content:
             body_content = str(msg.get('Subject', ''))
             
@@ -705,8 +913,9 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
                     anomaly_score += 0.4
                     details.append(f"Job Scam Heuristic: Job offer from a newly registered corporate domain ({age_info['age_days']} days old)")
                     
-        # 4. Base ML Analysis
-        ml_result = detect_email_phishing(body_content)
+        # 4. Base ML Analysis & Evidential Shadow Evaluation
+        subj = str(msg.get('Subject', ''))
+        ml_result = detect_email_phishing(body_content, subject=subj, sender=from_header)
         
         if ml_result["prediction"] == "Safe":
             base_ml_confidence = 1.0 - ml_result["confidence"]
@@ -724,11 +933,14 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
             
         details.append(ml_result['details'])
         
-        return {
+        response = {
             "prediction": final_prediction,
             "confidence": final_confidence if final_prediction != "Safe" else 1.0 - final_confidence,
             "details": " | ".join(details)
         }
+        if "shadow_telemetry" in ml_result:
+            response["shadow_telemetry"] = ml_result["shadow_telemetry"]
+        return response
         
     except Exception as e:
         return {"prediction": "Error", "confidence": 0, "details": f"Failed to parse EML file: {str(e)}"}
