@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "PhishShield-EDL Shield",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Evidential deep learning browser security with real-time epistemic uncertainty, tier-1 block interstitial, and field ECE telemetry.",
   "permissions": [
     "storage",
     "tabs",
     "webNavigation",
     "contextMenus",
-    "notifications"
+    "notifications",
+    "alarms"
   ],
   "host_permissions": [
     "http://*/*",

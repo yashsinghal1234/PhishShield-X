@@ -65,6 +65,18 @@ async function sha256(message) {
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+// MV3 service workers are terminated after ~30s of idle time, and a pending
+// fetch does NOT extend that lifetime. When the Render gateway is cold, a scan
+// can take 30-60s, so the SW would be killed mid-fetch and the verdict lost.
+// Heartbeats that call a Chrome API reset the idle timer and keep the worker
+// alive for the duration of long-running backend work.
+function startKeepalive() {
+  const beat = setInterval(() => {
+    try { chrome.runtime.getPlatformInfo(); } catch (e) { /* worker dying */ }
+  }, 20000);
+  return () => clearInterval(beat);
+}
+
 // ---------------------------------------------------------------------------
 // Automatic QR detection — client-side QR-likeness test using OffscreenCanvas.
 // Binarizes the image (global mean threshold) and searches for the QR "finder
@@ -259,9 +271,18 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
   if (cachedEntry && cachedEntry.expires_at > now) {
     // Cache Hit!
     const isOverrideActive = cachedEntry.override_expiry && (cachedEntry.override_expiry > now);
-    
+
     // Guardrail: Never honor override on Tier 1 malicious blocks
     const effectiveBlock = cachedEntry.ttl_tier === "tier1_phish";
+
+    const tabRecord = {
+      ...cachedEntry,
+      url: url,
+      url_hash: urlHash,
+      cache_hit: true,
+      override_reused: Boolean(isOverrideActive && !effectiveBlock),
+      timestamp: new Date().toISOString()
+    };
 
     if (effectiveBlock) {
       chrome.action.setBadgeBackgroundColor({ tabId: tabId, color: "#EF4444" });
@@ -287,6 +308,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
         })
       }).catch(() => {});
       // Tier-1 cache hit must still enforce the interstitial, not just badge
+      await chrome.storage.local.set({ [tabId.toString()]: tabRecord });
       await blockTab(tabId, urlHash, tabRecord);
       return;
     } else if (cachedEntry.ttl_tier === "tier2_uncertain") {
@@ -303,14 +325,6 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
       chrome.action.setBadgeText({ tabId: tabId, text: "OK" });
     }
 
-    const tabRecord = {
-      ...cachedEntry,
-      url: url,
-      url_hash: urlHash,
-      cache_hit: true,
-      override_reused: Boolean(isOverrideActive && !effectiveBlock),
-      timestamp: new Date().toISOString()
-    };
     await chrome.storage.local.set({ [tabId.toString()]: tabRecord });
 
     // Telemetry log cached visit (proves 70-80% fatigue reduction in field study)
@@ -339,6 +353,11 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
 
   // 4. Cache Miss — Query Evidential Backend
   const t0 = performance.now();
+  // In-flight UX: scanning badge + storage marker the popup can poll for
+  chrome.action.setBadgeBackgroundColor({ tabId: tabId, color: "#60A5FA" });
+  chrome.action.setBadgeText({ tabId: tabId, text: "SCAN" });
+  chrome.storage.local.set({ [`scan_${tabId}`]: { url: url, started_at: now } });
+  const stopKeepalive = startKeepalive();
   try {
     const res = await fetch(`${await getApiBase()}/api/detect/url`, {
       method: "POST",
@@ -386,6 +405,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
       [cacheKey]: domainCacheRecord,
       [tabId.toString()]: { ...domainCacheRecord, url: url, url_hash: urlHash, latency_ms: latencyMs }
     });
+    chrome.storage.local.remove([`scan_${tabId}`]);
 
     // Update Badge (Passive by default: No popup auto-open)
     if (ttlTier === "tier1_phish") {
@@ -423,7 +443,10 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
 
   } catch (err) {
     console.warn("PhishShield-EDL background scan error:", err);
+    chrome.storage.local.remove([`scan_${tabId}`]);
     chrome.action.setBadgeText({ tabId: tabId, text: "" });
+  } finally {
+    stopKeepalive();
   }
 });
 
@@ -431,7 +454,7 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   tabDebounceMap.delete(tabId);
   autoQrNotifyCount.delete(tabId);
-  chrome.storage.local.remove([tabId.toString(), `qr_${tabId}`]);
+  chrome.storage.local.remove([tabId.toString(), `qr_${tabId}`, `scan_${tabId}`]);
 });
 
 // Automatic QR verification pipeline (content script ships candidates)
@@ -441,6 +464,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const tabId = sender.tab.id;
       let verified = 0;
       let threats = 0;
+      const stopKeepalive = startKeepalive();
       try {
         const candidates = (request.candidates || []).slice(0, AUTO_QR_MAX_SCANS);
         for (const cand of candidates) {
@@ -500,6 +524,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ status: "done", verified: verified, threats: threats });
       } catch (e) {
         sendResponse({ status: "error", error: e.message });
+      } finally {
+        stopKeepalive();
       }
     })();
     return true;
@@ -599,13 +625,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// Register Context Menu for Multimodal In-Browser QR Image Scanning
+// Register Context Menu + Render free-tier keep-alive
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "scan_qr_image",
     title: "Verify QR Code with PhishShield-EDL",
     contexts: ["image"]
   });
+});
+
+// ---------------------------------------------------------------------------
+// Warm-up alarm: Render's free tier sleeps after ~15 min of inactivity, and a
+// sleeping backend adds a 30-60s cold-start delay to the next URL verdict.
+// A lightweight /health ping every 4.5 min keeps the gateway warm for as long
+// as the browser is open — scans then complete in ~2-3s instead of ~60s.
+// ---------------------------------------------------------------------------
+const KEEP_ALIVE_ALARM = "phishshield_gateway_warmup";
+try {
+  chrome.alarms.create(KEEP_ALIVE_ALARM, { periodInMinutes: 4.5 });
+} catch (e) { /* alarms API unavailable */ }
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== KEEP_ALIVE_ALARM) return;
+  try {
+    await fetch(`${await getApiBase()}/health`, { signal: AbortSignal.timeout(8000) });
+  } catch (e) { /* best-effort keep-alive */ }
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {

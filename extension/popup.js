@@ -24,7 +24,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Retrieve cached scan + automatic-QR findings for this tab
   const qrKey = `qr_${tab.id}`;
-  chrome.storage.local.get([tab.id.toString(), qrKey], (result) => {
+  const scanKey = `scan_${tab.id}`;
+  chrome.storage.local.get([tab.id.toString(), qrKey, scanKey], async (result) => {
     const qrData = result[qrKey];
     if (qrData && qrData.prediction === "Phishing") {
       const qrAlert = document.getElementById("qr-alert");
@@ -33,10 +34,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         `Auto-verify: embedded QR is PHISHING (${Math.round((qrData.confidence || 0) * 100)}%). ${qrData.details || qrData.advisory_message || "Do not scan it with your phone."}`;
     }
 
-    const data = result[tab.id.toString()];
+    let data = result[tab.id.toString()];
+    if (!data && result[scanKey]) {
+      // Backend scan is in flight — poll briefly so the popup lands on a real verdict
+      for (let i = 0; i < 12 && !data; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const cur = await chrome.storage.local.get([tab.id.toString()]);
+        data = cur[tab.id.toString()];
+        if (data) break;
+      }
+    }
     if (!data) {
-      verdictTitle.innerText = "QUEUED / UNPROTECTED";
-      verdictSubtitle.innerText = "Navigate to a URL or reload page to scan.";
+      if (result[scanKey]) {
+        verdictBox.className = "verdict-box suspicious";
+        verdictTitle.innerText = "SCANNING…";
+        verdictSubtitle.innerText =
+          "Live backend inference in progress. If the gateway just woke up (free-tier cold start), this can take up to ~60s — later scans resolve in seconds.";
+      } else {
+        verdictTitle.innerText = "QUEUED / UNPROTECTED";
+        verdictSubtitle.innerText = "Navigate to a URL or reload page to scan.";
+      }
       btnOverride.style.display = "none";
       return;
     }
