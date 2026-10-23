@@ -240,8 +240,37 @@ def scrape_for_phishing(url: str) -> dict:
         # Heuristics:
         # 1. Asking for password
         has_password_field = len(soup.find_all('input', type='password')) > 0
+
         # 2. Hidden iframes (often used in credential harvesting clickjacking)
-        has_hidden_iframe = len(soup.find_all('iframe', style=lambda value: value and 'display:none' in value.replace(' ', ''))) > 0
+        # Precision guardrail: only flag hidden iframes whose payload is neither
+        # same-origin content nor a well-known benign embed provider. Virtually
+        # every large legitimate site ships display:none iframes — most commonly
+        # the Google Tag Manager noscript analytics beacon — so counting those
+        # produced severe false positives (e.g. college exam LMS portals).
+        TRUSTED_IFRAME_HOSTS = (
+            "googletagmanager.com", "google-analytics.com", "doubleclick.net",
+            "challenges.cloudflare.com", "recaptcha.net", "gstatic.com",
+            "youtube.com", "youtube-nocookie.com", "player.vimeo.com",
+            "www.google.com", "accounts.google.com",
+            "login.microsoftonline.com", "login.live.com",
+            "facebook.com", "twitter.com", "platform.twitter.com", "x.com",
+        )
+        hidden_iframe_count = 0
+        for fr in soup.find_all('iframe'):
+            style = (fr.get('style') or '').replace(' ', '').lower()
+            is_hidden = 'display:none' in style or 'visibility:hidden' in style
+            if not is_hidden:
+                continue
+            src = (fr.get('src') or '').strip()
+            src_host = urllib.parse.urlparse(src).netloc.split(':')[0].lower()
+            same_origin = src_host == domain
+            trusted_embed = any(
+                src_host == h or src_host.endswith('.' + h)
+                for h in TRUSTED_IFRAME_HOSTS
+            )
+            if not same_origin and not trusted_embed:
+                hidden_iframe_count += 1
+        has_hidden_iframe = hidden_iframe_count > 0
         
         score = 0
         if has_password_field: score += 1
@@ -612,9 +641,18 @@ def detect_url_phishing(url: str) -> dict:
 
     # 2.7 Multi-Source Consensus Adjudication
     # State 1: Confirmed Clean Override — ONLY if domain is verified reputable (>180d) AND clean across all feeds AND not impersonating
-    if is_confirmed_reputable and vt_info.get("malicious", -1) == 0 and not gsb_info.get("malicious") and not is_unauthorized_brand_lure and not scrape_info.get("has_hidden_iframe"):
-        risk_score = max(0.01, risk_score - 0.50)
-        details.append("Reputation Consensus Override: Well-established domain (>180d) and clean multi-source history overruled ML suspicion (Safe)")
+    if is_confirmed_reputable and vt_info.get("malicious", -1) == 0 and not gsb_info.get("malicious") and not is_unauthorized_brand_lure:
+        if not scrape_info.get("has_hidden_iframe"):
+            risk_score = max(0.01, risk_score - 0.50)
+            details.append("Reputation Consensus Override: Well-established domain (>180d) and clean multi-source history overruled ML suspicion (Safe)")
+        elif domain_age_days is not None and domain_age_days >= 365:
+            # Structural-anomaly downgrade: a genuine DOM anomaly (hidden iframe
+            # with external payload) cannot ESCALATE a long-established domain
+            # with clean blacklist consensus past Tier-2 quarantine. Hard block
+            # is reserved for blacklist matches, brand weaponization or
+            # typosquatting — never for heuristics disagreeing with reputation.
+            risk_score = min(risk_score, 0.52)
+            details.append("Reputation Consensus Override (Downgraded): well-established domain with clean multi-source reputation; anomalous DOM structure gated to Tier-2 Quarantine")
     elif not is_confirmed_reputable and vt_info.get("malicious", -1) == 0 and not gsb_info.get("malicious"):
         # State 2: Unrated / Zero-Day Domain
         if is_unauthorized_brand_lure:
