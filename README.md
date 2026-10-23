@@ -33,7 +33,7 @@ flowchart TD
     U0 -->|Not Whitelisted| U1["[Stage 1] Typosquatting & Levenshtein Brand Check"]
     U1 --> U2["[Stage 2] Dual-Branch AI Engine"]
     
-    subgraph U_AI [Dual-Branch AI Engine]
+    subgraph U_AI ["Dual-Branch AI Engine"]
         U2A["Branch A: Deep Semantic Model\n(Conv1D + BiGRU + Multi-Head Attention)"]
         U2B["Branch B: 34-Feature Tabular Model\n(Shannon Entropy, TLD, Lexical Tokens)"]
         U2A & U2B --> U2_Ens["Ensemble Probability (P_ML)"]
@@ -41,7 +41,7 @@ flowchart TD
     U2 --> U_AI
     U_AI --> U3["[Stage 3] Parallel OSINT & Continuous Trust Decay"]
     
-    subgraph U_OSINT [Live Threat Intelligence & Infrastructure]
+    subgraph U_OSINT ["Live Threat Intelligence & Infrastructure"]
         U3A["VirusTotal v3 REST (70+ AV Engines)"]
         U3B["Google Safe Browsing v4 Lookup"]
         U3C["WHOIS Saturated Logarithmic Trust Curve\nT(d) = max_discount * ln(1+d) / ln(1+D_mature)"]
@@ -53,7 +53,7 @@ flowchart TD
     %% ----------------- QR VECTOR -----------------
     Ingest -->|QR Code Image| Q0["[Stage 0] Robust Dual-Engine Decoder"]
     
-    subgraph Q_CV [Multi-Pipeline Computer Vision Engine]
+    subgraph Q_CV ["Multi-Pipeline Computer Vision Engine"]
         Q0A["Contrast Enhancement (CLAHE 8x8)"]
         Q0B["White Quiet-Zone Border Padding"]
         Q0C["Inverted Dark-Mode QR Variants"]
@@ -69,7 +69,7 @@ flowchart TD
     %% ----------------- EMAIL VECTOR -----------------
     Ingest -->|.EML File / Raw Email| E0["[Stage 0] RFC 822 Forensic Header Parser"]
     
-    subgraph E_Forensics [Email Forensic & Social Engineering Engine]
+    subgraph E_Forensics ["Email Forensic & Social Engineering Engine"]
         E0A["Cryptographic Header Verification (SPF, DKIM, DMARC)"]
         E0B["Envelope Return-Path vs From Mismatch Detector"]
         E0C["Body Semantic TF-IDF NLP + Job/Invoice Scam Rules"]
@@ -88,7 +88,7 @@ Detailed schematic of the visual and lexical feature extraction streams, early m
 
 ```mermaid
 flowchart LR
-    subgraph Visual_Stream [Visual Spatial QR Stream]
+    subgraph Visual_Stream ["Visual Spatial QR Stream"]
         V_In["QR Matrix X_vis\n(64x64x1 Grayscale)"] --> V_Conv["Conv2D\n(16 filters, 3x3, ReLU)"]
         V_Conv --> V_Pool["MaxPool2D\n(4x4 Pool)"]
         V_Pool --> V_Flat["Flatten"]
@@ -96,7 +96,7 @@ flowchart LR
         V_Dense --> V_Feat["f_vis in R^32"]
     end
 
-    subgraph Lexical_Stream [Lexical Character Sequence Stream]
+    subgraph Lexical_Stream ["Lexical Character Sequence Stream"]
         L_In["URL Payload Sequence X_lex\n(180 Character Tokens)"] --> L_Emb["Embedding Layer\n(Vocab 110 -> Dim 32)"]
         L_Emb --> L_Conv["Conv1D\n(32 filters, k=3, ReLU)"]
         L_Conv --> L_Pool["MaxPool1D\n(Pool Size 6)"]
@@ -110,12 +110,12 @@ flowchart LR
     Dense1 --> Dense2["Dense (32, ReLU)"]
     Dense2 --> Logits["Logits z in R^2"]
 
-    subgraph Serving_Head [Production Serving Head (M3)]
+    subgraph Serving_Head ["Production Serving Head (M3)"]
         Logits --> Softmax["Softmax Layer\np = Softmax(z)"]
         Softmax --> CalibOut["Calibrated Threat Probability\n(ECE = 0.0236, Acc = 94.41%)"]
     end
 
-    subgraph Research_Head [Subjective Logic Evidential Head (M6)]
+    subgraph Research_Head ["Subjective Logic Evidential Head (M6)"]
         Logits --> EvLayer["Evidence e = ReLU(z)\nDirichlet alpha = e + 1.0"]
         EvLayer --> Strength["Total Strength S = sum(alpha_k)"]
         Strength --> Belief["Belief Masses: b_k = (alpha_k - 1) / S"]
@@ -141,7 +141,7 @@ flowchart TD
     
     Triage -->|Aged Domain >365d AND Clean Threat Intel AND Zero Heuristic Flags| T3["Tier 3: Auto-Cleared Benign\n• Zero ML Score Dependency (Prevents Circular Confirmation Bias)\n• Action: Auto-Enqueued to Benign Baseline Retraining Pool"]
 
-    subgraph Retrain_Pipeline [Continuous Retraining & Safety Gate]
+    subgraph Retrain_Pipeline ["Continuous Retraining & Safety Gate"]
         T1 & T3 --> NewModel["Retrain Candidate Neural Model"]
         NewModel --> RegGate{"Golden Benchmark Regression Gate"}
         RegGate -->|Passes Immutable 5-Fold Benchmark: Acc >= 94.40%, ECE <= 0.025| ProdDeploy["🚀 Promote to Production Live Serving"]

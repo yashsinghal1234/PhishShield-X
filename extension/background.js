@@ -400,6 +400,13 @@ chrome.webNavigation.onCommitted.addListener(async (details) => {
       override_expiry: null
     };
 
+    // Self-heal: if backend now says Safe/Uncertain but cached domain had tier1_phish,
+    // the cache was a false positive — overwrite it so future navs don't re-block.
+    if (cachedEntry && cachedEntry.ttl_tier === "tier1_phish" &&
+        data.prediction !== "Phishing" && data.friction_level !== "block") {
+      console.log("PhishShield-EDL: self-healing stale tier1_phish cache for", etldPlusOne);
+    }
+
     // Store in domain cache & tab record
     await chrome.storage.local.set({
       [cacheKey]: domainCacheRecord,
