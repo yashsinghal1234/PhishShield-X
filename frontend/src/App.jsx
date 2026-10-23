@@ -75,8 +75,8 @@ function Sidebar() {
       {/* Bottom Footer Actions */}
       <div className="pt-4 border-t border-[#E5E9EB] space-y-3">
         <a
-          href="/phishshield-extension-v1.2.0.zip"
-          download="PhishShield-EDL-Extension-v1.2.0.zip"
+          href="/phishshield-extension.zip"
+          download="PhishShield-EDL-Extension.zip"
           className="w-full flex items-center gap-3 rounded-xl bg-white border border-[#1F6A45]/30 px-3.5 py-3 text-[14px] font-semibold text-[#1F6A45] hover:bg-[#EAF5F0] shadow-sm transition-colors"
           title="Download browser extension (Manifest V3) — then load unpacked in Chrome"
         >

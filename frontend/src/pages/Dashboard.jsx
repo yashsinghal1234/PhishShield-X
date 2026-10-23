@@ -375,8 +375,8 @@ export default function Dashboard() {
 
         <div className="flex items-center gap-3">
           <a
-            href="/phishshield-extension-v1.2.0.zip"
-            download="PhishShield-EDL-Extension-v1.2.0.zip"
+            href="/phishshield-extension.zip"
+            download="PhishShield-EDL-Extension.zip"
             className="flex items-center gap-2 rounded-xl bg-white border border-[#1F6A45]/30 px-4 py-2.5 text-sm font-medium text-[#1F6A45] shadow-sm hover:bg-[#EAF5F0] transition-colors cursor-pointer"
             title="Download the PhishShield-EDL browser extension (Manifest V3)"
           >
