@@ -353,9 +353,15 @@ export default function UrlDetection() {
                 <h2 className="text-lg font-bold text-[#0F1720] flex items-center gap-2">
                   <Camera className="h-5 w-5 text-[#64748B]" /> Screenshot
                 </h2>
-                <a href={url} target="_blank" rel="noreferrer" className="text-sm font-semibold flex items-center gap-1 text-[#2563EB] hover:text-[#1D4ED8] transition-colors">
-                  Open Site <ExternalLink className="h-4 w-4" />
-                </a>
+                {result.friction_level !== 'quarantine' || !result.advisory_message?.includes('URL does not exist') ? (
+                  <a href={url} target="_blank" rel="noreferrer" className="text-sm font-semibold flex items-center gap-1 text-[#2563EB] hover:text-[#1D4ED8] transition-colors">
+                    Open Site <ExternalLink className="h-4 w-4" />
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-[#DC2626] flex items-center gap-1">
+                    <AlertTriangle className="h-4 w-4" /> Site does not exist
+                  </span>
+                )}
               </div>
               
               <div className="flex-1 bg-[#F8FAFC] rounded-2xl overflow-hidden border border-[#E2E8F0] relative group flex items-center justify-center min-h-[220px]">

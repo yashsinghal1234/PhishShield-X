@@ -425,6 +425,19 @@ def detect_url_phishing(url: str) -> dict:
                             "advisory_message": f"Tier 1 Automated Block: Typosquatting impersonation attack targeting '{target_brand}'."
                         }
 
+    # 0.7. Explicit domain existence check — if the domain cannot be resolved
+    # via DNS, it does not exist on the public internet. Do not default such
+    # randomly generated / zero-day domains to Safe.
+    domain_resolves = resolve_domain_ip(domain_netloc) is not None
+    if not domain_resolves:
+        return {
+            "prediction": "Suspicious",
+            "confidence": 0.50,
+            "details": f"URL does not exist: the domain '{domain_netloc}' could not be resolved via DNS. No website is hosted at this address — it is likely a randomly generated or disposable domain. Treat as untrusted.",
+            "friction_level": "quarantine",
+            "advisory_message": "URL does not exist: Domain cannot be resolved via DNS. No website is hosted at this address."
+        }
+
     # 1. Ensemble ML Prediction (Deep PhishNet-Hybrid + Tabular Feature Model)
     ensure_models_loaded()
     deep_prob = None
