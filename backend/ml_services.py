@@ -184,6 +184,22 @@ def resolve_domain_ip(domain: str):
     except Exception:
         return None
 
+
+@cached(cache=dns_cache)
+def check_port_connectivity(ip: str, port: int = 443, timeout: float = 3.0) -> bool:
+    """
+    Checks if a given IP is actually reachable on a specific port via TCP connect.
+    More reliable than ICMP ping (often blocked by firewalls/cloud providers).
+    Returns True if the port is open and accepting connections.
+    """
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(timeout)
+            result = sock.connect_ex((ip, port))
+            return result == 0
+    except Exception:
+        return False
+
 @cached(cache=whois_cache)
 def check_domain_age(url: str) -> dict:
     try:
@@ -695,12 +711,21 @@ def detect_url_phishing(url: str) -> dict:
                         details.append(f"Brand-Neutral Application: Verified cloud developer platform ({domain_etld1}); clean threat intelligence with zero brand impersonation (Safe 92.0%)")
                     elif scrape_info.get("score", 0) == 0:
                         # Parked / empty domain guard: resolves via DNS but has no
-                        # SSL certificate, no scrapeable content, and unverifiable
-                        # age — likely a randomly generated or parked domain.
+                        # reachable web server on port 80/443, no SSL certificate,
+                        # no scrapeable content, and unverifiable age — likely a
+                        # randomly generated or parked domain.
+                        resolved_ip = resolve_domain_ip(domain_netloc)
+                        ip_reachable = False
+                        if resolved_ip:
+                            ip_reachable = check_port_connectivity(resolved_ip, 443) or check_port_connectivity(resolved_ip, 80)
+
                         ssl_has_error = ssl_info.get("error") is not None
                         scrape_has_error = scrape_info.get("error") is not None
                         domain_unverifiable = domain_age_days is None
-                        if ssl_has_error and (scrape_has_error or domain_unverifiable) and not is_reputable_paas:
+                        if not ip_reachable and not is_reputable_paas:
+                            risk_score = 0.48
+                            details.append("Parked / Empty Domain: Domain resolves via DNS but no web server is reachable on port 80/443; likely a randomly generated or parked domain with no website. Treated as Suspicious.")
+                        elif ssl_has_error and (scrape_has_error or domain_unverifiable) and not is_reputable_paas:
                             risk_score = 0.48
                             details.append("Parked / Empty Domain: Domain resolves via DNS but has no SSL certificate, no scrapeable content, and unverifiable age; likely a randomly generated or parked domain. Treated as Suspicious.")
                         else:
