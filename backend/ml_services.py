@@ -694,8 +694,18 @@ def detect_url_phishing(url: str) -> dict:
                         risk_score = 0.08
                         details.append(f"Brand-Neutral Application: Verified cloud developer platform ({domain_etld1}); clean threat intelligence with zero brand impersonation (Safe 92.0%)")
                     elif scrape_info.get("score", 0) == 0:
-                        risk_score = 0.10
-                        details.append("Brand-Neutral Domain: Clean multi-source threat feeds, zero brand lures, and clean DOM; ML suspicion resolved to Safe (90.0%)")
+                        # Parked / empty domain guard: resolves via DNS but has no
+                        # SSL certificate, no scrapeable content, and unverifiable
+                        # age — likely a randomly generated or parked domain.
+                        ssl_has_error = ssl_info.get("error") is not None
+                        scrape_has_error = scrape_info.get("error") is not None
+                        domain_unverifiable = domain_age_days is None
+                        if ssl_has_error and (scrape_has_error or domain_unverifiable) and not is_reputable_paas:
+                            risk_score = 0.48
+                            details.append("Parked / Empty Domain: Domain resolves via DNS but has no SSL certificate, no scrapeable content, and unverifiable age; likely a randomly generated or parked domain. Treated as Suspicious.")
+                        else:
+                            risk_score = 0.10
+                            details.append("Brand-Neutral Domain: Clean multi-source threat feeds, zero brand lures, and clean DOM; ML suspicion resolved to Safe (90.0%)")
                     else:
                         # Brand-neutral domain with a standard login form
                         risk_score = 0.15
