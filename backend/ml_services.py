@@ -97,27 +97,11 @@ def load_ai_models():
             except Exception as e:
                 print(f"Error loading tokenizer.pkl: {e}")
 
-        # 4. Deep PhishNet Model (optional on constrained cloud instances)
-        ENABLE_DEEP_PHISH = os.getenv("ENABLE_DEEP_PHISH", "true").lower() in ("true", "1", "yes")
-        deep_path = os.path.join(BASE_DIR, "deep_phish_model.h5")
-        if ENABLE_DEEP_PHISH and os.path.exists(deep_path) and deep_phish_model is None:
-            try:
-                import tensorflow as tf
-                deep_phish_model = tf.keras.models.load_model(deep_path)
-            except Exception as e:
-                print(f"Error loading deep_phish_model.h5: {e}")
+        # 4. Deep PhishNet Model — loaded lazily on first use to reduce peak startup memory
+        # (see ensure_deep_phish_loaded() below)
 
-        # 5. M3 Multimodal Early Fusion Model (optional on constrained cloud instances)
-        ENABLE_M3_FUSION = os.getenv("ENABLE_M3_FUSION", "true").lower() in ("true", "1", "yes")
-        m3_weights_path = os.path.join(BASE_DIR, "m3_early_fusion_weights.weights.h5")
-        if ENABLE_M3_FUSION and os.path.exists(m3_weights_path) and m3_early_fusion_model is None:
-            try:
-                from quishing_engine import build_m3_early_fusion_model
-                m3_early_fusion_model = build_m3_early_fusion_model()
-                m3_early_fusion_model.load_weights(m3_weights_path)
-                print("Loaded M3 (Multimodal Early Fusion + Softmax) Production Neural Weights successfully!")
-            except Exception as e:
-                print(f"Error loading M3 Early Fusion model: {e}")
+        # 5. M3 Multimodal Early Fusion Model — loaded lazily on first use
+        # (see ensure_m3_loaded() below)
 
         # 6. URL-EDL Shadow Evaluation Model (Behind Flag)
         ENABLE_URL_EDL_SHADOW = os.getenv("ENABLE_URL_EDL_SHADOW", "false").lower() in ("true", "1", "yes")
@@ -167,6 +151,45 @@ def ensure_models_loaded():
     """Ensure heavy AI models are loaded before running detection inference."""
     if not _models_loaded:
         load_ai_models()
+
+def ensure_deep_phish_loaded():
+    """Lazily load Deep PhishNet model on first use to reduce startup memory."""
+    global deep_phish_model
+    if deep_phish_model is not None:
+        return
+    ENABLE_DEEP_PHISH = os.getenv("ENABLE_DEEP_PHISH", "true").lower() in ("true", "1", "yes")
+    if not ENABLE_DEEP_PHISH:
+        return
+    deep_path = os.path.join(BASE_DIR, "deep_phish_model.h5")
+    if not os.path.exists(deep_path):
+        return
+    try:
+        import tensorflow as tf
+        deep_phish_model = tf.keras.models.load_model(deep_path)
+        print("Loaded Deep PhishNet model (lazy) successfully!")
+        gc.collect()
+    except Exception as e:
+        print(f"Error loading deep_phish_model.h5: {e}")
+
+def ensure_m3_loaded():
+    """Lazily load M3 Early Fusion model on first use to reduce startup memory."""
+    global m3_early_fusion_model
+    if m3_early_fusion_model is not None:
+        return
+    ENABLE_M3_FUSION = os.getenv("ENABLE_M3_FUSION", "true").lower() in ("true", "1", "yes")
+    if not ENABLE_M3_FUSION:
+        return
+    m3_weights_path = os.path.join(BASE_DIR, "m3_early_fusion_weights.weights.h5")
+    if not os.path.exists(m3_weights_path):
+        return
+    try:
+        from quishing_engine import build_m3_early_fusion_model
+        m3_early_fusion_model = build_m3_early_fusion_model()
+        m3_early_fusion_model.load_weights(m3_weights_path)
+        print("Loaded M3 (Multimodal Early Fusion + Softmax) Production Neural Weights (lazy) successfully!")
+        gc.collect()
+    except Exception as e:
+        print(f"Error loading M3 Early Fusion model: {e}")
 
 def extract_etld_plus_one(domain_str: str) -> str:
     """
@@ -464,6 +487,7 @@ def detect_url_phishing(url: str) -> dict:
     deep_prob = None
     rf_prob = None
 
+    ensure_deep_phish_loaded()
     if deep_phish_model and tokenizer:
         try:
             from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -1056,6 +1080,7 @@ def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
     ensure_models_loaded()
 
     # 1. M3 Multimodal Early Fusion (Vision + Lexical -> Softmax, Calibrated ECE 0.0236)
+    ensure_m3_loaded()
     m3_res = evaluate_m3_early_fusion(img, decoded_payload, model=m3_early_fusion_model, tokenizer=tokenizer)
     m3_prob = None
     if m3_res.get("available"):
