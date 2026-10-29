@@ -1,4 +1,4 @@
- import React from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import {
   Shield,
@@ -9,9 +9,9 @@ import {
   LayoutDashboard,
   Settings,
   CircleHelp,
-  Search,
-  Bell,
-  Puzzle
+  Puzzle,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 import Dashboard from './pages/Dashboard';
@@ -19,9 +19,11 @@ import UrlDetection from './pages/UrlDetection';
 import EmailDetection from './pages/EmailDetection';
 import QrDetection from './pages/QrDetection';
 import HistoryPage from './pages/HistoryPage';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 
 function Sidebar() {
   const location = useLocation();
+  const { isDark, toggleTheme } = useTheme();
 
   const navItems = [
     { path: '/', name: 'Dashboard', icon: <LayoutDashboard size={20} /> },
@@ -95,6 +97,34 @@ function Sidebar() {
         </button>
 
         <div className="space-y-1">
+          {/* Theme Switcher Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="w-full text-left flex items-center justify-between rounded-lg px-3 py-2 text-[14px] font-medium text-[#475569] hover:bg-[#F4F7F6] hover:text-[#0F1720] transition-colors cursor-pointer"
+            title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            <div className="flex items-center gap-3">
+              {isDark ? (
+                <Sun size={18} className="text-amber-400" />
+              ) : (
+                <Moon size={18} className="text-[#475569]" />
+              )}
+              <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+            </div>
+            <span
+              className={`inline-flex items-center w-8 h-4 rounded-full p-0.5 transition-colors ${
+                isDark ? 'bg-[#1F6A45]' : 'bg-[#CBD5E1]'
+              }`}
+            >
+              <span
+                className={`block w-3 h-3 rounded-full bg-white shadow-sm transform transition-transform ${
+                  isDark ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </span>
+          </button>
+
           <button
             type="button"
             className="w-full text-left flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] font-medium text-[#475569] hover:bg-[#F4F7F6] hover:text-[#0F1720] transition-colors"
@@ -123,20 +153,22 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <div className="min-h-screen bg-[#F4F7F6] text-[#0F1720] font-['Poppins']">
-        <Sidebar />
-        <main className="min-h-screen ml-0 md:ml-68 p-4 md:p-7 max-w-7xl mx-auto">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/url" element={<UrlDetection />} />
-            <Route path="/email" element={<EmailDetection />} />
-            <Route path="/qr" element={<QrDetection />} />
-            <Route path="/history" element={<HistoryPage />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <div className="min-h-screen bg-[#F4F7F6] text-[#0F1720] font-['Poppins'] transition-colors duration-200">
+          <Sidebar />
+          <main className="min-h-screen ml-0 md:ml-68 p-4 md:p-7 max-w-7xl mx-auto">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/url" element={<UrlDetection />} />
+              <Route path="/email" element={<EmailDetection />} />
+              <Route path="/qr" element={<QrDetection />} />
+              <Route path="/history" element={<HistoryPage />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 

@@ -17,6 +17,7 @@ body {
   font-family: 'Poppins', sans-serif;
   @apply bg-[#F4F7F6] text-[#0F1720];
 }
+
 /* Glassmorphism utility */
 .glass-panel {
   @apply bg-dark-800/80 backdrop-blur-md border border-dark-700/50 shadow-xl rounded-2xl;
@@ -43,4 +44,154 @@ body {
 .recharts-pie,
 .recharts-responsive-container {
   outline: none !important;
+}
+
+/* ==========================================================================
+   Dark Theme System
+   ========================================================================== */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0d151c !important;
+  color: #f1f5f9 !important;
+}
+
+/* Background surfaces */
+html.dark .bg-\[\#F4F7F6\],
+html.dark .min-h-screen.bg-\[\#F4F7F6\] {
+  background-color: #0d151c !important;
+}
+
+html.dark .bg-white {
+  background-color: #15222e !important;
+}
+
+html.dark .bg-\[\#F8FAFC\] {
+  background-color: #1a2a38 !important;
+}
+
+html.dark .bg-\[\#F1F5F9\] {
+  background-color: #1e3142 !important;
+}
+
+html.dark .bg-\[\#EAF5F0\] {
+  background-color: rgba(31, 106, 69, 0.25) !important;
+}
+
+html.dark .bg-\[\#DCFCE7\],
+html.dark .bg-\[\#F0FDF4\] {
+  background-color: rgba(22, 101, 52, 0.28) !important;
+}
+
+html.dark .bg-\[\#FEE2E2\],
+html.dark .bg-\[\#FEF2F2\] {
+  background-color: rgba(220, 38, 38, 0.2) !important;
+}
+
+html.dark .bg-\[\#FEF3C7\],
+html.dark .bg-\[\#FFFBEB\] {
+  background-color: rgba(217, 119, 6, 0.2) !important;
+}
+
+/* Typography */
+html.dark .text-\[\#0F1720\],
+html.dark .text-\[\#1E293B\],
+html.dark .text-\[\#334155\] {
+  color: #f1f5f9 !important;
+}
+
+html.dark .text-\[\#475569\],
+html.dark .text-\[\#64748B\],
+html.dark .text-\[\#8B97A3\] {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-\[\#1F6A45\],
+html.dark .text-\[\#185336\],
+html.dark .text-\[\#16A34A\] {
+  color: #4ade80 !important;
+}
+
+/* Borders */
+html.dark .border-\[\#E5E9EB\],
+html.dark .border-\[\#E2E8F0\],
+html.dark .border-\[\#CBD5E1\],
+html.dark .border-\[\#F1F5F9\] {
+  border-color: #223446 !important;
+}
+
+html.dark .border-\[\#1F6A45\]\/30 {
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+html.dark .border-\[\#BBF7D0\] {
+  border-color: rgba(74, 222, 128, 0.3) !important;
+}
+
+html.dark .border-\[\#FECACA\] {
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+html.dark .border-\[\#FDE68A\] {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+/* Form Controls */
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #101a24 !important;
+  color: #f1f5f9 !important;
+  border-color: #26384a !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Hover States */
+html.dark .hover\:bg-\[\#F8FAFC\]:hover,
+html.dark .hover\:bg-\[\#F4F7F6\]:hover {
+  background-color: #1e2e3e !important;
+}
+
+html.dark .hover\:bg-\[\#EAF5F0\]:hover {
+  background-color: rgba(31, 106, 69, 0.35) !important;
+}
+
+html.dark .hover\:text-\[\#0F1720\]:hover {
+  color: #ffffff !important;
+}
+
+/* Elevation & Shadows */
+html.dark .shadow-sm,
+html.dark .shadow-\[0_4px_20px_rgba\(0\,0\,0\,0\.04\)\] {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Scrollbars */
+html.dark ::-webkit-scrollbar-track {
+  background-color: #0d151c;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background-color: #223446;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #2e445b;
+}
+
+/* Recharts styling in dark mode */
+html.dark .recharts-cartesian-grid line {
+  stroke: #223446 !important;
+}
+html.dark .recharts-text {
+  fill: #94a3b8 !important;
+}
+html.dark .recharts-default-tooltip {
+  background-color: #15222e !important;
+  border-color: #223446 !important;
+  color: #f1f5f9 !important;
 }
