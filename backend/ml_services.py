@@ -1,5 +1,6 @@
 import random
 import math
+import gc
 import time
 import hashlib
 import joblib
@@ -25,11 +26,12 @@ socket.setdefaulttimeout(3.0)
 
 # TTL-aware in-memory caches to prevent stale caching vulnerabilities (e.g. watering-hole compromises)
 # Expirations: 5 minutes (300s) for dynamic resolution & threat feeds; 1 hour (3600s) for WHOIS domain age
-dns_cache = TTLCache(maxsize=2000, ttl=300)
-whois_cache = TTLCache(maxsize=2000, ttl=3600)
-vt_cache = TTLCache(maxsize=2000, ttl=300)
-gsb_cache = TTLCache(maxsize=2000, ttl=300)
-ssl_cache = TTLCache(maxsize=2000, ttl=300)
+# Reduced maxsize to limit memory footprint on constrained cloud instances
+dns_cache = TTLCache(maxsize=500, ttl=300)
+whois_cache = TTLCache(maxsize=500, ttl=3600)
+vt_cache = TTLCache(maxsize=200, ttl=300)
+gsb_cache = TTLCache(maxsize=200, ttl=300)
+ssl_cache = TTLCache(maxsize=200, ttl=300)
 
 load_dotenv()
 
@@ -95,18 +97,20 @@ def load_ai_models():
             except Exception as e:
                 print(f"Error loading tokenizer.pkl: {e}")
 
-        # 4. Deep PhishNet Model
+        # 4. Deep PhishNet Model (optional on constrained cloud instances)
+        ENABLE_DEEP_PHISH = os.getenv("ENABLE_DEEP_PHISH", "true").lower() in ("true", "1", "yes")
         deep_path = os.path.join(BASE_DIR, "deep_phish_model.h5")
-        if os.path.exists(deep_path) and deep_phish_model is None:
+        if ENABLE_DEEP_PHISH and os.path.exists(deep_path) and deep_phish_model is None:
             try:
                 import tensorflow as tf
                 deep_phish_model = tf.keras.models.load_model(deep_path)
             except Exception as e:
                 print(f"Error loading deep_phish_model.h5: {e}")
 
-        # 5. M3 Multimodal Early Fusion Model
+        # 5. M3 Multimodal Early Fusion Model (optional on constrained cloud instances)
+        ENABLE_M3_FUSION = os.getenv("ENABLE_M3_FUSION", "true").lower() in ("true", "1", "yes")
         m3_weights_path = os.path.join(BASE_DIR, "m3_early_fusion_weights.weights.h5")
-        if os.path.exists(m3_weights_path) and m3_early_fusion_model is None:
+        if ENABLE_M3_FUSION and os.path.exists(m3_weights_path) and m3_early_fusion_model is None:
             try:
                 from quishing_engine import build_m3_early_fusion_model
                 m3_early_fusion_model = build_m3_early_fusion_model()
@@ -116,7 +120,7 @@ def load_ai_models():
                 print(f"Error loading M3 Early Fusion model: {e}")
 
         # 6. URL-EDL Shadow Evaluation Model (Behind Flag)
-        ENABLE_URL_EDL_SHADOW = os.getenv("ENABLE_URL_EDL_SHADOW", "true").lower() in ("true", "1", "yes")
+        ENABLE_URL_EDL_SHADOW = os.getenv("ENABLE_URL_EDL_SHADOW", "false").lower() in ("true", "1", "yes")
         url_edl_weights_path = os.path.join(BASE_DIR, "url_edl_weights.weights.h5")
         if ENABLE_URL_EDL_SHADOW and os.path.exists(url_edl_weights_path) and url_edl_shadow_model is None:
             try:
@@ -136,7 +140,7 @@ def load_ai_models():
                 print(f"Error loading URL-EDL Shadow model: {e}")
 
         # 7. Email-EDL Shadow Evaluation Model (Behind Flag)
-        ENABLE_EMAIL_EDL_SHADOW = os.getenv("ENABLE_EMAIL_EDL_SHADOW", "true").lower() in ("true", "1", "yes")
+        ENABLE_EMAIL_EDL_SHADOW = os.getenv("ENABLE_EMAIL_EDL_SHADOW", "false").lower() in ("true", "1", "yes")
         email_edl_weights_path = os.path.join(BASE_DIR, "email_edl_weights.weights.h5")
         if ENABLE_EMAIL_EDL_SHADOW and os.path.exists(email_edl_weights_path) and email_edl_shadow_model is None:
             try:
@@ -156,6 +160,7 @@ def load_ai_models():
             except Exception as e:
                 print(f"Error loading Email-EDL Shadow model: {e}")
 
+        gc.collect()
         _models_loaded = True
 
 def ensure_models_loaded():
@@ -818,7 +823,7 @@ def detect_email_phishing(content: str, subject: str = "", sender: str = "") -> 
 
     # 2. Email-EDL Shadow Evaluation (Non-blocking, Behind Flag)
     shadow_telemetry = None
-    ENABLE_EMAIL_EDL_SHADOW = os.getenv("ENABLE_EMAIL_EDL_SHADOW", "true").lower() in ("true", "1", "yes")
+    ENABLE_EMAIL_EDL_SHADOW = os.getenv("ENABLE_EMAIL_EDL_SHADOW", "false").lower() in ("true", "1", "yes")
     if ENABLE_EMAIL_EDL_SHADOW and email_edl_shadow_model is not None:
         try:
             t0 = time.perf_counter()

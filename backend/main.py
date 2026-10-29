@@ -128,6 +128,9 @@ def _is_image_response(resp: requests.Response) -> bool:
 
 
 def _capture_with_playwright(target: str):
+    # Disable Playwright on constrained cloud instances to save memory
+    if os.getenv("DISABLE_PLAYWRIGHT", "false").lower() in ("true", "1", "yes"):
+        return None
     try:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
