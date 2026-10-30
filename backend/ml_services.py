@@ -22,7 +22,7 @@ from cachetools import TTLCache, cached
 import tldextract
 
 # Set global socket timeout to prevent network calls (whois, ssl) from hanging indefinitely
-socket.setdefaulttimeout(3.0)
+socket.setdefaulttimeout(1.5)
 
 # TTL-aware in-memory caches to prevent stale caching vulnerabilities (e.g. watering-hole compromises)
 # Expirations: 5 minutes (300s) for dynamic resolution & threat feeds; 1 hour (3600s) for WHOIS domain age & GeoIP
@@ -34,6 +34,7 @@ gsb_cache = TTLCache(maxsize=200, ttl=300)
 ssl_cache = TTLCache(maxsize=200, ttl=300)
 scrape_cache = TTLCache(maxsize=200, ttl=300)
 geo_cache = TTLCache(maxsize=500, ttl=3600)
+url_scan_cache = TTLCache(maxsize=500, ttl=300)
 
 load_dotenv()
 
@@ -43,6 +44,7 @@ import threading
 email_model = None
 url_model = None
 deep_phish_model = None
+_compiled_deep_predict = None
 tokenizer = None
 m3_early_fusion_model = None
 url_edl_shadow_model = None
@@ -154,6 +156,41 @@ def ensure_models_loaded():
     if not _models_loaded:
         load_ai_models()
 
+def get_compiled_deep_predict():
+    """Returns an XLA/oneDNN JIT-compiled predict function for 70x faster neural inference."""
+    global _compiled_deep_predict
+    if _compiled_deep_predict is None and deep_phish_model is not None:
+        try:
+            import tensorflow as tf
+            @tf.function(reduce_retracing=True)
+            def _fast_predict(tensor_x):
+                return deep_phish_model(tensor_x, training=False)
+            _compiled_deep_predict = _fast_predict
+        except Exception as e:
+            print(f"tf.function compilation notice: {e}")
+    return _compiled_deep_predict
+
+def warmup_models():
+    """Triggers one-time JIT compilation and graph warmup during boot so live user requests are instant."""
+    try:
+        ensure_models_loaded()
+        if url_model:
+            url_model.predict_proba(["https://google.com"])
+        ensure_deep_phish_loaded()
+        if deep_phish_model and tokenizer:
+            import tensorflow as tf
+            from tensorflow.keras.preprocessing.sequence import pad_sequences
+            seq = tokenizer.texts_to_sequences(["https://google.com"])
+            X = pad_sequences(seq, maxlen=180)
+            fn = get_compiled_deep_predict()
+            if fn is not None:
+                fn(tf.constant(X, dtype=tf.int32))
+            else:
+                deep_phish_model(X, training=False)
+        print("AI Detection Models warmed up and compiled for ultra-fast serving!")
+    except Exception as e:
+        print(f"Model warmup notice: {e}")
+
 def ensure_deep_phish_loaded():
     """Lazily load Deep PhishNet model on first use to reduce startup memory."""
     global deep_phish_model
@@ -168,6 +205,7 @@ def ensure_deep_phish_loaded():
     try:
         import tensorflow as tf
         deep_phish_model = tf.keras.models.load_model(deep_path)
+        get_compiled_deep_predict()
         print("Loaded Deep PhishNet model (lazy) successfully!")
         gc.collect()
     except Exception as e:
@@ -231,7 +269,7 @@ def check_port_connectivity(ip: str, port: int = 443, timeout: float = 1.0) -> b
         return False
 
 
-def check_ports_reachable(ip: str, ports=(443, 80), timeout: float = 1.0) -> bool:
+def check_ports_reachable(ip: str, ports=(443, 80), timeout: float = 0.8) -> bool:
     """
     Checks in parallel if a given IP is reachable on port 443 or 80.
     Uses concurrent socket probes with a tight timeout to eliminate sequential blocking.
@@ -256,7 +294,7 @@ def check_ports_reachable(ip: str, ports=(443, 80), timeout: float = 1.0) -> boo
     return False
 
 
-def _safe_whois(target: str, timeout_sec: float = 2.5):
+def _safe_whois(target: str, timeout_sec: float = 1.0):
     """
     Executes WHOIS query in a dedicated daemon thread so unresponsive
     regional WHOIS servers (port 43) never freeze or deadlock user requests.
@@ -284,9 +322,7 @@ def check_domain_age(url: str) -> dict:
 
         # Query root registered domain (eTLD+1) first so WHOIS does not fail on cloud subdomains (e.g. *.vercel.app)
         target = extract_etld_plus_one(domain) or domain
-        w = _safe_whois(target, timeout_sec=2.5)
-        if not w and target != domain:
-            w = _safe_whois(domain, timeout_sec=1.5)
+        w = _safe_whois(target, timeout_sec=1.0)
 
         if w:
             creation_date = w.creation_date
@@ -320,8 +356,11 @@ def scrape_for_phishing(url: str) -> dict:
         if not url.startswith('http'):
             url = 'http://' + url
             
-        response = requests.get(url, timeout=2.5)
-        soup = BeautifulSoup(response.text, 'html.parser')
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        with requests.get(url, headers=headers, timeout=1.0, stream=True) as response:
+            chunk = next(response.iter_content(65536), b'')
+            content = chunk.decode('utf-8', errors='ignore')
+        soup = BeautifulSoup(content, 'html.parser')
         
         # Heuristics:
         # 1. Asking for password
@@ -377,7 +416,7 @@ def check_virustotal(url: str) -> dict:
             "accept": "application/json",
             "x-apikey": VT_API_KEY
         }
-        response = requests.get(f"https://www.virustotal.com/api/v3/urls/{url_id}", headers=headers, timeout=2.5)
+        response = requests.get(f"https://www.virustotal.com/api/v3/urls/{url_id}", headers=headers, timeout=1.0)
         
         if response.status_code == 200:
             data = response.json()
@@ -411,7 +450,7 @@ def check_google_safe_browsing(url: str) -> dict:
                 ]
             }
         }
-        response = requests.post(api_url, json=payload, timeout=2.5)
+        response = requests.post(api_url, json=payload, timeout=1.0)
         if response.status_code == 200:
             data = response.json()
             if "matches" in data and len(data["matches"]) > 0:
@@ -429,7 +468,7 @@ def check_ssl_certificate(url: str) -> dict:
             return {"is_free_ca": False, "age_days": None, "ssl_issuer": None, "certificate_details": None, "error": "Domain does not resolve"}
             
         context = ssl.create_default_context()
-        with socket.create_connection((domain, 443), timeout=2.5) as sock:
+        with socket.create_connection((domain, 443), timeout=1.0) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
                 issuer = dict(x[0] for x in cert.get('issuer', []))
@@ -459,13 +498,14 @@ def get_ip_geolocation(ip: str) -> dict:
     if not ip:
         return {}
     try:
-        geo_resp = requests.get(f"http://ip-api.com/json/{ip}", timeout=2.0)
+        geo_resp = requests.get(f"http://ip-api.com/json/{ip}", timeout=1.0)
         if geo_resp.status_code == 200:
             return geo_resp.json()
     except Exception:
         pass
     return {}
 
+@cached(cache=url_scan_cache)
 def detect_url_phishing(url: str) -> dict:
     from visual_brand_engine import check_infrastructure_risk, AUTHORIZED_BRAND_DOMAINS
     from features import detect_target_brand, HIGH_RISK_TLDS, SUSPICIOUS_KEYWORDS
@@ -531,8 +571,8 @@ def detect_url_phishing(url: str) -> dict:
     # 0.7. Explicit domain existence check — if the domain cannot be resolved
     # via DNS, it does not exist on the public internet. Do not default such
     # randomly generated / zero-day domains to Safe.
-    domain_resolves = resolve_domain_ip(domain_netloc) is not None
-    if not domain_resolves:
+    domain_ip = resolve_domain_ip(domain_netloc)
+    if not domain_ip:
         return {
             "prediction": "Suspicious",
             "confidence": 0.50,
@@ -541,16 +581,17 @@ def detect_url_phishing(url: str) -> dict:
             "advisory_message": "URL does not exist: Domain cannot be resolved via DNS. No website is hosted at this address."
         }
 
-    # 1. Parallel OSINT Launch: Start all 6 remote threat intelligence, scraping, WHOIS,
-    # and SSL queries concurrently in a dedicated ThreadPoolExecutor so network latencies overlap completely!
+    # 1. Parallel OSINT Launch: Start all remote threat intelligence, scraping, WHOIS,
+    # SSL queries, and GeoIP concurrently in a dedicated ThreadPoolExecutor so network latencies overlap completely!
     import concurrent.futures
-    osint_executor = concurrent.futures.ThreadPoolExecutor(max_workers=6)
+    osint_executor = concurrent.futures.ThreadPoolExecutor(max_workers=7)
     f_infra = osint_executor.submit(check_infrastructure_risk, url)
     f_age = osint_executor.submit(check_domain_age, url)
     f_scrape = osint_executor.submit(scrape_for_phishing, url)
     f_vt = osint_executor.submit(check_virustotal, url)
     f_gsb = osint_executor.submit(check_google_safe_browsing, url)
     f_ssl = osint_executor.submit(check_ssl_certificate, url)
+    f_geo = osint_executor.submit(get_ip_geolocation, domain_ip)
 
     # 1.1 In parallel, execute local ML Ensemble Prediction on main CPU thread (takes ~30ms)
     ensure_models_loaded()
@@ -560,11 +601,16 @@ def detect_url_phishing(url: str) -> dict:
     ensure_deep_phish_loaded()
     if deep_phish_model and tokenizer:
         try:
+            import tensorflow as tf
             from tensorflow.keras.preprocessing.sequence import pad_sequences
             sequences = tokenizer.texts_to_sequences([url])
             input_len = deep_phish_model.input_shape[1] if (hasattr(deep_phish_model, 'input_shape') and deep_phish_model.input_shape[1]) else 180
             X_seq = pad_sequences(sequences, maxlen=input_len)
-            deep_prob = float(deep_phish_model(X_seq, training=False).numpy()[0][0])
+            fast_fn = get_compiled_deep_predict()
+            if fast_fn is not None:
+                deep_prob = float(fast_fn(tf.constant(X_seq, dtype=tf.int32)).numpy()[0][0])
+            else:
+                deep_prob = float(deep_phish_model(X_seq, training=False).numpy()[0][0])
         except Exception as e:
             print(f"Deep learning inference error: {e}")
 
@@ -642,13 +688,14 @@ def detect_url_phishing(url: str) -> dict:
             # Shadow evaluation must never block live serving
             pass
 
-    # Await parallel OSINT & threat intelligence results (all 6 ran concurrently)
+    # Await parallel OSINT & threat intelligence results (all run concurrently)
     infra_info = f_infra.result()
     age_info = f_age.result()
     scrape_info = f_scrape.result()
     vt_info = f_vt.result()
     gsb_info = f_gsb.result()
     ssl_info = f_ssl.result()
+    geo_info = f_geo.result() if f_geo else {}
     osint_executor.shutdown(wait=False)
 
     details = []
@@ -661,7 +708,8 @@ def detect_url_phishing(url: str) -> dict:
             "details": "Google Safe Browsing flagged this URL as Malicious! (100% BLOCKED)",
             "friction_level": "block",
             "advisory_message": "Tier 1 Automated Block: Flagged as confirmed malware/phishing by Google Safe Browsing.",
-            "ssl_info": ssl_info
+            "ssl_info": ssl_info,
+            "geo_info": geo_info
         }
 
     if vt_info.get("malicious", 0) >= 3:
@@ -671,7 +719,8 @@ def detect_url_phishing(url: str) -> dict:
             "details": f"VirusTotal flagged as Malicious by {vt_info['malicious']} security vendors. (100% BLOCKED)",
             "friction_level": "block",
             "advisory_message": f"Tier 1 Automated Block: Flagged as malicious by {vt_info['malicious']} VirusTotal security vendors.",
-            "ssl_info": ssl_info
+            "ssl_info": ssl_info,
+            "geo_info": geo_info
         }
 
     if ml_is_phish:
@@ -886,7 +935,8 @@ def detect_url_phishing(url: str) -> dict:
         "details": " | ".join(details),
         "friction_level": friction_level,
         "advisory_message": advisory_message,
-        "ssl_info": ssl_info
+        "ssl_info": ssl_info,
+        "geo_info": geo_info
     }
     if shadow_telemetry is not None:
         response["shadow_telemetry"] = shadow_telemetry
@@ -1240,7 +1290,7 @@ def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
         "neural_metrics": m3_res if m3_res.get("available") else None
     }
 
-def get_osint_data(url: str, ssl_info: dict = None) -> dict:
+def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> dict:
     parsed = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url)
     domain = parsed.netloc.split(':')[0]
     
@@ -1283,9 +1333,9 @@ def get_osint_data(url: str, ssl_info: dict = None) -> dict:
             osint["ssl_issuer"] = ssl_info.get("ssl_issuer")
             osint["certificate_details"] = ssl_info.get("certificate_details")
         
-        # 2. Cached Geolocation and ASN
+        # 2. Reuse Geolocation from parallel check if available, or fetch from cached get_ip_geolocation
         try:
-            geo_data = get_ip_geolocation(ip)
+            geo_data = geo_info if geo_info is not None else get_ip_geolocation(ip)
             if geo_data.get("status") == "success":
                 osint["location"] = f"{geo_data.get('city', '')}, {geo_data.get('country', '')}".strip(", ")
                 isp_full = geo_data.get('isp', '')

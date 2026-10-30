@@ -42,9 +42,16 @@ app = FastAPI(title="PhishShield-X API", version="0.1.0")
 
 @app.on_event("startup")
 def startup_event():
-    """Warm up machine learning models in a non-blocking background daemon thread."""
+    """Pre-load and JIT-warm machine learning models in a non-blocking background daemon thread."""
     import threading
-    threading.Thread(target=ml_services.load_ai_models, daemon=True).start()
+    def _warmup_worker():
+        try:
+            ml_services.load_ai_models()
+            ml_services.ensure_deep_phish_loaded()
+            ml_services.warmup_models()
+        except Exception as e:
+            print(f"Startup warmup notice: {e}")
+    threading.Thread(target=_warmup_worker, daemon=True).start()
 
 # Allow frontend to connect
 app.add_middleware(
@@ -87,7 +94,7 @@ def health_check():
 @app.post("/api/detect/url", response_model=schemas.ScanResponse)
 def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
     result = ml_services.detect_url_phishing(request.url)
-    osint_data = ml_services.get_osint_data(request.url, ssl_info=result.get("ssl_info"))
+    osint_data = ml_services.get_osint_data(request.url, ssl_info=result.get("ssl_info"), geo_info=result.get("geo_info"))
     
     saved = save_history(db, "url", request.url, result)
     shadow = result.get("shadow_telemetry") or {}
