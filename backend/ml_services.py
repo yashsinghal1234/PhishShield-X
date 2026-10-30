@@ -25,13 +25,15 @@ import tldextract
 socket.setdefaulttimeout(3.0)
 
 # TTL-aware in-memory caches to prevent stale caching vulnerabilities (e.g. watering-hole compromises)
-# Expirations: 5 minutes (300s) for dynamic resolution & threat feeds; 1 hour (3600s) for WHOIS domain age
+# Expirations: 5 minutes (300s) for dynamic resolution & threat feeds; 1 hour (3600s) for WHOIS domain age & GeoIP
 # Reduced maxsize to limit memory footprint on constrained cloud instances
 dns_cache = TTLCache(maxsize=500, ttl=300)
 whois_cache = TTLCache(maxsize=500, ttl=3600)
 vt_cache = TTLCache(maxsize=200, ttl=300)
 gsb_cache = TTLCache(maxsize=200, ttl=300)
 ssl_cache = TTLCache(maxsize=200, ttl=300)
+scrape_cache = TTLCache(maxsize=200, ttl=300)
+geo_cache = TTLCache(maxsize=500, ttl=3600)
 
 load_dotenv()
 
@@ -214,7 +216,7 @@ def resolve_domain_ip(domain: str):
 
 
 @cached(cache=dns_cache)
-def check_port_connectivity(ip: str, port: int = 443, timeout: float = 3.0) -> bool:
+def check_port_connectivity(ip: str, port: int = 443, timeout: float = 1.0) -> bool:
     """
     Checks if a given IP is actually reachable on a specific port via TCP connect.
     More reliable than ICMP ping (often blocked by firewalls/cloud providers).
@@ -228,6 +230,50 @@ def check_port_connectivity(ip: str, port: int = 443, timeout: float = 3.0) -> b
     except Exception:
         return False
 
+
+def check_ports_reachable(ip: str, ports=(443, 80), timeout: float = 1.0) -> bool:
+    """
+    Checks in parallel if a given IP is reachable on port 443 or 80.
+    Uses concurrent socket probes with a tight timeout to eliminate sequential blocking.
+    """
+    if not ip:
+        return False
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    def _test(port):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(timeout)
+                return sock.connect_ex((ip, port)) == 0
+        except Exception:
+            return False
+
+    with ThreadPoolExecutor(max_workers=len(ports)) as executor:
+        futures = [executor.submit(_test, p) for p in ports]
+        for f in as_completed(futures):
+            if f.result():
+                return True
+    return False
+
+
+def _safe_whois(target: str, timeout_sec: float = 2.5):
+    """
+    Executes WHOIS query in a dedicated daemon thread so unresponsive
+    regional WHOIS servers (port 43) never freeze or deadlock user requests.
+    """
+    import threading
+    res = [None]
+    def _worker():
+        try:
+            res[0] = whois.whois(target)
+        except Exception:
+            pass
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    t.join(timeout=timeout_sec)
+    return res[0]
+
+
 @cached(cache=whois_cache)
 def check_domain_age(url: str) -> dict:
     try:
@@ -238,14 +284,9 @@ def check_domain_age(url: str) -> dict:
 
         # Query root registered domain (eTLD+1) first so WHOIS does not fail on cloud subdomains (e.g. *.vercel.app)
         target = extract_etld_plus_one(domain) or domain
-        w = None
-        try:
-            w = whois.whois(target)
-        except Exception:
-            try:
-                w = whois.whois(domain)
-            except Exception:
-                pass
+        w = _safe_whois(target, timeout_sec=2.5)
+        if not w and target != domain:
+            w = _safe_whois(domain, timeout_sec=1.5)
 
         if w:
             creation_date = w.creation_date
@@ -268,6 +309,7 @@ def check_domain_age(url: str) -> dict:
     except Exception as e:
         return {"age_days": None, "error": str(e)}
 
+@cached(cache=scrape_cache)
 def scrape_for_phishing(url: str) -> dict:
     # A heuristic web scraper with structural DOM inspection
     try:
@@ -278,7 +320,7 @@ def scrape_for_phishing(url: str) -> dict:
         if not url.startswith('http'):
             url = 'http://' + url
             
-        response = requests.get(url, timeout=3)
+        response = requests.get(url, timeout=2.5)
         soup = BeautifulSoup(response.text, 'html.parser')
         
         # Heuristics:
@@ -286,11 +328,6 @@ def scrape_for_phishing(url: str) -> dict:
         has_password_field = len(soup.find_all('input', type='password')) > 0
 
         # 2. Hidden iframes (often used in credential harvesting clickjacking)
-        # Precision guardrail: only flag hidden iframes whose payload is neither
-        # same-origin content nor a well-known benign embed provider. Virtually
-        # every large legitimate site ships display:none iframes — most commonly
-        # the Google Tag Manager noscript analytics beacon — so counting those
-        # produced severe false positives (e.g. college exam LMS portals).
         TRUSTED_IFRAME_HOSTS = (
             "googletagmanager.com", "google-analytics.com", "doubleclick.net",
             "challenges.cloudflare.com", "recaptcha.net", "gstatic.com",
@@ -340,7 +377,7 @@ def check_virustotal(url: str) -> dict:
             "accept": "application/json",
             "x-apikey": VT_API_KEY
         }
-        response = requests.get(f"https://www.virustotal.com/api/v3/urls/{url_id}", headers=headers, timeout=3)
+        response = requests.get(f"https://www.virustotal.com/api/v3/urls/{url_id}", headers=headers, timeout=2.5)
         
         if response.status_code == 200:
             data = response.json()
@@ -374,7 +411,7 @@ def check_google_safe_browsing(url: str) -> dict:
                 ]
             }
         }
-        response = requests.post(api_url, json=payload, timeout=3)
+        response = requests.post(api_url, json=payload, timeout=2.5)
         if response.status_code == 200:
             data = response.json()
             if "matches" in data and len(data["matches"]) > 0:
@@ -389,23 +426,45 @@ def check_ssl_certificate(url: str) -> dict:
     try:
         domain = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url).netloc.split(':')[0]
         if not domain or not resolve_domain_ip(domain):
-            return {"is_free_ca": False, "age_days": None, "error": "Domain does not resolve"}
+            return {"is_free_ca": False, "age_days": None, "ssl_issuer": None, "certificate_details": None, "error": "Domain does not resolve"}
             
         context = ssl.create_default_context()
-        with socket.create_connection((domain, 443), timeout=3) as sock:
+        with socket.create_connection((domain, 443), timeout=2.5) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
-                issuer = dict(x[0] for x in cert['issuer'])
-                issuer_org = issuer.get('organizationName', '')
+                issuer = dict(x[0] for x in cert.get('issuer', []))
+                issuer_org = issuer.get('organizationName', '--')
                 
                 is_free_ca = any(ca in issuer_org for ca in ["Let's Encrypt", "ZeroSSL", "cPanel"])
                 
                 not_before = datetime.strptime(cert['notBefore'], '%b %d %H:%M:%S %Y %Z')
                 age_days = (datetime.now() - not_before).days
                 
-                return {"is_free_ca": is_free_ca, "age_days": age_days, "error": None}
+                san_list = [v for k, v in cert.get('subjectAltName', [])]
+                cert_details = f"{issuer_org}: " + ", ".join(san_list[:3]) + ("..." if len(san_list) > 3 else "") if san_list else None
+                
+                return {
+                    "is_free_ca": is_free_ca,
+                    "age_days": age_days,
+                    "ssl_issuer": issuer_org if issuer_org != "--" else None,
+                    "certificate_details": cert_details,
+                    "error": None
+                }
     except Exception as e:
-        return {"is_free_ca": False, "age_days": None, "error": str(e)}
+        return {"is_free_ca": False, "age_days": None, "ssl_issuer": None, "certificate_details": None, "error": str(e)}
+
+
+@cached(cache=geo_cache)
+def get_ip_geolocation(ip: str) -> dict:
+    if not ip:
+        return {}
+    try:
+        geo_resp = requests.get(f"http://ip-api.com/json/{ip}", timeout=2.0)
+        if geo_resp.status_code == 200:
+            return geo_resp.json()
+    except Exception:
+        pass
+    return {}
 
 def detect_url_phishing(url: str) -> dict:
     from visual_brand_engine import check_infrastructure_risk, AUTHORIZED_BRAND_DOMAINS
@@ -482,7 +541,18 @@ def detect_url_phishing(url: str) -> dict:
             "advisory_message": "URL does not exist: Domain cannot be resolved via DNS. No website is hosted at this address."
         }
 
-    # 1. Ensemble ML Prediction (Deep PhishNet-Hybrid + Tabular Feature Model)
+    # 1. Parallel OSINT Launch: Start all 6 remote threat intelligence, scraping, WHOIS,
+    # and SSL queries concurrently in a dedicated ThreadPoolExecutor so network latencies overlap completely!
+    import concurrent.futures
+    osint_executor = concurrent.futures.ThreadPoolExecutor(max_workers=6)
+    f_infra = osint_executor.submit(check_infrastructure_risk, url)
+    f_age = osint_executor.submit(check_domain_age, url)
+    f_scrape = osint_executor.submit(scrape_for_phishing, url)
+    f_vt = osint_executor.submit(check_virustotal, url)
+    f_gsb = osint_executor.submit(check_google_safe_browsing, url)
+    f_ssl = osint_executor.submit(check_ssl_certificate, url)
+
+    # 1.1 In parallel, execute local ML Ensemble Prediction on main CPU thread (takes ~30ms)
     ensure_models_loaded()
     deep_prob = None
     rf_prob = None
@@ -572,13 +642,14 @@ def detect_url_phishing(url: str) -> dict:
             # Shadow evaluation must never block live serving
             pass
 
-    # 2. Multi-Signal OSINT, Threat Intel, Infrastructure & Brand Analysis
-    infra_info = check_infrastructure_risk(url)
-    age_info = check_domain_age(url)
-    scrape_info = scrape_for_phishing(url)
-    vt_info = check_virustotal(url)
-    gsb_info = check_google_safe_browsing(url)
-    ssl_info = check_ssl_certificate(url)
+    # Await parallel OSINT & threat intelligence results (all 6 ran concurrently)
+    infra_info = f_infra.result()
+    age_info = f_age.result()
+    scrape_info = f_scrape.result()
+    vt_info = f_vt.result()
+    gsb_info = f_gsb.result()
+    ssl_info = f_ssl.result()
+    osint_executor.shutdown(wait=False)
 
     details = []
 
@@ -589,7 +660,8 @@ def detect_url_phishing(url: str) -> dict:
             "confidence": 0.99,
             "details": "Google Safe Browsing flagged this URL as Malicious! (100% BLOCKED)",
             "friction_level": "block",
-            "advisory_message": "Tier 1 Automated Block: Flagged as confirmed malware/phishing by Google Safe Browsing."
+            "advisory_message": "Tier 1 Automated Block: Flagged as confirmed malware/phishing by Google Safe Browsing.",
+            "ssl_info": ssl_info
         }
 
     if vt_info.get("malicious", 0) >= 3:
@@ -598,7 +670,8 @@ def detect_url_phishing(url: str) -> dict:
             "confidence": 0.99,
             "details": f"VirusTotal flagged as Malicious by {vt_info['malicious']} security vendors. (100% BLOCKED)",
             "friction_level": "block",
-            "advisory_message": f"Tier 1 Automated Block: Flagged as malicious by {vt_info['malicious']} VirusTotal security vendors."
+            "advisory_message": f"Tier 1 Automated Block: Flagged as malicious by {vt_info['malicious']} VirusTotal security vendors.",
+            "ssl_info": ssl_info
         }
 
     if ml_is_phish:
@@ -746,7 +819,7 @@ def detect_url_phishing(url: str) -> dict:
                         resolved_ip = resolve_domain_ip(domain_netloc)
                         ip_reachable = False
                         if resolved_ip:
-                            ip_reachable = check_port_connectivity(resolved_ip, 443) or check_port_connectivity(resolved_ip, 80)
+                            ip_reachable = check_ports_reachable(resolved_ip, ports=(443, 80), timeout=1.0)
 
                         ssl_has_error = ssl_info.get("error") is not None
                         scrape_has_error = scrape_info.get("error") is not None
@@ -812,7 +885,8 @@ def detect_url_phishing(url: str) -> dict:
         "confidence": reported_confidence,
         "details": " | ".join(details),
         "friction_level": friction_level,
-        "advisory_message": advisory_message
+        "advisory_message": advisory_message,
+        "ssl_info": ssl_info
     }
     if shadow_telemetry is not None:
         response["shadow_telemetry"] = shadow_telemetry
@@ -1166,7 +1240,7 @@ def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
         "neural_metrics": m3_res if m3_res.get("available") else None
     }
 
-def get_osint_data(url: str) -> dict:
+def get_osint_data(url: str, ssl_info: dict = None) -> dict:
     parsed = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url)
     domain = parsed.netloc.split(':')[0]
     
@@ -1196,50 +1270,30 @@ def get_osint_data(url: str) -> dict:
         "certificate_details": None
     }
     
-    # Try fetching SSL Details
+    # Resolve domain IP (cached via dns_cache)
     ip = resolve_domain_ip(domain)
     if ip:
         osint["ip_address"] = ip
-        try:
-            ctx = ssl.create_default_context()
-            with socket.create_connection((domain, 443), timeout=2) as sock:
-                with ctx.wrap_socket(sock, server_hostname=domain) as ssock:
-                    cert = ssock.getpeercert()
-                    
-                    # Extract SSL Certificate Authority (Issuer Organization)
-                    issuer_org = "--"
-                    for field in cert.get('issuer', []):
-                        for k, v in field:
-                            if k == 'organizationName':
-                                issuer_org = v
-                                break
-                                
-                    # Extract Certificate Details (Subject Alt Names)
-                    san_list = []
-                    for k, v in cert.get('subjectAltName', []):
-                        san_list.append(v)
-                    
-                    if issuer_org != "--":
-                        osint["ssl_issuer"] = issuer_org
-                    
-                    if san_list:
-                        osint["certificate_details"] = f"{issuer_org}: " + ", ".join(san_list[:3]) + ("..." if len(san_list) > 3 else "")
-                        
-        except Exception as e:
-            print(f"SSL error: {e}")
         
+        # 1. Reuse SSL details from parallel check if available, or fetch from cached check_ssl_certificate
+        if ssl_info is None:
+            ssl_info = check_ssl_certificate(url)
+            
+        if ssl_info and not ssl_info.get("error"):
+            osint["ssl_issuer"] = ssl_info.get("ssl_issuer")
+            osint["certificate_details"] = ssl_info.get("certificate_details")
+        
+        # 2. Cached Geolocation and ASN
         try:
-            geo_resp = requests.get(f"http://ip-api.com/json/{ip}", timeout=2)
-            if geo_resp.status_code == 200:
-                geo_data = geo_resp.json()
-                if geo_data.get("status") == "success":
-                    osint["location"] = f"{geo_data.get('city', '')}, {geo_data.get('country', '')}".strip(", ")
-                    isp_full = geo_data.get('isp', '')
-                    osint["hosting_provider"] = isp_full.split(' ')[0] if isp_full else None
-                    
-                    as_info = geo_data.get("as", "")
-                    if as_info:
-                        osint["asn"] = as_info.split(' ')[0].replace("AS", "")
+            geo_data = get_ip_geolocation(ip)
+            if geo_data.get("status") == "success":
+                osint["location"] = f"{geo_data.get('city', '')}, {geo_data.get('country', '')}".strip(", ")
+                isp_full = geo_data.get('isp', '')
+                osint["hosting_provider"] = isp_full.split(' ')[0] if isp_full else None
+                
+                as_info = geo_data.get("as", "")
+                if as_info:
+                    osint["asn"] = as_info.split(' ')[0].replace("AS", "")
         except Exception as e:
             print(f"OSINT error: {e}")
             

@@ -87,7 +87,7 @@ def health_check():
 @app.post("/api/detect/url", response_model=schemas.ScanResponse)
 def scan_url(request: schemas.URLScanRequest, db: Session = Depends(get_db)):
     result = ml_services.detect_url_phishing(request.url)
-    osint_data = ml_services.get_osint_data(request.url)
+    osint_data = ml_services.get_osint_data(request.url, ssl_info=result.get("ssl_info"))
     
     saved = save_history(db, "url", request.url, result)
     shadow = result.get("shadow_telemetry") or {}

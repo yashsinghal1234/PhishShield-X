@@ -273,8 +273,8 @@ def recursively_unroll_url(initial_url: str, max_hops: int = 4) -> Tuple[str, Li
             if any(domain == s or domain.endswith("." + s) for s in KNOWN_SHORTENERS_AND_REDIRECTS):
                 risk_boost = max(risk_boost, 0.30)
 
-            # Send lightweight HEAD request to follow redirect
-            resp = requests.head(current_url, allow_redirects=True, timeout=3.5)
+            # Send lightweight HEAD request to follow redirect with fast 1.5s timeout
+            resp = requests.head(current_url, allow_redirects=True, timeout=1.5)
             if resp.url and resp.url != current_url:
                 chain.append(resp.url)
                 current_url = resp.url
