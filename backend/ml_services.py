@@ -506,7 +506,7 @@ def check_ssl_certificate(url: str) -> dict:
                 age_days = (datetime.now() - not_before).days
                 
                 san_list = [v for k, v in cert.get('subjectAltName', [])]
-                cert_details = f"{issuer_org}: " + ", ".join(san_list[:3]) + ("..." if len(san_list) > 3 else "") if san_list else None
+                cert_details = f"Issued to '{', '.join(san_list[:3])}' by {issuer_org}" if san_list else f"Issued by {issuer_org}"
                 
                 return {
                     "is_free_ca": is_free_ca,
@@ -545,7 +545,7 @@ def detect_url_phishing(url: str) -> dict:
         return {
             "prediction": "Safe",
             "confidence": 1.0,
-            "details": f"Domain {domain_netloc} (root: {domain_etld1}) is in the Top 100,000 Global Sites whitelist. (100% SAFE)",
+            "details": f"The domain '{domain_netloc}' (root domain: '{domain_etld1}') is verified in the Top 100,000 Global Whitelist. (100% SAFE)",
             "friction_level": "none",
             "advisory_message": None
         }
@@ -566,7 +566,7 @@ def detect_url_phishing(url: str) -> dict:
             return {
                 "prediction": "Safe",
                 "confidence": 0.99,
-                "details": f"Domain {domain_netloc} is an authorized first-party host/subdomain for '{detected_brand}'. (100% SAFE)",
+                "details": f"The domain '{domain_netloc}' is an authorized first-party host/subdomain for '{detected_brand}'. (100% SAFE)",
                 "friction_level": "none",
                 "advisory_message": None
             }
