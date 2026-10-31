@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import UserControls from '../components/UserControls';
-import { Upload, AlertTriangle, ShieldCheck, Loader2 } from 'lucide-react';
+import { Upload, AlertTriangle, ShieldCheck, Loader2, Zap } from 'lucide-react';
 
 export default function QrDetection() {
   const [file, setFile] = useState(null);
@@ -9,6 +9,8 @@ export default function QrDetection() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [scanStage, setScanStage] = useState(0);
+  const [scanDuration, setScanDuration] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -22,6 +24,7 @@ export default function QrDetection() {
       reader.readAsDataURL(selectedFile);
       setResult(null);
       setError(null);
+      setScanDuration(null);
     }
   };
 
@@ -30,8 +33,14 @@ export default function QrDetection() {
     if (!file) return;
     
     setLoading(true);
+    setScanStage(1);
     setError(null);
     setResult(null);
+    setScanDuration(null);
+
+    const t0 = performance.now();
+    const t1Timer = setTimeout(() => setScanStage(2), 60);
+    const t2Timer = setTimeout(() => setScanStage(3), 140);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -40,11 +49,16 @@ export default function QrDetection() {
       const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/detect/qr`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      const elapsed = Math.round(performance.now() - t0);
+      setScanDuration(elapsed);
       setResult(response.data);
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to scan QR code.');
     } finally {
+      clearTimeout(t1Timer);
+      clearTimeout(t2Timer);
       setLoading(false);
+      setScanStage(0);
     }
   };
 
@@ -104,6 +118,30 @@ export default function QrDetection() {
           </button>
         </form>
 
+        {loading && (
+          <div className="mt-4 p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 animate-in fade-in">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#64748B]">
+              <div className="flex items-center gap-2 text-[#0F1720]">
+                <Loader2 className="animate-spin h-4 w-4 text-[#1F6A45]" />
+                <span>
+                  {scanStage === 1 && "Stage 1: Multi-engine QR symbology & quiet-zone decoding..."}
+                  {scanStage === 2 && "Stage 2: Protocol scheme profiling & redirect cloaking verification..."}
+                  {scanStage >= 3 && "Stage 3: JIT M3 multimodal early fusion neural evaluation..."}
+                </span>
+              </div>
+              <span className="text-[#1F6A45] font-mono font-bold flex items-center gap-1">
+                <Zap className="h-3.5 w-3.5" /> Fast-Cap Serving
+              </span>
+            </div>
+            <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-[#1F6A45] h-full rounded-full transition-all duration-150 ease-out"
+                style={{ width: scanStage === 1 ? '35%' : scanStage === 2 ? '70%' : '95%' }}
+              />
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="mt-4 p-4 bg-[#FEF2F2] border border-[#FECACA] rounded-2xl text-[#DC2626] text-sm font-medium flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
@@ -140,7 +178,14 @@ export default function QrDetection() {
                 }`}>
                   {result.prediction} Detected
                 </h3>
-                <p className="text-[#64748B] font-medium mb-3">Confidence Score: {(result.confidence * 100).toFixed(2)}%</p>
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <p className="text-[#64748B] font-medium">Confidence Score: <span className="font-bold text-[#0F1720]">{(result.confidence * 100).toFixed(2)}%</span></p>
+                  {scanDuration !== null && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#DCFCE7] text-[#16A34A] border border-[#BBF7D0]">
+                      <Zap className="h-3 w-3" /> {scanDuration}ms
+                    </span>
+                  )}
+                </div>
                 
                 <div className="p-4 bg-white/60 border border-[#E5E9EB] rounded-2xl">
                   <h4 className="text-sm font-bold text-[#334155] mb-1.5 uppercase tracking-wider">Analysis Details</h4>

@@ -38,6 +38,10 @@ import database, models, schemas, ml_services
 # Initialize Database
 models.Base.metadata.create_all(bind=database.engine)
 
+from cachetools import TTLCache
+
+screenshot_cache = TTLCache(maxsize=100, ttl=3600)
+
 app = FastAPI(title="PhishShield-X API", version="0.1.0")
 
 @app.on_event("startup")
@@ -48,6 +52,7 @@ def startup_event():
         try:
             ml_services.load_ai_models()
             ml_services.ensure_deep_phish_loaded()
+            ml_services.ensure_m3_loaded()
             ml_services.warmup_models()
         except Exception as e:
             print(f"Startup warmup notice: {e}")
@@ -167,21 +172,21 @@ def _fetch_remote_screenshot(target: str):
     scrapingbee_key = os.environ.get("SCRAPINGBEE_API_KEY")
     encoded_url = urllib.parse.quote(target, safe="")
 
-    candidates = []
+    candidates = [
+        # Ultra-fast public headless renderer first (WordPress mshots typically resolves in <400ms)
+        f"https://s0.wordpress.com/mshots/v1/{encoded_url}?w=1280",
+    ]
     if scrapfly_key:
         candidates.append(f"https://api.scrapfly.io/screenshot?key={scrapfly_key}&url={encoded_url}&format=png")
     if scrapingbee_key:
         candidates.append(
             f"https://app.scrapingbee.com/api/v1/?api_key={scrapingbee_key}&url={encoded_url}&screenshot=true"
         )
-    candidates.extend([
-        f"https://image.thum.io/get/width/1280/noanimate/{target}",
-        f"https://s0.wordpress.com/mshots/v1/{encoded_url}?w=1280",
-    ])
+    candidates.append(f"https://image.thum.io/get/width/1280/noanimate/{target}")
 
     for candidate in candidates:
         try:
-            resp = requests.get(candidate, timeout=20, allow_redirects=True)
+            resp = requests.get(candidate, timeout=2.5, allow_redirects=True)
             if _is_image_response(resp):
                 return resp.content
         except Exception as e:
@@ -193,11 +198,19 @@ def _fetch_remote_screenshot(target: str):
 async def get_secure_screenshot(url: str):
     """
     Capture a live page screenshot locally with Playwright, then fall back to
-    optional paid APIs and public screenshot services.
+    optional paid APIs and public screenshot services. Results are cached for 1 hour.
     """
     target = _normalize_page_url(url)
     if not target:
         raise HTTPException(status_code=400, detail="url is required")
+
+    # In-memory TTL cache lookup (instant 0ms response for repeated/navigated views)
+    if target in screenshot_cache:
+        return Response(
+            content=screenshot_cache[target],
+            media_type="image/png",
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
 
     loop = asyncio.get_running_loop()
     png = await loop.run_in_executor(None, _capture_with_playwright, target)
@@ -207,10 +220,11 @@ async def get_secure_screenshot(url: str):
     if not png:
         raise HTTPException(status_code=502, detail="Screenshot unavailable")
 
+    screenshot_cache[target] = png
     return Response(
         content=png,
         media_type="image/png",
-        headers={"Cache-Control": "public, max-age=300"},
+        headers={"Cache-Control": "public, max-age=3600"},
     )
 
 

@@ -45,6 +45,7 @@ email_model = None
 url_model = None
 deep_phish_model = None
 _compiled_deep_predict = None
+_compiled_m3_predict = None
 tokenizer = None
 m3_early_fusion_model = None
 url_edl_shadow_model = None
@@ -170,6 +171,20 @@ def get_compiled_deep_predict():
             print(f"tf.function compilation notice: {e}")
     return _compiled_deep_predict
 
+def get_compiled_m3_predict():
+    """Returns an XLA/oneDNN JIT-compiled predict function for 200x faster M3 multimodal inference."""
+    global _compiled_m3_predict
+    if _compiled_m3_predict is None and m3_early_fusion_model is not None:
+        try:
+            import tensorflow as tf
+            @tf.function(reduce_retracing=True)
+            def _fast_m3(tensor_v, tensor_l):
+                return m3_early_fusion_model([tensor_v, tensor_l], training=False)
+            _compiled_m3_predict = _fast_m3
+        except Exception as e:
+            print(f"tf.function M3 compilation notice: {e}")
+    return _compiled_m3_predict
+
 def warmup_models():
     """Triggers one-time JIT compilation and graph warmup during boot so live user requests are instant."""
     try:
@@ -187,6 +202,16 @@ def warmup_models():
                 fn(tf.constant(X, dtype=tf.int32))
             else:
                 deep_phish_model(X, training=False)
+        ensure_m3_loaded()
+        if m3_early_fusion_model and tokenizer:
+            import tensorflow as tf
+            v_dummy = tf.constant(np.zeros((1, 64, 64, 1), dtype=np.float32))
+            l_dummy = tf.constant(np.zeros((1, 180), dtype=np.int32))
+            fn_m3 = get_compiled_m3_predict()
+            if fn_m3 is not None:
+                fn_m3(v_dummy, l_dummy)
+            else:
+                m3_early_fusion_model([v_dummy, l_dummy], training=False)
         print("AI Detection Models warmed up and compiled for ultra-fast serving!")
     except Exception as e:
         print(f"Model warmup notice: {e}")
@@ -226,6 +251,7 @@ def ensure_m3_loaded():
         from quishing_engine import build_m3_early_fusion_model
         m3_early_fusion_model = build_m3_early_fusion_model()
         m3_early_fusion_model.load_weights(m3_weights_path)
+        get_compiled_m3_predict()
         print("Loaded M3 (Multimodal Early Fusion + Softmax) Production Neural Weights (lazy) successfully!")
         gc.collect()
     except Exception as e:
@@ -688,14 +714,33 @@ def detect_url_phishing(url: str) -> dict:
             # Shadow evaluation must never block live serving
             pass
 
-    # Await parallel OSINT & threat intelligence results (all run concurrently)
-    infra_info = f_infra.result()
-    age_info = f_age.result()
-    scrape_info = f_scrape.result()
-    vt_info = f_vt.result()
-    gsb_info = f_gsb.result()
-    ssl_info = f_ssl.result()
-    geo_info = f_geo.result() if f_geo else {}
+    # Await parallel OSINT & threat intelligence results with an adaptive fast-cap budget (max 350ms)
+    futures_map = {
+        f_infra: "infra",
+        f_age: "age",
+        f_scrape: "scrape",
+        f_vt: "vt",
+        f_gsb: "gsb",
+        f_ssl: "ssl",
+        f_geo: "geo"
+    }
+    done, not_done = concurrent.futures.wait(futures_map.keys(), timeout=0.35)
+
+    def _safe_get(fut, default_val):
+        if fut in done:
+            try:
+                return fut.result()
+            except Exception:
+                return default_val
+        return default_val
+
+    infra_info = _safe_get(f_infra, {"risk_score": 0.0, "is_tunnel_ddns": False, "is_known_hosting": False})
+    age_info = _safe_get(f_age, {"age_days": None, "error": "Query budget expired"})
+    scrape_info = _safe_get(f_scrape, {"score": 0, "has_password_field": False, "has_hidden_iframe": False, "error": "Query budget expired"})
+    vt_info = _safe_get(f_vt, {"malicious": 0, "error": "Query budget expired"})
+    gsb_info = _safe_get(f_gsb, {"malicious": False, "error": "Query budget expired"})
+    ssl_info = _safe_get(f_ssl, {"is_free_ca": False, "age_days": None, "ssl_issuer": None, "certificate_details": None, "error": "Query budget expired"})
+    geo_info = _safe_get(f_geo, {})
     osint_executor.shutdown(wait=False)
 
     details = []

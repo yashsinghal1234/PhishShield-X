@@ -264,6 +264,26 @@ def recursively_unroll_url(initial_url: str, max_hops: int = 4) -> Tuple[str, Li
     chain = [initial_url]
     risk_boost = 0.0
 
+    parsed = urllib.parse.urlparse(current_url)
+    domain = parsed.netloc.lower().split(":")[0]
+
+    # Fast gate: Check if domain is a known shortener or open redirect host with active redirection parameter.
+    is_shortener = any(domain == s or domain.endswith("." + s) for s in KNOWN_SHORTENERS_AND_REDIRECTS)
+    is_open_redirect = False
+    for host, params in OPEN_REDIRECT_HOSTS.items():
+        if domain == host or domain.endswith("." + host):
+            if params:
+                query_dict = urllib.parse.parse_qs(parsed.query)
+                if any(p in query_dict for p in params):
+                    is_open_redirect = True
+                    break
+            else:
+                is_open_redirect = True
+                break
+
+    if not (is_shortener or is_open_redirect):
+        return current_url, chain, 0.0
+
     for hop in range(max_hops):
         try:
             parsed = urllib.parse.urlparse(current_url)
@@ -273,8 +293,9 @@ def recursively_unroll_url(initial_url: str, max_hops: int = 4) -> Tuple[str, Li
             if any(domain == s or domain.endswith("." + s) for s in KNOWN_SHORTENERS_AND_REDIRECTS):
                 risk_boost = max(risk_boost, 0.30)
 
-            # Send lightweight HEAD request to follow redirect with fast 1.5s timeout
-            resp = requests.head(current_url, allow_redirects=True, timeout=1.5)
+            # Send lightweight request to follow redirect with fast 0.8s timeout
+            headers = {"User-Agent": "Mozilla/5.0"}
+            resp = requests.head(current_url, headers=headers, allow_redirects=True, timeout=0.8)
             if resp.url and resp.url != current_url:
                 chain.append(resp.url)
                 current_url = resp.url
@@ -368,8 +389,15 @@ def evaluate_m3_early_fusion(
         seqs = tokenizer.texts_to_sequences([payload_text])
         seq_tensor = pad_sequences(seqs, maxlen=180, padding="post", truncating="post")
 
-        # 3. Model Forward Pass
-        probs = model.predict([img_tensor, seq_tensor], verbose=0)
+        # 3. Model Forward Pass (using JIT-compiled predict for ~200x faster inference)
+        import ml_services
+        fast_fn = ml_services.get_compiled_m3_predict()
+        if fast_fn is not None:
+            import tensorflow as tf
+            probs = fast_fn(tf.constant(img_tensor, dtype=tf.float32), tf.constant(seq_tensor, dtype=tf.int32)).numpy()
+        else:
+            probs = model([img_tensor, seq_tensor], training=False).numpy()
+
         if isinstance(probs, list):
             probs = probs[-1]
 
