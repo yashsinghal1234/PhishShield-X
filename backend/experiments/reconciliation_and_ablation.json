@@ -1,0 +1,42 @@
+{
+  "artifact_classifier_5fold_xgb": 0.7918481012490155,
+  "artifact_classifier_temp_xgb": 0.7605998062357744,
+  "full_xgb_temp_auroc": 0.9055458638669956,
+  "full_xgb_tpr_1pct": 61.231238870516414,
+  "ablated_xgb_temp_auroc": 0.8354195326321041,
+  "ablated_xgb_tpr_1pct": 61.231238870516414,
+  "top_positive_ngrams": [
+    "tp://",
+    "tp:",
+    "p://",
+    "p:/",
+    "http:",
+    "ttp:/",
+    "ttp:",
+    "tp:/",
+    ".com ",
+    "com ",
+    "om ",
+    ".we",
+    "id=",
+    "p/ ",
+    "op/"
+  ],
+  "top_negative_ngrams": [
+    "www.",
+    "ww.",
+    "/www.",
+    "www",
+    "com/",
+    "//www",
+    "om/",
+    ".com/",
+    "://ww",
+    "//ww",
+    "/www",
+    ".jp/",
+    "/ww",
+    "jp/",
+    "s://w"
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "artifact_audit": {
+    "benign": {
+      "n": 23173,
+      "https_pct": 97.79484745177577,
+      "http_pct": 0.6084667500970957,
+      "bare_domain_pct": 7.482846416087688,
+      "mean_url_len": 60.4235964268761,
+      "median_url_len": 55.0,
+      "mean_path_len": 33.97199326802745,
+      "median_path_len": 28.0,
+      "mean_dom_len": 13.339101540586027,
+      "mean_subdomains": 0.8617356406162344,
+      "has_query_pct": 0.004315367021965218
+    },
+    "phish": {
+      "n": 18771,
+      "https_pct": 86.97458846092377,
+      "http_pct": 13.025411539076234,
+      "bare_domain_pct": 44.45687496670396,
+      "mean_url_len": 55.55825475467476,
+      "median_url_len": 39.0,
+      "mean_path_len": 21.69879068776304,
+      "median_path_len": 2.0,
+      "mean_dom_len": 12.607745991156571,
+      "mean_subdomains": 0.8382078738479569,
+      "has_query_pct": 9.924884129774652
+    }
+  },
+  "paired_ci_1pct_fpr": {
+    "xgb_minus_ngram": {
+      "mean": 11.466518466906695,
+      "ci_95": [
+        5.96350112229971,
+        16.68845228326747
+      ]
+    },
+    "stack_minus_xgb": {
+      "mean": -4.230918243225846,
+      "ci_95": [
+        -10.066300825055688,
+        2.275625638895986
+      ]
+    }
+  },
+  "top30_ngram_false_positives": [
+    {
+      "rank": 1,
+      "url": "http://justlink.top/trade.php",
+      "domain": "justlink.top",
+      "p_ngram": 0.9944182500906082,
+      "p_xgb": 0.9881759881973267,
+      "p_stack": 0.9916092083967737
+    },
+    {
+      "rank": 2,
+      "url": "https://qware.app/",
+      "domain": "qware.app",
+      "p_ngram": 0.9920742161908961,
+      "p_xgb": 0.5133270621299744,
+      "p_stack": 0.7766379938832492
+    },
+    {
+      "rank": 3,
+      "url": "http://dostube.com/",
+      "domain": "dostube.com",
+      "p_ngram": 0.9818608453892699,
+      "p_xgb": 0.9809626340866089,
+      "p_stack": 0.9814566264612146
+    },
+    {
+      "rank": 4,
+      "url": "https://flowc.ziik.io/",
+      "domain": "ziik.io",
+      "p_ngram": 0.9745640826484596,
+      "p_xgb": 0.853738009929657,
+      "p_stack": 0.9201923409843018
+    },
+    {
+      "rank": 5,
+      "url": "http://webmail.broadengine.com/",
+      "domain": "broadengine.com",
+      "p_ngram": 0.9729730242228508,
+      "p_xgb": 0.9915869235992432,
+      "p_stack": 0.9813492729817629
+    },
+    {
+      "rank": 6,
+      "url": "https://rc-ui.trevipay.app/index.html",
+      "domain": "trevipay.app",
+      "p_ngram": 0.9721422989637732,
+      "p_xgb": 0.5393145084381104,
+      "p_stack": 0.7773697813062961
+    },
+    {
+      "rank": 7,
+      "url": "http://hcps.us/",
+      "domain": "hcps.us",
+      "p_ngram": 0.9714991035733263,
+      "p_xgb": 0.8872796297073364,
+      "p_stack": 0.933600316491773
+    },
+    {
+      "rank": 8,
+      "url": "http://llclick.com/nmwdpjjd/",
+      "domain": "llclick.com",
+      "p_ngram": 0.9698689344594874,
+      "p_xgb": 0.8522672057151794,
+      "p_stack": 0.9169481595047811
+    },
+    {
+      "rank": 9,
+      "url": "http://hornylips.com/",
+      "domain": "hornylips.com",
+      "p_ngram": 0.9616202360531759,
+      "p_xgb": 0.9822944402694702,
+      "p_stack": 0.9709236160295794
+    },
+    {
+      "rank": 10,
+      "url": "https://yellowpages.com.mk/firma.php",
+      "domain": "yellowpages.com.mk",
+      "p_ngram": 0.9572339285376861,
+      "p_xgb": 0.7120590209960938,
+      "p_stack": 0.8469052141835051
+    },
+    {
+      "rank": 11,
+      "url": "https://shimejis.xyz/",
+      "domain": "shimejis.xyz",
+      "p_ngram": 0.9532513855182115,
+      "p_xgb": 0.4325186610221863,
+      "p_stack": 0.718921656514768
+    },
+    {
+      "rank": 12,
+      "url": "https://docs.chain.link/vrf",
+      "domain": "chain.link",
+      "p_ngram": 0.9527324231093112,
+      "p_xgb": 0.8468828797340393,
+      "p_stack": 0.9051001196497421
+    },
+    {
+      "rank": 13,
+      "url": "https://mail.terra.com.br/",
+      "domain": "terra.com.br",
+      "p_ngram": 0.9481749247240839,
+      "p_xgb": 0.23925992846488953,
+      "p_stack": 0.629163170446982
+    },
+    {
+      "rank": 14,
+      "url": "https://ledn.io/",
+      "domain": "ledn.io",
+      "p_ngram": 0.9427925558231202,
+      "p_xgb": 0.19002646207809448,
+      "p_stack": 0.6040478136378586
+    },
+    {
+      "rank": 15,
+      "url": "http://gaypixelporn.com/",
+      "domain": "gaypixelporn.com",
+      "p_ngram": 0.9423655991180206,
+      "p_xgb": 0.9702275991439819,
+      "p_stack": 0.9549034931692388
+    },
+    {
+      "rank": 16,
+      "url": "https://101032.click.validclick.net/cad.php",
+      "domain": "validclick.net",
+      "p_ngram": 0.9377357721528939,
+      "p_xgb": 0.6216331124305725,
+      "p_stack": 0.7954895544162237
+    },
+    {
+      "rank": 17,
+      "url": "http://scene-rls.net/page/4/",
+      "domain": "scene-rls.net",
+      "p_ngram": 0.9342723603663236,
+      "p_xgb": 0.9257457256317139,
+      "p_stack": 0.9304353628148203
+    },
+    {
+      "rank": 18,
+      "url": "https://webmail.frisokar.com.br/",
+      "domain": "frisokar.com.br",
+      "p_ngram": 0.9306240006362442,
+      "p_xgb": 0.6623145937919617,
+      "p_stack": 0.8098847526551559
+    },
+    {
+      "rank": 19,
+      "url": "https://92080.click.validclick.net/cad.php",
+      "domain": "validclick.net",
+      "p_ngram": 0.9298487013680168,
+      "p_xgb": 0.6165880560874939,
+      "p_stack": 0.7888814139720137
+    },
+    {
+      "rank": 20,
+      "url": "http://webmailab.juno.com/webmail/new/5",
+      "domain": "juno.com",
+      "p_ngram": 0.9272576911271848,
+      "p_xgb": 0.31237757205963135,
+      "p_stack": 0.650561640527018
+    },
+    {
+      "rank": 21,
+      "url": "http://deepcreek.ocsrv.net/",
+      "domain": "ocsrv.net",
+      "p_ngram": 0.9152922259825023,
+      "p_xgb": 0.9338072538375854,
+      "p_stack": 0.9236239765963608
+    },
+    {
+      "rank": 22,
+      "url": "http://webmail0.lightblast.net/",
+      "domain": "lightblast.net",
+      "p_ngram": 0.9092146748060214,
+      "p_xgb": 0.9754825830459595,
+      "p_stack": 0.9390352096721356
+    },
+    {
+      "rank": 23,
+      "url": "https://xiaoxintv.cc/index.php/vod/type/id/6.html",
+      "domain": "xiaoxintv.cc",
+      "p_ngram": 0.9038637020654815,
+      "p_xgb": 0.5946491956710815,
+      "p_stack": 0.7647171682275371
+    },
+    {
+      "rank": 24,
+      "url": "https://rq9fsw.elnk7.com/",
+      "domain": "elnk7.com",
+      "p_ngram": 0.9009698999731631,
+      "p_xgb": 0.9533707499504089,
+      "p_stack": 0.9245502735222271
+    },
+    {
+      "rank": 25,
+      "url": "https://docs.pota.app/docs/rules.html",
+      "domain": "pota.app",
+      "p_ngram": 0.8991367305750402,
+      "p_xgb": 0.08825137466192245,
+      "p_stack": 0.5342383200416082
+    },
+    {
+      "rank": 26,
+      "url": "https://tcapi.io/4st/i",
+      "domain": "tcapi.io",
+      "p_ngram": 0.8976645382869989,
+      "p_xgb": 0.8107462525367737,
+      "p_stack": 0.8585512947982363
+    },
+    {
+      "rank": 27,
+      "url": "http://frankenmuthsurety.com/",
+      "domain": "frankenmuthsurety.com",
+      "p_ngram": 0.8878041063151861,
+      "p_xgb": 0.9658282995223999,
+      "p_stack": 0.9229149932584324
+    },
+    {
+      "rank": 28,
+      "url": "https://kb.voscast.com/index.php",
+      "domain": "voscast.com",
+      "p_ngram": 0.8862178964824716,
+      "p_xgb": 0.1219768151640892,
+      "p_stack": 0.5423094102617286
+    },
+    {
+      "rank": 29,
+      "url": "https://ahavamd.dataphone.cloud/login.php",
+      "domain": "dataphone.cloud",
+      "p_ngram": 0.8822019514131735,
+      "p_xgb": 0.2413206249475479,
+      "p_stack": 0.5938053492882356
+    },
+    {
+      "rank": 30,
+      "url": "https://help.hostedftp.com/",
+      "domain": "hostedftp.com",
+      "p_ngram": 0.8789444479579377,
+      "p_xgb": 0.9610241651535034,
+      "p_stack": 0.9158803206959423
+    }
+  ]
+}

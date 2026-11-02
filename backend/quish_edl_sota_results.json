@@ -1,0 +1,95 @@
+{
+  "M1_Vision": {
+    "acc_mean": 0.5,
+    "acc_std": 0.0,
+    "auroc_mean": 0.48624770824150093,
+    "auroc_std": 0.010841917996846204,
+    "prauc_mean": 0.4939958468273116,
+    "prauc_std": 0.005035781132257695,
+    "ece_mean": 0.0017169952392578126,
+    "ece_std": 0.0009477087091210417,
+    "brier_mean": 0.250003844499588,
+    "brier_std": 3.65065676601955e-06
+  },
+  "M2_Lexical": {
+    "acc_mean": 0.6691358986342629,
+    "acc_std": 0.03495178170609567,
+    "auroc_mean": 0.7373928158731636,
+    "auroc_std": 0.030481947370430966,
+    "prauc_mean": 0.7289596299355703,
+    "prauc_std": 0.017552834029949616,
+    "ece_mean": 0.06738078229366486,
+    "ece_std": 0.032420418491849234,
+    "brier_mean": 0.21453203856945038,
+    "brier_std": 0.017209759074614365
+  },
+  "M3_Softmax": {
+    "acc_mean": 0.6811062211143999,
+    "acc_std": 0.009878862823912008,
+    "auroc_mean": 0.7613335385893252,
+    "auroc_std": 0.009059625903407602,
+    "prauc_mean": 0.7502227645853379,
+    "prauc_std": 0.007249082193131941,
+    "ece_mean": 0.07064753537893623,
+    "ece_std": 0.0200157756616342,
+    "brier_mean": 0.20776334404945374,
+    "brier_std": 0.004870890753313546,
+    "ood_auroc_mean": 0.2985131867632549,
+    "ood_auroc_std": 0.024528166608040032
+  },
+  "M5_Char_Ngram_LR": {
+    "acc_mean": 0.7338188710598744,
+    "acc_std": 0.015513695394129499,
+    "auroc_mean": 0.8092666825855309,
+    "auroc_std": 0.013766742620661722,
+    "prauc_mean": 0.8054958255893151,
+    "prauc_std": 0.010744515764426662,
+    "ece_mean": 0.1032181225111157,
+    "ece_std": 0.01589190281368797,
+    "brier_mean": 0.19211183050919584,
+    "brier_std": 0.004288605330453556
+  },
+  "M6_Quish_EDL": {
+    "acc_mean": 0.6678253362413666,
+    "acc_std": 0.02946513076561517,
+    "auroc_mean": 0.7334635065734973,
+    "auroc_std": 0.027195311480343404,
+    "prauc_mean": 0.7159115084378543,
+    "prauc_std": 0.026367193918212333,
+    "ece_mean": 0.049264635785639575,
+    "ece_std": 0.023318309608216025,
+    "brier_mean": 0.21292140781879426,
+    "brier_std": 0.011496753771047379,
+    "ood_auroc_mean": 0.7534489893285559,
+    "ood_auroc_std": 0.03481816229586415,
+    "u_ratio_mean": 1.286956524848938,
+    "u_ratio_std": 0.055406642785326386
+  },
+  "family_breakdown": {
+    "novel_tld": {
+      "mean_epistemic_uncertainty": 0.3597375750541687,
+      "mean_phish_prob": 0.7197944521903992,
+      "quarantine_rate_at_u_04": 0.125
+    },
+    "open_redirect": {
+      "mean_epistemic_uncertainty": 0.5721904039382935,
+      "mean_phish_prob": 0.46762770414352417,
+      "quarantine_rate_at_u_04": 0.875
+    },
+    "modality_conflict": {
+      "mean_epistemic_uncertainty": 0.3988294005393982,
+      "mean_phish_prob": 0.7897685170173645,
+      "quarantine_rate_at_u_04": 0.25
+    },
+    "punycode_homoglyph": {
+      "mean_epistemic_uncertainty": 0.5900977253913879,
+      "mean_phish_prob": 0.6317762136459351,
+      "quarantine_rate_at_u_04": 1.0
+    },
+    "benign_branded_high_ecl": {
+      "mean_epistemic_uncertainty": 0.41257914900779724,
+      "mean_phish_prob": 0.28225448727607727,
+      "quarantine_rate_at_u_04": 0.375
+    }
+  }
+}

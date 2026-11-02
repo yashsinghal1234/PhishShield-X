@@ -255,6 +255,50 @@ def analyze_payload_protocol(raw_payload: str) -> Dict:
     }
 
 
+def analyze_canonical_payload(raw_payload: str) -> Dict:
+    """
+    Performs deterministic canonicalization and zero-day threat analysis:
+    1. IDN / Punycode decoding and confusable Latin skeleton mapping.
+    2. Brand impersonation detection via Levenshtein skeleton distance.
+    3. Open-redirect parameter unwrapping (e.g. google.com/url?q=...).
+    4. Infrastructure risk profiling (raw IPv4, non-standard ports, ephemeral tunnels).
+    """
+    from canonicalize_engine import canonicalize_url_advanced
+    info = canonicalize_url_advanced(raw_payload)
+    anomalies = []
+    canonical_risk = 0.0
+
+    if info.get("is_brand_impersonation"):
+        canonical_risk += 0.65
+        brand = info.get("brand_match")
+        sim = info.get("brand_similarity", 0.0)
+        anomalies.append(f"Critical Impersonation: Detected IDN Punycode / Confusable skeleton targeting '{brand}' (similarity {sim*100:.1f}%)")
+
+    if info.get("is_ip"):
+        canonical_risk += 0.40
+        anomalies.append("Infrastructure Risk: Decoded payload points directly to a raw IPv4 address")
+
+    if info.get("has_custom_port"):
+        canonical_risk += 0.25
+        anomalies.append("Infrastructure Risk: Destination targets a non-standard port")
+
+    if info.get("is_tunnel"):
+        canonical_risk += 0.50
+        anomalies.append("Infrastructure Risk: Ephemeral reverse tunnel or Dynamic DNS service detected")
+
+    if info.get("was_redirect"):
+        canonical_risk += 0.30
+        anomalies.append(f"Nested Redirect Unwrapped: Extracted hidden target destination '{info.get('unwrapped_url')}'")
+
+    return {
+        "canonical_info": info,
+        "canonical_risk": canonical_risk,
+        "anomalies": anomalies,
+        "normalized_url": info.get("normalized_url", raw_payload),
+        "unwrapped_url": info.get("unwrapped_url", raw_payload)
+    }
+
+
 def recursively_unroll_url(initial_url: str, max_hops: int = 4) -> Tuple[str, List[str], float]:
     """
     Recursively follows HTTP redirects to defeat multi-hop shorteners and open-redirect cloaking.
@@ -385,8 +429,11 @@ def evaluate_m3_early_fusion(
             img_tensor = np.zeros((1, 64, 64, 1), dtype=np.float32)
 
         # 2. Tokenize and Pad Sequence to (1, 180)
+        # Canonically normalize string to strip scheme and www. so the prefix shortcut does not bias predictions
         from tensorflow.keras.preprocessing.sequence import pad_sequences
-        seqs = tokenizer.texts_to_sequences([payload_text])
+        clean_text = re.sub(r'^[a-zA-Z]+://', '', str(payload_text).strip())
+        clean_text = re.sub(r'^www\.', '', clean_text, flags=re.IGNORECASE)
+        seqs = tokenizer.texts_to_sequences([clean_text])
         seq_tensor = pad_sequences(seqs, maxlen=180, padding="post", truncating="post")
 
         # 3. Model Forward Pass (using JIT-compiled predict for ~200x faster inference)
@@ -499,21 +546,27 @@ def evaluate_quish_cross_edl(
         return {"available": False}
 
     try:
-        # 1. Preprocess QR Image to (1, 64, 64, 1)
+        # 1. Preprocess QR Image to (1, 96, 96, 1) — V2 architecture input resolution
+        from quish_cross_edl import IMG_SHAPE as _EVAL_IMG_SHAPE
+        target_hw = (_EVAL_IMG_SHAPE[1], _EVAL_IMG_SHAPE[0])  # (width, height) for cv2.resize
         if img is not None:
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if len(img.shape) == 3 else img
-            resized = cv2.resize(gray, (64, 64), interpolation=cv2.INTER_AREA)
-            img_tensor = (resized.astype(np.float32) / 255.0).reshape(1, 64, 64, 1)
+            resized = cv2.resize(gray, target_hw, interpolation=cv2.INTER_AREA)
+            img_tensor = (resized.astype(np.float32) / 255.0).reshape(1, *_EVAL_IMG_SHAPE)
         else:
-            img_tensor = np.zeros((1, 64, 64, 1), dtype=np.float32)
+            img_tensor = np.zeros((1, *_EVAL_IMG_SHAPE), dtype=np.float32)
 
         # 2. Tokenize and Pad Sequence to (1, 180)
+        # Canonically normalize string to strip scheme and www. so the prefix shortcut does not bias predictions
         from tensorflow.keras.preprocessing.sequence import pad_sequences
-        seqs = tokenizer.texts_to_sequences([payload_text])
+        clean_text = re.sub(r'^[a-zA-Z]+://', '', str(payload_text).strip())
+        clean_text = re.sub(r'^www\.', '', clean_text, flags=re.IGNORECASE)
+        seqs = tokenizer.texts_to_sequences([clean_text])
         seq_tensor = pad_sequences(seqs, maxlen=180, padding="post", truncating="post")
 
-        # 3. Model Forward Pass
-        alpha = model.predict([img_tensor, seq_tensor], verbose=0)
+        # 3. Model Forward Pass (V2 model returns [alpha, density_gate])
+        raw_out = model.predict([img_tensor, seq_tensor], verbose=0)
+        alpha = raw_out[0] if isinstance(raw_out, (list, tuple)) else raw_out
         if isinstance(alpha, list):
             alpha = alpha[-1]
         

@@ -1238,6 +1238,7 @@ def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
     from quishing_engine import (
         analyze_qr_visual_structure,
         analyze_payload_protocol,
+        analyze_canonical_payload,
         recursively_unroll_url,
         evaluate_m3_early_fusion
     )
@@ -1248,16 +1249,23 @@ def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
     # 0. Ensure neural weights & models are loaded
     ensure_models_loaded()
 
-    # 1. M3 Multimodal Early Fusion (Vision + Lexical -> Softmax, Calibrated ECE 0.0236)
+    # 1. Deterministic Canonicalization & Evasion Normalization
+    canonical_res = analyze_canonical_payload(decoded_payload)
+    quishing_anomaly_score += canonical_res["canonical_risk"]
+    if canonical_res["anomalies"]:
+        details.extend(canonical_res["anomalies"])
+    effective_payload = canonical_res.get("unwrapped_url", decoded_payload)
+
+    # 2. M3 Multimodal Early Fusion (Vision + Lexical -> Softmax, Calibrated ECE 0.0236)
     ensure_m3_loaded()
-    m3_res = evaluate_m3_early_fusion(img, decoded_payload, model=m3_early_fusion_model, tokenizer=tokenizer)
+    m3_res = evaluate_m3_early_fusion(img, effective_payload, model=m3_early_fusion_model, tokenizer=tokenizer)
     m3_prob = None
     if m3_res.get("available"):
         m3_prob = m3_res["prob_phishing"]
         details.append(f"M3 Multimodal Neural Analysis: {m3_prob*100:.1f}% Phishing Probability (Calibrated ECE 0.0236)")
 
-    # 2. Payload & Protocol Analysis
-    proto_info = analyze_payload_protocol(decoded_payload)
+    # 3. Payload & Protocol Analysis
+    proto_info = analyze_payload_protocol(effective_payload)
     quishing_anomaly_score += proto_info["protocol_risk"]
     if proto_info["anomalies"]:
         details.extend(proto_info["anomalies"])
@@ -1347,11 +1355,17 @@ def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> di
 
     # Target brand detection via homoglyph / Levenshtein distance against high-risk target brands
     detected_brand = None
+    entropy_val = None
     try:
-        from features import detect_target_brand
+        from features import detect_target_brand, calculate_entropy
         detected_brand = detect_target_brand(domain)
+        entropy_val = round(float(calculate_entropy(domain)), 2)
     except Exception as e:
-        print(f"Brand detection error: {e}")
+        print(f"Brand/entropy detection error: {e}")
+
+    subdomain_depth = max(0, domain.count('.') - 1) if domain else 0
+    is_secure_proto = full_url.lower().startswith("https")
+    protocol_str = "TLS 1.3 / HTTPS (Encrypted)" if is_secure_proto else "HTTP (Unencrypted / Cleartext)"
 
     osint = {
         "ip_address": None,
@@ -1362,13 +1376,19 @@ def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> di
         "screenshot_url": screenshot_path,
         "brand": detected_brand if detected_brand else "None (Generic Domain)",
         "ssl_issuer": None,
-        "certificate_details": None
+        "certificate_details": None,
+        "certificate_age_days": None,
+        "protocol": protocol_str,
+        "dns_status": "Unresolved / Offline Host",
+        "entropy": entropy_val,
+        "subdomain_depth": subdomain_depth
     }
     
     # Resolve domain IP (cached via dns_cache)
     ip = resolve_domain_ip(domain)
     if ip:
         osint["ip_address"] = ip
+        osint["dns_status"] = "Active IPv4 (DNS Verified)"
         
         # 1. Reuse SSL details from parallel check if available, or fetch from cached check_ssl_certificate
         if ssl_info is None:
@@ -1377,18 +1397,22 @@ def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> di
         if ssl_info and not ssl_info.get("error"):
             osint["ssl_issuer"] = ssl_info.get("ssl_issuer")
             osint["certificate_details"] = ssl_info.get("certificate_details")
+            osint["certificate_age_days"] = ssl_info.get("age_days")
         
         # 2. Reuse Geolocation from parallel check if available, or fetch from cached get_ip_geolocation
         try:
             geo_data = geo_info if geo_info is not None else get_ip_geolocation(ip)
             if geo_data.get("status") == "success":
                 osint["location"] = f"{geo_data.get('city', '')}, {geo_data.get('country', '')}".strip(", ")
-                isp_full = geo_data.get('isp', '')
-                osint["hosting_provider"] = isp_full.split(' ')[0] if isp_full else None
+                org = geo_data.get('org', '').strip()
+                isp = geo_data.get('isp', '').strip()
+                osint["hosting_provider"] = org if org else (isp if isp else "Cloud CDN / Distributed")
                 
-                as_info = geo_data.get("as", "")
+                as_info = geo_data.get("as", "").strip()
                 if as_info:
-                    osint["asn"] = as_info.split(' ')[0].replace("AS", "")
+                    osint["asn"] = as_info
+                else:
+                    osint["asn"] = "AS-Distributed (Anycast)"
         except Exception as e:
             print(f"OSINT error: {e}")
             

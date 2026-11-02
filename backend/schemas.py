@@ -28,6 +28,12 @@ class ScanResponse(BaseModel):
     brand: Optional[str] = None
     ssl_issuer: Optional[str] = None
     certificate_details: Optional[str] = None
+    certificate_age_days: Optional[int] = None
+    protocol: Optional[str] = None
+    dns_status: Optional[str] = None
+    entropy: Optional[float] = None
+    subdomain_depth: Optional[int] = None
+    decoded_url: Optional[str] = None
 
 class ExtensionLogRequest(BaseModel):
     url_hash: str

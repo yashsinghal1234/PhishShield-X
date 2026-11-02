@@ -1,0 +1,78 @@
+{
+    "ablation_results": [
+        {
+            "Architecture / Ablation": "M1: Unimodal Vision-Only",
+            "Accuracy (%)": "50.00 \u00b1 0.00",
+            "F1-Score (%)": "53.33 \u00b1 26.67",
+            "ROC-AUC": "0.5118 \u00b1 0.0162",
+            "McNemar p-val": "p < 0.001"
+        },
+        {
+            "Architecture / Ablation": "M2: Unimodal Lexical-Only",
+            "Accuracy (%)": "90.23 \u00b1 1.70",
+            "F1-Score (%)": "90.11 \u00b1 1.79",
+            "ROC-AUC": "0.9540 \u00b1 0.0107",
+            "McNemar p-val": "p = 0.1834"
+        },
+        {
+            "Architecture / Ablation": "M3: Multimodal Early Fusion (Softmax)",
+            "Accuracy (%)": "90.93 \u00b1 1.27",
+            "F1-Score (%)": "90.74 \u00b1 1.31",
+            "ROC-AUC": "0.9579 \u00b1 0.0103",
+            "McNemar p-val": "p = 1.0000"
+        },
+        {
+            "Architecture / Ablation": "M4: Multimodal Late Fusion",
+            "Accuracy (%)": "90.20 \u00b1 1.66",
+            "F1-Score (%)": "90.08 \u00b1 1.74",
+            "ROC-AUC": "0.9540 \u00b1 0.0107",
+            "McNemar p-val": "p = 0.1625"
+        },
+        {
+            "Architecture / Ablation": "M5: Multimodal Cross-Attention (Softmax)",
+            "Accuracy (%)": "87.63 \u00b1 1.58",
+            "F1-Score (%)": "87.00 \u00b1 1.93",
+            "ROC-AUC": "0.9426 \u00b1 0.0112",
+            "McNemar p-val": "p < 0.001"
+        },
+        {
+            "Architecture / Ablation": "M6: Quish-EDL (Proposed Fusion + EDL)",
+            "Accuracy (%)": "90.90 \u00b1 0.83",
+            "F1-Score (%)": "90.86 \u00b1 0.97",
+            "ROC-AUC": "0.9572 \u00b1 0.0060",
+            "McNemar p-val": "--- (Ref)"
+        }
+    ],
+    "m3_vs_m6_headline_mcnemar": {
+        "chi2": 0.0,
+        "p_value": "p = 1.0000"
+    },
+    "calibration": {
+        "ECE_Softmax": "0.0221 \u00b1 0.0089",
+        "ECE_EDL": "0.0584 \u00b1 0.0205",
+        "Brier_Softmax": "0.0716 \u00b1 0.0098",
+        "Brier_EDL": "0.0764 \u00b1 0.0048"
+    },
+    "uncertainty_quantification": {
+        "id_uncertainty": {
+            "mean": 0.2337,
+            "std": 0.1436,
+            "median": 0.1733,
+            "q25": 0.153,
+            "q75": 0.2419
+        },
+        "ood_uncertainty": {
+            "mean": 0.5727,
+            "std": 0.1867,
+            "median": 0.6272,
+            "q25": 0.432,
+            "q75": 0.7061
+        },
+        "uncertainty_ratio_ood_id": 2.45,
+        "ood_discrimination": {
+            "auroc": "0.9244 \u00b1 0.0394",
+            "fpr_at_95": "28.40% \u00b1 12.39%",
+            "protocol": "Held-out scheme families (odd i%16), 5-fold val split for ID"
+        }
+    }
+}

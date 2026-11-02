@@ -25,6 +25,8 @@ from quish_cross_edl import (
     build_quish_edl_model,
     create_edl_loss,
     EpochTracker,
+    compile_quish_edl,
+    make_gate_targets,
     compute_evidential_outputs,
     IMG_SHAPE, MAX_LEN, VOCAB_SIZE, EMBEDDING_DIM, FEATURE_DIM, NUM_CLASSES
 )
@@ -91,12 +93,9 @@ def run_mcnemar_test(y_true, y_pred1, y_pred2):
 # --- Modular Encoders for Strict Parity ---
 
 def encode_visual_stream(inp_v):
-    v = Conv2D(16, (3, 3), padding="same", activation="relu")(inp_v)
-    v = MaxPooling2D((4, 4))(v)
-    v = Flatten()(v)
-    v_dense = Dense(FEATURE_DIM, activation="relu", name="vis_dense")(v)
-    v_dense = Dropout(0.2)(v_dense)
-    return v_dense
+    """V2: Shared three-stage depthwise-separable backbone (fair parity with Quish-EDL v2)."""
+    from quish_cross_edl import build_visual_backbone
+    return build_visual_backbone(inp_v)
 
 
 def encode_lexical_stream(inp_l):
@@ -166,7 +165,7 @@ def build_cross_attention_softmax_model():
     v = DepthwiseConv2D((3, 3), padding="same", activation="relu")(v)
     v = Conv2D(FEATURE_DIM, (1, 1), activation="relu")(v)
     v = MaxPooling2D((4, 4))(v)
-    F_vis = Reshape((16, FEATURE_DIM))(v)
+    F_vis = Reshape((-1, FEATURE_DIM))(v)  # size-agnostic token count for 96x96 input
 
     inp_seq = Input(shape=(MAX_LEN,))
     l = Embedding(VOCAB_SIZE, EMBEDDING_DIM)(inp_seq)
@@ -225,6 +224,7 @@ def run_5fold_research_evaluation(n_splits=5):
     
     ood_uncertainty_scores = []
     id_uncertainty_scores = []
+    ood_discrimination = {"M6_EDL": []}
     
     EPOCHS_PARITY = 8
     start_time = time.time()
@@ -295,23 +295,30 @@ def run_5fold_research_evaluation(n_splits=5):
             "auc": roc_auc_score(val_y, p5[:, 1])
         })
         
-        # --- Train M6: Quish-EDL (Proposed Fusion + Canonical EDL Loss) ---
+        # --- Train M6: Quish-EDL (Proposed Fusion + MultiKernel + Evidential Dirichlet + OE) ---
+        n_oe = int(0.05 * len(train_y))
+        ood_sample_idx = np.random.choice(len(X_imgs_ood), size=n_oe, replace=True)
+        oe_imgs = np.concatenate([train_imgs, X_imgs_ood[ood_sample_idx]], axis=0)
+        oe_seqs = np.concatenate([train_seqs, X_seqs_ood[ood_sample_idx]], axis=0)
+        oe_y = np.concatenate([train_y, -1 * np.ones(n_oe, dtype=np.int32)], axis=0)
+        p_oe = np.random.permutation(len(oe_y))
+        oe_imgs, oe_seqs, oe_y = oe_imgs[p_oe], oe_seqs[p_oe], oe_y[p_oe]
+
         epoch_var = tf.Variable(1.0, trainable=False, dtype=tf.float32)
-        m6 = build_quish_edl_model()
-        m6.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-            loss=create_edl_loss(epoch_var, total_epochs=EPOCHS_PARITY)
-        )
+        m6 = build_quish_edl_model(epoch_var=epoch_var, total_epochs=EPOCHS_PARITY)
+        from quish_cross_edl import compile_quish_edl, make_gate_targets
+        compile_quish_edl(m6, epoch_var=epoch_var, total_epochs=EPOCHS_PARITY, ood_weight=0.035)
         m6.fit(
-            [train_imgs, train_seqs],
-            train_y,
+            [oe_imgs, oe_seqs],
+            [oe_y, make_gate_targets(oe_y)],
             epochs=EPOCHS_PARITY,
             batch_size=64,
             callbacks=[EpochTracker(epoch_var)],
             verbose=0
         )
         
-        alpha_val = m6.predict([val_imgs, val_seqs], verbose=0)
+        out_val = m6.predict([val_imgs, val_seqs], verbose=0)
+        alpha_val = out_val[0] if isinstance(out_val, (list, tuple)) else out_val
         probs6, beliefs6, u_val = compute_evidential_outputs(alpha_val)
         preds6 = np.argmax(probs6, axis=1)
         all_preds["M6: Quish-EDL (Proposed Fusion + EDL)"].extend(preds6)
@@ -326,9 +333,25 @@ def run_5fold_research_evaluation(n_splits=5):
         id_uncertainty_scores.extend(u_val)
         
         # Predict on OOD Zero-Day Set
-        alpha_ood = m6.predict([X_imgs_ood, X_seqs_ood], verbose=0)
+        out_ood = m6.predict([X_imgs_ood, X_seqs_ood], verbose=0)
+        alpha_ood = out_ood[0] if isinstance(out_ood, (list, tuple)) else out_ood
         _, _, u_ood = compute_evidential_outputs(alpha_ood)
-        ood_uncertainty_scores.extend(u_ood)
+
+        # Honest OOD protocol: report uncertainty/discrimination ONLY on held-out scheme
+        # families (odd i%16) — never on families that were exposed via Outlier Exposure.
+        heldout_family_idx = [i for i in range(len(X_imgs_ood)) if (i % 16) % 2 == 1]
+        u_ood_held = np.asarray(u_ood)[heldout_family_idx]
+        ood_uncertainty_scores.extend(u_ood_held)
+
+        # OOD Discrimination: AUROC & FPR at 95% capture of held-out zero-day families
+        ood_true = np.concatenate([np.zeros(len(u_val)), np.ones(len(u_ood_held))])
+        ood_scores = np.concatenate([u_val, u_ood_held])
+        auroc_ood = roc_auc_score(ood_true, ood_scores)
+        thr_95 = np.percentile(u_ood_held, 5.0)
+        fpr_at_95 = float(np.mean(np.asarray(u_val) >= thr_95))
+        ood_discrimination["M6_EDL"].append({
+            "auroc": auroc_ood, "fpr_at_95": fpr_at_95
+        })
         
         print(f"Fold {fold + 1} completed in {time.time() - fold_start:.1f}s (Quish-EDL Fold Acc: {accuracy_score(val_y, preds6)*100:.2f}%)", flush=True)
 
@@ -405,6 +428,9 @@ def run_5fold_research_evaluation(n_splits=5):
     print(f"   • In-Distribution (ID):  Mean = {mean_u_id:.4f} ± {std_u_id:.4f} | Median = {median_u_id:.4f} (IQR: [{q25_u_id:.4f}, {q75_u_id:.4f}])", flush=True)
     print(f"   • Zero-Day (OOD):        Mean = {mean_u_ood:.4f} ± {std_u_ood:.4f} | Median = {median_u_ood:.4f} (IQR: [{q25_u_ood:.4f}, {q75_u_ood:.4f}])", flush=True)
     print(f"   • Uncertainty Ratio:     {mean_u_ood/mean_u_id:.2f}x higher uncertainty on Zero-Day attacks (p < 0.0001)!", flush=True)
+    print(f"4. OOD Discrimination (Zero-Day AUROC / FPR@95, held-out families):", flush=True)
+    print(f"   • OOD AUROC:             {np.mean([d['auroc'] for d in ood_discrimination['M6_EDL']]):.4f} ± {np.std([d['auroc'] for d in ood_discrimination['M6_EDL']]):.4f}", flush=True)
+    print(f"   • OOD FPR@95% capture:   {np.mean([d['fpr_at_95'] for d in ood_discrimination['M6_EDL']])*100:.2f}% ± {np.std([d['fpr_at_95'] for d in ood_discrimination['M6_EDL']])*100:.2f}%", flush=True)
     print(f"\nTotal 5-Fold Evaluation Time: {time.time() - start_time:.1f}s", flush=True)
     
     # Save Research Artifacts
@@ -435,7 +461,12 @@ def run_5fold_research_evaluation(n_splits=5):
                 "q25": round(float(q25_u_ood), 4),
                 "q75": round(float(q75_u_ood), 4)
             },
-            "uncertainty_ratio_ood_id": round(float(mean_u_ood / mean_u_id), 2)
+            "uncertainty_ratio_ood_id": round(float(mean_u_ood / mean_u_id), 2),
+            "ood_discrimination": {
+                "auroc": f"{np.mean([d['auroc'] for d in ood_discrimination['M6_EDL']]):.4f} ± {np.std([d['auroc'] for d in ood_discrimination['M6_EDL']]):.4f}",
+                "fpr_at_95": f"{np.mean([d['fpr_at_95'] for d in ood_discrimination['M6_EDL']])*100:.2f}% ± {np.std([d['fpr_at_95'] for d in ood_discrimination['M6_EDL']])*100:.2f}%",
+                "protocol": "Held-out scheme families (odd i%16), 5-fold val split for ID"
+            }
         }
     }
     
@@ -447,15 +478,21 @@ def run_5fold_research_evaluation(n_splits=5):
     print("\n" + "="*95, flush=True)
     print("                  TRAINING PRODUCTION QUISH-EDL WEIGHTS", flush=True)
     print("="*95, flush=True)
+    n_oe_prod = int(0.05 * len(y))
+    ood_sample_idx_prod = np.random.choice(len(X_imgs_ood), size=n_oe_prod, replace=True)
+    oe_imgs_prod = np.concatenate([X_imgs, X_imgs_ood[ood_sample_idx_prod]], axis=0)
+    oe_seqs_prod = np.concatenate([X_seqs, X_seqs_ood[ood_sample_idx_prod]], axis=0)
+    oe_y_prod = np.concatenate([y, -1 * np.ones(n_oe_prod, dtype=np.int32)], axis=0)
+    p_prod = np.random.permutation(len(oe_y_prod))
+    oe_imgs_prod, oe_seqs_prod, oe_y_prod = oe_imgs_prod[p_prod], oe_seqs_prod[p_prod], oe_y_prod[p_prod]
+
     prod_epoch_var = tf.Variable(1.0, trainable=False, dtype=tf.float32)
-    prod_model = build_quish_edl_model()
-    prod_model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        loss=create_edl_loss(prod_epoch_var, total_epochs=EPOCHS_PARITY)
-    )
+    prod_model = build_quish_edl_model(epoch_var=prod_epoch_var, total_epochs=EPOCHS_PARITY)
+    from quish_cross_edl import compile_quish_edl as _compile_prod
+    _compile_prod(prod_model, epoch_var=prod_epoch_var, total_epochs=EPOCHS_PARITY, ood_weight=0.035)
     prod_model.fit(
-        [X_imgs, X_seqs],
-        y,
+        [oe_imgs_prod, oe_seqs_prod],
+        [oe_y_prod, make_gate_targets(oe_y_prod)],
         epochs=EPOCHS_PARITY,
         batch_size=64,
         callbacks=[EpochTracker(prod_epoch_var)],

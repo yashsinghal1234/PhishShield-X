@@ -1,0 +1,125 @@
+{
+  "source_file": "C:\\Users\\lenovo\\OneDrive\\Desktop\\final_year_project\\backend/data/malicious_phish.csv",
+  "source_sha256": "d83ce942075dd63ed4d11560cfdcd9d512caa3d680e292f22cab484e8f074d01",
+  "source_rows": 651191,
+  "source_label_distribution": {
+    "benign": 428103,
+    "defacement": 96457,
+    "phishing": 94111,
+    "malware": 32520
+  },
+  "render_sample": {
+    "n": 3000,
+    "benign": 1500,
+    "malicious": 1500
+  },
+  "positive_class_composition": {
+    "benign": 1500,
+    "defacement": 627,
+    "malware": 223,
+    "phishing": 650
+  },
+  "npz": {
+    "id": "7e5a1e65c8c7bac2e2a0d2342e2d194b0ba97a1a52212876191514853dbdeff2",
+    "id_data_copy": "7e5a1e65c8c7bac2e2a0d2342e2d194b0ba97a1a52212876191514853dbdeff2",
+    "ood": "27bda3e2b9dd6b6289f8ebc53eb69982cd057f2d84e9f3b83ec891ae1d797fab"
+  },
+  "reconstruction_label_match_pct": 100.0,
+  "cross_class_overlap": {
+    "domains_in_both_classes": 7,
+    "domains_in_both_examples": [
+      "bit.ly",
+      "controlyourbreath.com",
+      "en.wikipedia.org",
+      "eskimo.com",
+      "facebook.com",
+      "pastehtml.com",
+      "sourceforge.net"
+    ],
+    "exact_urls_in_both_classes": 0,
+    "duplicate_rows_in_render_set": 5
+  },
+  "fold_domain_disjointness": {
+    "per_fold": [
+      {
+        "fold": 1,
+        "shared_registrable_domains": 132,
+        "shared_flat_domains": 132,
+        "val_rows_from_shared_reg_domains": 208,
+        "val_rows": 600
+      },
+      {
+        "fold": 2,
+        "shared_registrable_domains": 137,
+        "shared_flat_domains": 137,
+        "val_rows_from_shared_reg_domains": 209,
+        "val_rows": 600
+      },
+      {
+        "fold": 3,
+        "shared_registrable_domains": 144,
+        "shared_flat_domains": 144,
+        "val_rows_from_shared_reg_domains": 235,
+        "val_rows": 600
+      },
+      {
+        "fold": 4,
+        "shared_registrable_domains": 135,
+        "shared_flat_domains": 135,
+        "val_rows_from_shared_reg_domains": 217,
+        "val_rows": 600
+      },
+      {
+        "fold": 5,
+        "shared_registrable_domains": 129,
+        "shared_flat_domains": 129,
+        "val_rows_from_shared_reg_domains": 214,
+        "val_rows": 600
+      }
+    ],
+    "mean_shared_registrable_domains": 135.4,
+    "mean_val_fraction_from_shared_domains": 0.361
+  },
+  "ngram_baselines": {
+    "v2_random": {
+      "acc": 0.833,
+      "f1": 0.8223781182238648,
+      "auc": 0.9225355555555556
+    },
+    "v2_domain_grouped": {
+      "acc": 0.7980080667562973,
+      "f1": 0.7810764740344341,
+      "auc": 0.8886543657070192
+    },
+    "phishing_only_random": {
+      "acc": 0.817,
+      "f1": 0.8164783105433641,
+      "auc": 0.8963755555555556
+    },
+    "phishing_only_domain_grouped": {
+      "acc": 0.7750103250286806,
+      "f1": 0.7748331876605121,
+      "auc": 0.8523921994565372
+    },
+    "v2_per_type_pooled_grouped_auc": {}
+  },
+  "m1_checks": {
+    "std_of_positive_class_prob": 8.72751911629166e-07,
+    "min": 0.5004267692565918,
+    "max": 0.5004324316978455,
+    "constant_prediction_fraction": 1.0,
+    "fold1_acc": 50.0,
+    "fold1_auc": 0.5072444444444445,
+    "positive_control_length_bucket": {
+      "fold1_acc_pct": 35.0,
+      "chance_pct": 33.333333333333336,
+      "constant_frac": 1.0,
+      "above_chance": false
+    }
+  },
+  "artifact_probes": {
+    "image_pixel_probe_random_auc": 0.5658911111111111,
+    "url_artifact_probe_random_auc": 0.7215399999999998,
+    "url_artifact_probe_grouped_auc": 0.7150684674125528
+  }
+}

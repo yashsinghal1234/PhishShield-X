@@ -1,0 +1,34 @@
+{
+  "Char_Ngram_LogisticRegression": {
+    "accuracy_mean": 75.34390042300772,
+    "accuracy_std": 1.5356048121324077,
+    "auroc_mean": 0.8414511474033896,
+    "auroc_std": 0.013510249412015335,
+    "ece_mean": 0.2560225838930954,
+    "brier_mean": 0.16879701839743827
+  },
+  "Tabular_RandomForest_34": {
+    "accuracy_mean": 71.04056660345861,
+    "accuracy_std": 2.9694480112876285,
+    "auroc_mean": 0.7921354595486972,
+    "auroc_std": 0.024750142884401968,
+    "ece_mean": 0.22104360898162403,
+    "brier_mean": 0.1869182529222801
+  },
+  "Tabular_XGBoost_34": {
+    "accuracy_mean": 69.58811040339702,
+    "accuracy_std": 2.1281300223661472,
+    "auroc_mean": 0.7755362413403488,
+    "auroc_std": 0.025841963978670533,
+    "ece_mean": 0.23039741324338686,
+    "brier_mean": 0.19247542917728425
+  },
+  "Hybrid_Tabular_Ngram_LR": {
+    "accuracy_mean": 75.980972755709,
+    "accuracy_std": 1.3065681620933398,
+    "auroc_mean": 0.8486186213506051,
+    "auroc_std": 0.013529217083479686,
+    "ece_mean": 0.2648149370526024,
+    "brier_mean": 0.1611915704404241
+  }
+}
