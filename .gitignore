@@ -16,6 +16,9 @@ backend/logs/
 
 # Training data caches (regenerable, heavyweight — do not push)
 backend/*.npz
+backend/data/clean_quishing_*.npz
+backend/data/*.parquet
+
 
 # Chrome extension build artifacts (none needed — plain JS, loaded unpacked)
 extension/*.zip
@@ -27,3 +30,15 @@ frontend/.env
 frontend/.eslintcache
 
 node_modules
+
+# Temporary scratch & test artifacts
+scratch/
+scratch_*
+qr_*.png
+__pycache__/
+*.pyc
+*.txt
+!backend/data/top_domains.txt
+*.weights.h5
+backend/_aug_tmp.jpg
+
