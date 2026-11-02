@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Silkscreen:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Pixelify+Sans:wght@400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Silkscreen:wght@400;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -6,6 +6,7 @@
   --font-stitch: 'Silkscreen', monospace;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'Space Mono', monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
 
   --color-uniqode-blue: #0047FF;
   --color-uniqode-blue-hover: #0036CC;
