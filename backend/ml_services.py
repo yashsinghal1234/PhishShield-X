@@ -535,13 +535,40 @@ def get_ip_geolocation(ip: str) -> dict:
 def detect_url_phishing(url: str) -> dict:
     from visual_brand_engine import check_infrastructure_risk, AUTHORIZED_BRAND_DOMAINS
     from features import detect_target_brand, HIGH_RISK_TLDS, SUSPICIOUS_KEYWORDS
+    import re
 
-    parsed_url = urllib.parse.urlparse(url if url.startswith(('http://', 'https://')) else 'http://' + url)
+    # Scheme Normalization & Evasion / Typosquat Detection (e.g. htttps://, htttp://, hxxp://)
+    raw_url = url.strip()
+    scheme_anomaly = None
+    scheme_match = re.match(r'^([a-zA-Z0-9_\-]+)://(.*)$', raw_url)
+    if scheme_match:
+        raw_scheme = scheme_match.group(1).lower()
+        raw_body = scheme_match.group(2)
+        if raw_scheme in ('http', 'https'):
+            normalized_url = raw_url
+        elif raw_scheme in ('htttps', 'htttp', 'httpt', 'httpps', 'hxxp', 'hxxps', 'htp', 'htpp', 'hhttps'):
+            scheme_anomaly = f"Protocol Syntax Anomaly: Malformed scheme '{raw_scheme}://' (typosquat or evasion technique)"
+            norm_proto = 'https' if 's' in raw_scheme else 'http'
+            normalized_url = f"{norm_proto}://{raw_body}"
+        else:
+            normalized_url = raw_url
+    else:
+        normalized_url = f"https://{raw_url}"
+
+    parsed_url = urllib.parse.urlparse(normalized_url)
     domain_netloc = parsed_url.netloc.lower().split(':')[0]
     domain_etld1 = extract_etld_plus_one(domain_netloc)
     
     # 0. Check Whitelist & Authorized Brand Root Domains First
     if domain_netloc in top_domains or domain_netloc.replace("www.", "") in top_domains or domain_etld1 in top_domains:
+        if scheme_anomaly:
+            return {
+                "prediction": "Suspicious",
+                "confidence": 0.65,
+                "details": f"{scheme_anomaly} | Evaluated host: '{domain_netloc}'",
+                "friction_level": "soft",
+                "advisory_message": "Malformed URI protocol detected. While the root host is recognized, the link syntax is irregular."
+            }
         return {
             "prediction": "Safe",
             "confidence": 1.0,
@@ -1568,14 +1595,30 @@ def detect_qr_phishing(decoded_payload: str, img=None) -> dict:
     }
 
 def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> dict:
-    parsed = urllib.parse.urlparse(url if url.startswith('http') else 'http://' + url)
+    import re
+    raw_url = url.strip()
+    scheme_match = re.match(r'^([a-zA-Z0-9_\-]+)://(.*)$', raw_url)
+    if scheme_match:
+        raw_scheme = scheme_match.group(1).lower()
+        raw_body = scheme_match.group(2)
+        if raw_scheme in ('http', 'https'):
+            clean_url = raw_url
+            protocol_str = "TLS 1.3 / HTTPS (Encrypted)" if raw_scheme == 'https' else "HTTP (Unencrypted / Cleartext)"
+        else:
+            norm_proto = 'https' if 's' in raw_scheme else 'http'
+            clean_url = f"{norm_proto}://{raw_body}"
+            protocol_str = f"Malformed Scheme: {raw_scheme}://"
+    else:
+        clean_url = f"https://{raw_url}"
+        protocol_str = "HTTPS (Default Scheme)"
+
+    parsed = urllib.parse.urlparse(clean_url)
     domain = parsed.netloc.split(':')[0]
     
     parts = domain.split('.')
     tld = parts[-1] if len(parts) > 1 else ""
     
-    full_url = url if url.startswith(("http://", "https://")) else f"https://{url}"
-    screenshot_path = f"/api/detect/screenshot?url={urllib.parse.quote(full_url, safe='')}"
+    screenshot_path = f"/api/detect/screenshot?url={urllib.parse.quote(clean_url, safe='')}"
 
     # Target brand detection via homoglyph / Levenshtein distance against high-risk target brands
     detected_brand = None
@@ -1588,8 +1631,6 @@ def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> di
         print(f"Brand/entropy detection error: {e}")
 
     subdomain_depth = max(0, domain.count('.') - 1) if domain else 0
-    is_secure_proto = full_url.lower().startswith("https")
-    protocol_str = "TLS 1.3 / HTTPS (Encrypted)" if is_secure_proto else "HTTP (Unencrypted / Cleartext)"
 
     osint = {
         "ip_address": None,
@@ -1602,7 +1643,7 @@ def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> di
         "ssl_issuer": None,
         "certificate_details": None,
         "certificate_age_days": None,
-        "protocol": protocol_str,
+        "protocol": "Offline / Host Unresolved" if not domain else protocol_str,
         "dns_status": "Unresolved / Offline Host",
         "entropy": entropy_val,
         "subdomain_depth": subdomain_depth
@@ -1616,12 +1657,17 @@ def get_osint_data(url: str, ssl_info: dict = None, geo_info: dict = None) -> di
         
         # 1. Reuse SSL details from parallel check if available, or fetch from cached check_ssl_certificate
         if ssl_info is None:
-            ssl_info = check_ssl_certificate(url)
+            ssl_info = check_ssl_certificate(clean_url)
             
         if ssl_info and not ssl_info.get("error"):
             osint["ssl_issuer"] = ssl_info.get("ssl_issuer")
             osint["certificate_details"] = ssl_info.get("certificate_details")
             osint["certificate_age_days"] = ssl_info.get("age_days")
+            osint["protocol"] = "TLS 1.3 / HTTPS (Encrypted)"
+        elif ssl_info and ssl_info.get("error"):
+            osint["protocol"] = f"SSL Error: {ssl_info.get('error')[:30]}"
+    else:
+        osint["protocol"] = "Offline / Host Unresolved"
         
         # 2. Reuse Geolocation from parallel check if available, or fetch from cached get_ip_geolocation
         try:

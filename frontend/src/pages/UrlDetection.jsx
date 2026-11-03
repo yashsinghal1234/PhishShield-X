@@ -231,6 +231,8 @@ export default function UrlDetection() {
             className={`rounded-[32px] p-8 text-white relative overflow-hidden shadow-xl ${
               result.prediction === 'Phishing'
                 ? 'bg-gradient-to-br from-[#1A0A0E] via-[#240A10] to-[#0A0D14] border border-red-900/60'
+                : result.prediction === 'Suspicious'
+                ? 'bg-gradient-to-br from-[#1E1505] via-[#2D1F08] to-[#0A0D14] border border-amber-900/60'
                 : 'bg-gradient-to-br from-[#0047FF] to-[#002FA8] border border-[#0047FF]'
             }`}
           >
@@ -240,23 +242,34 @@ export default function UrlDetection() {
                   className={`p-3.5 rounded-2xl shrink-0 flex items-center justify-center ${
                     result.prediction === 'Phishing'
                       ? 'bg-red-600/30 text-red-400 border border-red-500/30'
+                      : result.prediction === 'Suspicious'
+                      ? 'bg-amber-600/30 text-amber-400 border border-amber-500/30'
                       : 'bg-white/20 text-white border border-white/30'
                   }`}
                 >
                   {result.prediction === 'Phishing' ? (
                     <AlertTriangle className="h-8 w-8" />
+                  ) : result.prediction === 'Suspicious' ? (
+                    <AlertTriangle className="h-8 w-8 text-amber-400" />
                   ) : (
                     <ShieldCheck className="h-8 w-8" />
                   )}
                 </div>
                 <div>
                   <h2 className="font-['Pixelify_Sans'] text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight">
-                    {result.prediction === 'Phishing' ? 'MALICIOUS THREAT DETECTED' : 'URL VERIFIED LEGITIMATE'}
-                  </h2>
-                  <p className="text-sm font-medium opacity-85 mt-1.5 max-w-2xl">
                     {result.prediction === 'Phishing'
-                      ? 'This destination exhibits deceptive homoglyphs, zero-day infrastructure, or brand imitation patterns.'
-                      : 'This domain matches established reputation parameters, valid TLS certificates, and clean lexical entropy.'}
+                      ? 'MALICIOUS THREAT DETECTED'
+                      : result.prediction === 'Suspicious'
+                      ? 'SUSPICIOUS / UNVERIFIED DESTINATION'
+                      : 'URL VERIFIED LEGITIMATE'}
+                  </h2>
+                  <p className="text-sm font-medium opacity-85 mt-1.5 max-w-2xl leading-relaxed">
+                    {result.details ||
+                      (result.prediction === 'Phishing'
+                        ? 'This destination exhibits deceptive homoglyphs, zero-day infrastructure, or brand imitation patterns.'
+                        : result.prediction === 'Suspicious'
+                        ? 'Anomalous routing, malformed protocol syntax, or unverified hosting detected. Proceed with caution.'
+                        : 'This domain matches established reputation parameters, valid TLS certificates, and clean lexical entropy.')}
                   </p>
                 </div>
               </div>
@@ -304,7 +317,7 @@ export default function UrlDetection() {
                     Top-Level Domain (TLD)
                   </span>
                   <span className="font-mono text-xs font-bold text-[#0A0D14] dark:text-white">
-                    {result.tld || '.com'}
+                    {result.tld ? `.${result.tld}` : 'N/A'}
                   </span>
                 </div>
 
@@ -314,7 +327,7 @@ export default function UrlDetection() {
                   </span>
                   <span className="text-xs font-semibold text-[#0A0D14] dark:text-white flex items-center gap-1.5">
                     <Fingerprint size={14} className="text-[#0047FF]" />
-                    {result.brand || 'Generic / Unknown'}
+                    {result.brand || 'None (Generic Domain)'}
                   </span>
                 </div>
 
@@ -323,7 +336,7 @@ export default function UrlDetection() {
                     Resolved IP Address
                   </span>
                   <span className="font-mono text-xs text-[#0047FF] dark:text-[#9BBFE0]">
-                    {result.ip_address || '104.21.58.192'}
+                    {result.ip_address || 'Unresolved / Offline Host'}
                   </span>
                 </div>
 
@@ -333,7 +346,7 @@ export default function UrlDetection() {
                   </span>
                   <span className="text-xs text-[#0A0D14] dark:text-white flex items-center gap-1.5">
                     <MapPin size={14} className="text-[#64748B]" />
-                    {result.location || 'United States (Cloudflare CDN)'}
+                    {result.location || (result.ip_address ? 'Location Unknown' : 'Host Offline')}
                   </span>
                 </div>
 
@@ -342,8 +355,12 @@ export default function UrlDetection() {
                     SSL / TLS Certificate Authority
                   </span>
                   <span className="text-xs text-[#0A0D14] dark:text-white flex items-center gap-1.5">
-                    <ShieldCheck size={14} className="text-emerald-500" />
-                    {result.ssl_issuer || 'Let\'s Encrypt Authority E6'}
+                    {result.ssl_issuer ? (
+                      <ShieldCheck size={14} className="text-emerald-500" />
+                    ) : (
+                      <AlertTriangle size={14} className="text-amber-500" />
+                    )}
+                    {result.ssl_issuer || (result.dns_status?.includes('Unresolved') ? 'No SSL (Domain Unresolved)' : 'No Certificate Available')}
                   </span>
                 </div>
 
@@ -351,8 +368,8 @@ export default function UrlDetection() {
                   <span className="text-[11px] font-['Silkscreen'] text-[#64748B] dark:text-[#94A3B8] uppercase block mb-1">
                     Autonomous System (ASN)
                   </span>
-                  <span className="font-mono text-xs text-[#0A0D14] dark:text-white truncate block" title={result.asn || 'AS13335 (Cloudflare, Inc.)'}>
-                    {result.asn || 'AS13335 (Cloudflare, Inc.)'}
+                  <span className="font-mono text-xs text-[#0A0D14] dark:text-white truncate block" title={result.asn || 'Unrouted / Private'}>
+                    {result.asn || 'Unrouted / Private'}
                   </span>
                 </div>
 
@@ -360,8 +377,8 @@ export default function UrlDetection() {
                   <span className="text-[11px] font-['Silkscreen'] text-[#64748B] dark:text-[#94A3B8] uppercase block mb-1">
                     Hosting Provider / Network
                   </span>
-                  <span className="text-xs font-semibold text-[#0A0D14] dark:text-white truncate block" title={result.hosting_provider || 'Cloudflare, Inc.'}>
-                    {result.hosting_provider || 'Cloudflare, Inc.'}
+                  <span className="text-xs font-semibold text-[#0A0D14] dark:text-white truncate block" title={result.hosting_provider || 'Unreachable Host'}>
+                    {result.hosting_provider || 'Unreachable Host'}
                   </span>
                 </div>
 
@@ -371,7 +388,7 @@ export default function UrlDetection() {
                   </span>
                   <span className="text-xs font-mono text-emerald-500 flex items-center gap-1.5">
                     <Zap size={13} />
-                    {result.protocol || 'TLS 1.3 / HTTPS (Encrypted)'}
+                    {result.protocol || 'Unencrypted / Offline'}
                   </span>
                 </div>
 
@@ -383,7 +400,9 @@ export default function UrlDetection() {
                     <Calendar size={13} className="text-[#64748B]" />
                     {result.certificate_age_days !== undefined && result.certificate_age_days !== null
                       ? `${result.certificate_age_days} days active (${result.certificate_age_days > 30 ? 'Mature' : 'Zero-Day Risk'})`
-                      : 'Active / Valid Certificate'}
+                      : result.ssl_issuer
+                      ? 'Active Certificate'
+                      : 'No Active Certificate'}
                   </span>
                 </div>
               </div>
