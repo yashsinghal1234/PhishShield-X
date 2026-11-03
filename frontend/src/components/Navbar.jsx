@@ -14,7 +14,7 @@ import {
  * - cross: X-shaped dot constellation ("Careers")
  * - diamond: Diamond / reticle pattern ("Explore")
  */
-function DotMatrixGlyph({ type = 'aperture', className = '' }) {
+function DotMatrixGlyph({ type = 'aperture', className = '', isActive = false }) {
   const patterns = {
     // 1. "About" style: rounded square border with center dot
     aperture: [
@@ -68,7 +68,9 @@ function DotMatrixGlyph({ type = 'aperture', className = '' }) {
           width="2"
           height="2"
           rx="0.45"
-          className="transition-colors duration-150 group-hover:fill-[#0047FF]"
+          className={`transition-colors duration-150 ${
+            isActive ? 'fill-[#38BDF8]' : 'group-hover:fill-[#38BDF8]'
+          }`}
         />
       ))}
     </svg>
@@ -100,18 +102,39 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Minimalist Dot Matrix Links matching the reference image */}
-          <nav className="hidden md:flex items-center gap-8 text-[15px] font-['Plus_Jakarta_Sans'] font-medium text-white/90">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className="group hover:text-[#38BDF8] transition-colors flex items-center gap-2.5"
-              >
-                <DotMatrixGlyph type={link.icon} className="text-white/80" />
-                <span className="tracking-tight">{link.label}</span>
-              </Link>
-            ))}
+          {/* Minimalist Dot Matrix Links with Active Blue & Dotted Underline Effect */}
+          <nav className="hidden md:flex items-center gap-8 text-[15px] font-['Plus_Jakarta_Sans'] font-medium">
+            {navLinks.map((link) => {
+              const isActive =
+                location.pathname === link.path ||
+                (link.path === '/docs' && location.pathname === '/documentation');
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`group transition-all flex items-center gap-2.5 py-1.5 relative ${
+                    isActive
+                      ? 'text-[#38BDF8] font-semibold'
+                      : 'text-white/80 hover:text-[#38BDF8]'
+                  }`}
+                >
+                  <DotMatrixGlyph
+                    type={link.icon}
+                    isActive={isActive}
+                    className={isActive ? 'text-[#38BDF8]' : 'text-white/70'}
+                  />
+                  <span
+                    className={`tracking-tight transition-all pb-1 ${
+                      isActive
+                        ? 'border-b-2 border-dotted border-[#38BDF8] text-[#38BDF8]'
+                        : 'border-b-2 border-transparent group-hover:border-dotted group-hover:border-[#38BDF8]/40'
+                    }`}
+                  >
+                    {link.label}
+                  </span>
+                </Link>
+              );
+            })}
           </nav>
         </div>
 
@@ -138,25 +161,60 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#1E2533] bg-[#080A0F] px-4 py-4 space-y-3">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 py-2 text-base font-medium text-white hover:text-[#38BDF8]"
-            >
-              <DotMatrixGlyph type={link.icon} className="text-white/80" />
-              <span>{link.label}</span>
-            </Link>
-          ))}
+        <div className="md:hidden border-b border-[#1E2533] bg-[#080A0F] px-4 py-4 space-y-2">
+          {navLinks.map((link) => {
+            const isActive =
+              location.pathname === link.path ||
+              (link.path === '/docs' && location.pathname === '/documentation');
+            return (
+              <Link
+                key={link.path}
+                to={link.path}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-all ${
+                  isActive
+                    ? 'text-[#38BDF8] bg-[#0047FF]/15 border border-[#38BDF8]/30 font-semibold'
+                    : 'text-white/90 hover:text-[#38BDF8] hover:bg-white/5'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <DotMatrixGlyph
+                    type={link.icon}
+                    isActive={isActive}
+                    className={isActive ? 'text-[#38BDF8]' : 'text-white/70'}
+                  />
+                  <span className={isActive ? 'border-b-2 border-dotted border-[#38BDF8] pb-0.5' : ''}>
+                    {link.label}
+                  </span>
+                </div>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]"></span>
+                )}
+              </Link>
+            );
+          })}
           <Link
             to="/history"
             onClick={() => setMobileMenuOpen(false)}
-            className="flex items-center gap-3 py-2 text-base font-medium text-white hover:text-[#38BDF8]"
+            className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-all ${
+              location.pathname === '/history'
+                ? 'text-[#38BDF8] bg-[#0047FF]/15 border border-[#38BDF8]/30 font-semibold'
+                : 'text-white/90 hover:text-[#38BDF8] hover:bg-white/5'
+            }`}
           >
-            <DotMatrixGlyph type="aperture" className="text-white/80" />
-            <span>Audit History</span>
+            <div className="flex items-center gap-3">
+              <DotMatrixGlyph
+                type="aperture"
+                isActive={location.pathname === '/history'}
+                className={location.pathname === '/history' ? 'text-[#38BDF8]' : 'text-white/70'}
+              />
+              <span className={location.pathname === '/history' ? 'border-b-2 border-dotted border-[#38BDF8] pb-0.5' : ''}>
+                Audit History
+              </span>
+            </div>
+            {location.pathname === '/history' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]"></span>
+            )}
           </Link>
           <div className="pt-2">
             <a
