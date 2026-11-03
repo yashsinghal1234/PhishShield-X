@@ -129,11 +129,11 @@ export default function HalftoneGlobe({ size = 500, className = '' }) {
   }, [size]);
 
   return (
-    <div className={`relative flex items-center justify-center select-none ${className}`}>
+    <div className={`relative flex items-center justify-center select-none w-full max-w-full overflow-hidden ${className}`}>
       <canvas
         ref={canvasRef}
-        style={{ width: size, height: size }}
-        className="pointer-events-none drop-shadow-xl"
+        style={{ width: '100%', maxWidth: `${size}px`, height: 'auto', aspectRatio: '1 / 1' }}
+        className="pointer-events-none drop-shadow-xl max-w-full"
       />
     </div>
   );

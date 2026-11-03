@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl } from '../config/api';
 import HalftoneGlobe from '../components/HalftoneGlobe';
 import UrlBrandBadge from '../components/UrlBrandBadge';
 import {
@@ -36,6 +37,16 @@ export default function UrlDetection() {
   const [scannedUrl, setScannedUrl] = useState('');
   const resultsRef = useRef(null);
 
+  useEffect(() => {
+    try {
+      const prefilled = sessionStorage.getItem('phishshield_prefill_url');
+      if (prefilled) {
+        sessionStorage.removeItem('phishshield_prefill_url');
+        setUrl(prefilled);
+      }
+    } catch {}
+  }, []);
+
   const handleScan = async (e) => {
     e.preventDefault();
     if (!url) return;
@@ -55,7 +66,7 @@ export default function UrlDetection() {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/detect/url`,
+        `${getApiBaseUrl()}/api/detect/url`,
         { url: targetUrl }
       );
       const elapsed = Math.round(performance.now() - t0);
@@ -92,7 +103,7 @@ export default function UrlDetection() {
           HERO SECTION: THE ELECTRIC BLUE HALFTONE GLOBE & FLOATING PILL BAR
           (Exact Recreation of the User's Reference Image)
           ========================================================================= */}
-      <section className="-mx-4 sm:-mx-6 lg:-mx-8 rounded-[36px] bg-[#0047FF] text-white p-6 sm:p-10 md:p-14 relative overflow-hidden shadow-2xl shadow-[#0047FF]/25 min-h-[540px] flex flex-col justify-center">
+      <section className="-mx-4 sm:-mx-6 lg:-mx-8 rounded-[24px] sm:rounded-[36px] bg-[#0047FF] text-white p-5 sm:p-10 md:p-14 relative overflow-hidden shadow-2xl shadow-[#0047FF]/25 min-h-[440px] sm:min-h-[540px] flex flex-col justify-center">
         
         {/* Subtle dot matrix background texture */}
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[radial-gradient(circle_at_center,_#ffffff_1px,_transparent_1px)] bg-[size:14px_14px]" />
@@ -100,40 +111,40 @@ export default function UrlDetection() {
         {/* Center Grid: Left Typography + Right Halftone 3D Globe with Floating Pill */}
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
           
-          {/* Left Column: Bold Editorial Typography (Matching the reference image text layout) */}
-          <div className="lg:col-span-5 space-y-4">
+          {/* Left Column: Bold Editorial Typography */}
+          <div className="lg:col-span-5 space-y-3 sm:space-y-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white whitespace-nowrap leading-tight">
               Global Radar.
             </h1>
             <p className="text-white/85 text-sm sm:text-base font-normal leading-relaxed max-w-md">
               Inspect digital accounts and domains across 190+ countries. Enjoy autonomous Evidential consensus with zero false positives.
             </p>
-            <div className="pt-2 flex items-center gap-3 font-['Silkscreen'] text-[11px] text-white/80 tracking-wider">
+            <div className="pt-1 sm:pt-2 flex flex-wrap items-center gap-2 sm:gap-3 font-['Silkscreen'] text-[10px] sm:text-[11px] text-white/80 tracking-wider">
               <span>● ACTIVE TELEMETRY</span>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span className="font-mono">LATENCY &lt; 38ms</span>
             </div>
           </div>
 
           {/* Right Column: 3D Halftone Globe with Floating White Pill Bar Overlay */}
-          <div className="lg:col-span-7 relative flex items-center justify-center min-h-[420px]">
+          <div className="lg:col-span-7 relative flex items-center justify-center min-h-[280px] sm:min-h-[420px] w-full">
             
             {/* The 3D Halftone ASCII Dot-Matrix Globe (Rendered on Canvas) */}
-            <div className="relative z-0">
+            <div className="relative z-0 w-full flex items-center justify-center">
               <HalftoneGlobe size={460} />
             </div>
 
-            {/* FLOATING WHITE PILL BAR (Directly inspired by the reference image) */}
-            <div className="absolute z-20 w-full max-w-[560px] px-2 sm:px-0">
+            {/* FLOATING WHITE PILL BAR */}
+            <div className="absolute z-20 w-full max-w-[560px] px-1 sm:px-0">
               <form
                 onSubmit={handleScan}
-                className="w-full bg-white text-[#0A0D14] rounded-full p-2 sm:p-2.5 pl-3.5 sm:pl-4 shadow-2xl flex items-center gap-2.5 sm:gap-3"
+                className="w-full bg-white text-[#0A0D14] rounded-full p-1.5 sm:p-2.5 pl-2.5 sm:pl-4 shadow-2xl flex items-center gap-1.5 sm:gap-3"
               >
                 {/* Dynamic Brand Logo / Live Favicon / Cyber Domain Monogram Badge */}
                 <UrlBrandBadge url={url} />
 
                 {/* Sleek Input Field */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative min-w-0">
                   <input
                     type="text"
                     value={url}
@@ -143,16 +154,16 @@ export default function UrlDetection() {
                   />
                 </div>
 
-                {/* Right Badge / Action Button (Matches the RF193,481.26 pill tag) */}
+                {/* Right Badge / Action Button */}
                 <button
                   type="submit"
                   disabled={loading || !url}
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-[10.5px] sm:text-xs font-bold tracking-wider disabled:opacity-50 transition-all flex items-center gap-1.5 shrink-0 shadow-sm cursor-pointer"
+                  className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-[10px] sm:text-xs font-bold tracking-wider disabled:opacity-50 transition-all flex items-center gap-1 sm:gap-1.5 shrink-0 shadow-sm cursor-pointer"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="animate-spin h-3.5 w-3.5" />
-                      <span>INSPECTING...</span>
+                      <span className="hidden sm:inline">INSPECTING...</span>
                     </>
                   ) : (
                     <>
@@ -404,7 +415,7 @@ export default function UrlDetection() {
                       src={
                         result.screenshot_url.startsWith('http')
                           ? result.screenshot_url
-                          : `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.screenshot_url}`
+                          : `${getApiBaseUrl()}${result.screenshot_url}`
                       }
                       alt="Headless DOM Capture"
                       className={`w-full h-full object-cover transition-opacity duration-300 ${

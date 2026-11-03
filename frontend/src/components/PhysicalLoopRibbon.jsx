@@ -40,7 +40,7 @@ export default function PhysicalLoopRibbon({ className = '' }) {
             viewBox="0 0 900 350"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-[680px] sm:w-[800px] md:w-[900px] h-full overflow-visible"
+            className="w-full max-w-[390px] sm:max-w-[700px] md:max-w-[900px] h-full overflow-visible"
           >
             <defs>
               {/* Unified 3D matte white silicone gradient */}
@@ -95,7 +95,7 @@ export default function PhysicalLoopRibbon({ className = '' }) {
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             xmlnsXlink="http://www.w3.org/1999/xlink"
-            className="w-[680px] sm:w-[800px] md:w-[900px] h-full overflow-visible"
+            className="w-full max-w-[390px] sm:max-w-[700px] md:max-w-[900px] h-full overflow-visible"
           >
             <defs>
               {/* Soft drop shadow cast onto the blue strip and text beneath */}

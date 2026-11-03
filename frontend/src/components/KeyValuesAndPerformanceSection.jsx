@@ -66,7 +66,7 @@ export default function KeyValuesAndPerformanceSection() {
             </div>
 
             {/* Editorial Slash Headline */}
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal tracking-tight leading-[1.12]">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-normal tracking-tight leading-[1.15]">
               <span className="text-[#0047FF] font-light mr-1">/</span>
               <span>Less manual work.</span><br />
               <span>More intelligent execution.</span>
@@ -258,7 +258,7 @@ export default function KeyValuesAndPerformanceSection() {
               <span className="hidden sm:inline text-slate-300 dark:text-slate-700">--------------------------------</span>
             </div>
 
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-normal tracking-tight leading-[1.12]">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-normal tracking-tight leading-[1.15]">
               <span className="text-[#0047FF] font-light mr-1">/</span>
               <span>Real-time intelligence.</span><br />
               <span>Zero unnecessary work.</span>
@@ -377,10 +377,12 @@ export default function KeyValuesAndPerformanceSection() {
               <div className="w-[1.5px] h-full bg-[#0047FF] shadow-[0_0_8px_#0047FF]" />
 
               {/* The Floating Center Badge Tag */}
-              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center bg-white dark:bg-[#0A0D14] border border-[#0047FF] text-[#0A0D14] dark:text-white rounded-md shadow-xl text-[9.5px] sm:text-[10px] font-['Silkscreen'] tracking-wider uppercase px-2 py-1 gap-2 whitespace-nowrap">
-                <span className="text-slate-400 dark:text-slate-500">WITHOUT PHISHSHIELD &lt;</span>
+              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center bg-white dark:bg-[#0A0D14] border border-[#0047FF] text-[#0A0D14] dark:text-white rounded-md shadow-xl text-[8px] sm:text-[10px] font-['Silkscreen'] tracking-wider uppercase px-1.5 sm:px-2 py-0.5 sm:py-1 gap-1.5 sm:gap-2 whitespace-nowrap">
+                <span className="text-slate-400 dark:text-slate-500 hidden sm:inline">WITHOUT &lt;</span>
+                <span className="text-slate-400 dark:text-slate-500 inline sm:hidden">&lt;</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-[#0047FF] animate-pulse" />
-                <span className="text-[#0047FF] dark:text-[#38BDF8]">&gt; WITH PHISHSHIELD</span>
+                <span className="text-[#0047FF] dark:text-[#38BDF8] hidden sm:inline">&gt; WITH PHISHSHIELD</span>
+                <span className="text-[#0047FF] dark:text-[#38BDF8] inline sm:hidden">&gt; WITH</span>
               </div>
             </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import GradientRibbonFolder from '../components/GradientRibbonFolder';
+import { getApiBaseUrl } from '../config/api';
 import {
   AlertTriangle,
   ShieldCheck,
@@ -51,27 +52,78 @@ export default function QrDetection() {
     const t1Timer = setTimeout(() => setScanStage(2), 70);
     const t2Timer = setTimeout(() => setScanStage(3), 160);
 
+    const apiBase = getApiBaseUrl();
+
+    // Client-side BarcodeDetector fast pre-scan (if supported by browser hardware)
+    let clientDecodedUrl = null;
+    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+      try {
+        const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        const bitmap = await createImageBitmap(selectedFile);
+        const codes = await detector.detect(bitmap);
+        if (codes && codes.length > 0 && codes[0].rawValue) {
+          clientDecodedUrl = codes[0].rawValue;
+        }
+      } catch (e) {
+        // Fallback to server-side computer vision
+      }
+    }
+
     const formData = new FormData();
     formData.append('file', selectedFile);
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/detect/qr`,
+        `${apiBase}/api/detect/qr`,
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 45000,
         }
       );
       setResult(response.data);
 
-      // Smooth auto-scroll down to the result card
       setTimeout(() => {
         if (resultsRef.current) {
           resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 120);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to decode QR code. Please verify the image is clear.');
+      // If server QR decode failed but client BarcodeDetector successfully decoded URL, fallback to URL neural scan!
+      if (clientDecodedUrl) {
+        try {
+          const urlScanRes = await axios.post(
+            `${apiBase}/api/detect/url`,
+            { url: clientDecodedUrl },
+            { timeout: 30000 }
+          );
+          setResult({
+            ...urlScanRes.data,
+            scan_type: 'qr',
+            decoded_url: clientDecodedUrl,
+            details: `Decoded via Client Hardware Engine: ${clientDecodedUrl} | ${urlScanRes.data.details || ''}`
+          });
+          setTimeout(() => {
+            if (resultsRef.current) {
+              resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 120);
+          return;
+        } catch (urlErr) {
+          // Continue to generic error below
+        }
+      }
+
+      const serverMsg = err.response?.data?.detail;
+      if (serverMsg) {
+        setError(serverMsg);
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Connection timed out. The cloud backend on Render may be waking from sleep. Please try once more.');
+      } else if (err.message?.includes('Network Error')) {
+        setError(`Unable to connect to security backend at ${apiBase}. If on mobile, please wait a moment for the backend cold-start.`);
+      } else {
+        setError('Failed to decode QR code. Please ensure the QR code is clearly visible and well-lit.');
+      }
     } finally {
       clearTimeout(t1Timer);
       clearTimeout(t2Timer);

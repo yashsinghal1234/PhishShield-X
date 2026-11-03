@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl } from '../config/api';
 import { Link } from 'react-router-dom';
 import UserControls from '../components/UserControls';
 import UniqodeLogo from '../components/UniqodeLogo';
@@ -70,7 +71,7 @@ export default function Dashboard() {
 
   const fetchHistory = async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/history`);
+      const response = await axios.get(`${getApiBaseUrl()}/api/history`);
       const data = response.data || [];
       setHistory(data);
 
@@ -100,7 +101,7 @@ export default function Dashboard() {
     setQuickResult(null);
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/detect/url`, {
+      const response = await axios.post(`${getApiBaseUrl()}/api/detect/url`, {
         url: quickUrl,
       });
       setQuickResult(response.data);

@@ -32,7 +32,7 @@ export default function UniqodeBentoCollage({ onLaunchScan }) {
 
           {/* Main Pixel Headline - Bold, Expanded Width & Size */}
           <div className="relative z-10 pt-1">
-            <h1 className="font-['Pixelify_Sans'] text-4xl sm:text-5xl md:text-[62px] lg:text-[74px] xl:text-[82px] font-bold tracking-[0.025em] leading-[1.01] text-white">
+            <h1 className="font-['Pixelify_Sans'] text-3xl sm:text-5xl md:text-[62px] lg:text-[74px] xl:text-[82px] font-bold tracking-[0.025em] leading-[1.01] text-white">
               Everything,<br />
               Everywhere,<br />
               All at Once.
@@ -40,7 +40,7 @@ export default function UniqodeBentoCollage({ onLaunchScan }) {
           </div>
 
           {/* Bottom Row: ■ LET'S GET STARTED and PHISHSHIELD.COM */}
-          <div className="relative z-10 pt-4 flex items-center justify-between text-white/90">
+          <div className="relative z-10 pt-4 flex flex-wrap items-center justify-between gap-2.5 text-white/90">
             <button
               onClick={onLaunchScan}
               type="button"
@@ -103,8 +103,8 @@ export default function UniqodeBentoCollage({ onLaunchScan }) {
         </div>
 
         {/* CARD 7: Pitch Black "IRL TO URL & BACK AGAIN" (Cols 5-12) */}
-        <div className="md:col-span-8 rounded-[24px] bg-[#0A0D14] text-white p-6 sm:p-8 flex items-center justify-center min-h-[240px] sm:min-h-[265px] shadow-lg border border-[#1A1E29]">
-          <h2 className="font-['Pixelify_Sans'] text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-bold tracking-tight text-[#9BBFE0] leading-[1.12] text-center">
+        <div className="md:col-span-8 rounded-[24px] bg-[#0A0D14] text-white p-6 sm:p-8 flex items-center justify-center min-h-[220px] sm:min-h-[265px] shadow-lg border border-[#1A1E29]">
+          <h2 className="font-['Pixelify_Sans'] text-3xl sm:text-5xl md:text-6xl lg:text-[68px] font-bold tracking-tight text-[#9BBFE0] leading-[1.12] text-center">
             IRL TO<br />
             URL &amp; BACK<br />
             AGAIN

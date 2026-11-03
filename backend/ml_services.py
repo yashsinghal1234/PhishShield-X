@@ -1057,18 +1057,180 @@ def detect_email_phishing(content: str, subject: str = "", sender: str = "") -> 
             # Shadow evaluation must never block live serving
             pass
 
+    import re
+    text_urls = list(dict.fromkeys(re.findall(r'https?://[^\s<>"\'\)]+', content)))[:8]
+    text_tactics = detect_coercion_tactics(content, subject=subject or "")
+
     response = {
         "prediction": prediction,
         "confidence": confidence,
-        "details": details
+        "details": details,
+        "email_sender": sender or "Raw Text Input",
+        "email_recipient": "Header unavailable (raw text)",
+        "email_subject": subject or (content.strip().split('\n')[0][:60] if content else "Raw Message Body"),
+        "email_date": "Current Session",
+        "email_return_path": "Header unavailable (raw text)",
+        "spf_status": "NONE",
+        "dkim_status": "NONE",
+        "dmarc_status": "NONE",
+        "domain_alignment": "NOT APPLICABLE",
+        "extracted_urls": text_urls,
+        "attachments": [],
+        "coercion_tactics": text_tactics
     }
     if shadow_telemetry is not None:
         response["shadow_telemetry"] = shadow_telemetry
     return response
 
-def detect_eml_phishing(file_bytes: bytes) -> dict:
+def detect_coercion_tactics(text: str, subject: str = "") -> list:
+    combined = f"{subject} {text}".lower()
+    tactics = []
+    if any(w in combined for w in ['urgent', 'immediately', 'within 24 hours', 'immediate action', 'hours left', 'action required', 'expir', 'deadline', 'suspend']):
+        tactics.append("Urgent Action Pressure")
+    if any(w in combined for w in ['payroll', 'invoice', 'salary', 'transaction', 'banking', 'payment declined', 'tax discrepancy', 'wire transfer', 'crypto', 'wallet', 'refund']):
+        tactics.append("Financial / Payment Coercion")
+    if any(w in combined for w in ['it support', 'helpdesk', 'administrator', 'security alert', 'microsoft team', 'google security', 'apple support', 'cloud portal']):
+        tactics.append("Authority & IT Impersonation")
+    if any(w in combined for w in ['re-authenticate', 'verify your identity', 'password reset', 'confirm credentials', 'login below', 'click to keep access', 'update account', 're-verify']):
+        tactics.append("Credential Harvesting Lure")
+    if any(w in combined for w in ['internship', 'job offer', 'hiring', 'interview invitation', 'remote job', 'earn $']):
+        tactics.append("Fake Job / Recruitment Trap")
+    if any(w in combined for w in ['unauthorized login', 'breach detected', 'law enforcement', 'legal action', 'subpoena', 'penalties']):
+        tactics.append("Fear & Disciplinary Intimidation")
+    return tactics
+
+def detect_pdf_phishing(file_bytes: bytes, filename: str = "document.pdf") -> dict:
+    import io
+    import re
+    import pypdf
+    
+    details = []
+    anomaly_score = 0.0
+    extracted_urls = []
+    body_text = ""
+    attachments = []
+    
+    # 1. Raw PDF Stream Analysis (JavaScript, Launch, Embedded Files)
+    raw_str = file_bytes.decode('latin-1', errors='ignore')
+    
+    has_js = bool(re.search(r'/(?:JavaScript|JS)\b', raw_str, re.IGNORECASE))
+    has_launch = bool(re.search(r'/(?:Launch|OpenAction)\b', raw_str, re.IGNORECASE))
+    has_embedded = bool(re.search(r'/(?:EmbeddedFiles|RichMedia)\b', raw_str, re.IGNORECASE))
+    
+    if has_js:
+        anomaly_score += 0.55
+        details.append("PDF Exploit Vector: Contains active embedded JavaScript (/JS /JavaScript action)")
+    if has_launch:
+        anomaly_score += 0.50
+        details.append("PDF Exploit Vector: Contains automatic execution launch triggers (/OpenAction /Launch)")
+    if has_embedded:
+        anomaly_score += 0.35
+        details.append("PDF Structural Anomaly: Contains embedded binary payload objects (/EmbeddedFiles)")
+        attachments.append({"filename": "embedded_payload.bin", "content_type": "application/octet-stream", "is_risky": True})
+        
+    # 2. PyPDF Extraction (Text, Annotations, Metadata)
+    pdf_author = "Unknown Author"
+    pdf_title = filename
+    pdf_date = "N/A"
+    
+    try:
+        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+        if reader.metadata:
+            meta = reader.metadata
+            pdf_author = str(meta.author or meta.creator or "Unknown Creator")
+            pdf_title = str(meta.title or filename)
+            if meta.creation_date:
+                pdf_date = str(meta.creation_date)
+                
+        for p_idx, page in enumerate(reader.pages):
+            try:
+                page_text = page.extract_text() or ""
+                body_text += f"\n--- Page {p_idx+1} ---\n" + page_text
+            except Exception:
+                pass
+                
+            if "/Annots" in page:
+                try:
+                    annots = page["/Annots"]
+                    for annot_ref in annots:
+                        annot = annot_ref.get_object() if hasattr(annot_ref, 'get_object') else annot_ref
+                        if annot and isinstance(annot, dict) and "/A" in annot:
+                            action = annot["/A"]
+                            if hasattr(action, 'get_object'): action = action.get_object()
+                            if action and isinstance(action, dict) and action.get("/S") == "/URI":
+                                uri = str(action.get("/URI", "")).strip()
+                                if uri.startswith(('http://', 'https://')):
+                                    extracted_urls.append(uri)
+                except Exception:
+                    pass
+    except Exception as e:
+        details.append(f"PDF Parsing Notice: {str(e)[:100]}")
+        
+    regex_urls = re.findall(r'https?://[^\s<>"\'\)]+', body_text + " " + raw_str)
+    all_urls = list(dict.fromkeys(extracted_urls + regex_urls))[:12]
+    
+    suspicious_pdf_keywords = [
+        "invoice", "wire transfer", "payment receipt", "cryptocurrency", "bitcoin", "metamask", 
+        "account suspended", "verify your identity", "order confirmation", "geek squad", "norton", 
+        "mcafee", "renew your subscription", "unauthorized charge", "call support"
+    ]
+    detected_kw = [kw for kw in suspicious_pdf_keywords if kw in (body_text.lower() + " " + raw_str.lower())]
+    if detected_kw:
+        anomaly_score += min(0.4, len(detected_kw) * 0.1)
+        details.append(f"Scam Lures in PDF: Identified financial/urgency keywords ({', '.join(detected_kw[:4])})")
+        
+    if all_urls and not has_js and not has_launch and not detected_kw:
+        details.append(f"PDF Analysis: {len(all_urls)} hyperlinks extracted and indexed for scanning.")
+        
+    coercion_tactics = detect_coercion_tactics(body_text, subject=pdf_title)
+    if coercion_tactics:
+        anomaly_score += min(0.3, len(coercion_tactics) * 0.1)
+        
+    ml_result = detect_email_phishing(body_text[:2000] if body_text.strip() else pdf_title, subject=pdf_title, sender=pdf_author)
+    if ml_result["prediction"] == "Safe":
+        base_ml_confidence = 1.0 - ml_result["confidence"]
+    else:
+        base_ml_confidence = ml_result["confidence"]
+        
+    final_confidence = min(0.99, base_ml_confidence + anomaly_score)
+    if final_confidence > 0.74 or has_js or has_launch:
+        final_prediction = "Phishing"
+    elif final_confidence > 0.40:
+        final_prediction = "Suspicious"
+    else:
+        final_prediction = "Safe"
+        
+    details.append(f"PDF Document Scanned ({len(file_bytes)/1024:.1f} KB)")
+    
+    response = {
+        "prediction": final_prediction,
+        "confidence": final_confidence if final_prediction != "Safe" else 1.0 - final_confidence,
+        "details": " | ".join(details),
+        "email_sender": f"PDF Author: {pdf_author}",
+        "email_recipient": "Document Target / Viewer",
+        "email_subject": pdf_title or filename,
+        "email_date": pdf_date or "Embedded in PDF metadata",
+        "email_return_path": "N/A (Portable Document File)",
+        "spf_status": "N/A",
+        "dkim_status": "N/A",
+        "dmarc_status": "N/A",
+        "domain_alignment": "PDF Direct File Ingestion",
+        "extracted_urls": all_urls,
+        "attachments": attachments,
+        "coercion_tactics": coercion_tactics
+    }
+    if "shadow_telemetry" in ml_result:
+        response["shadow_telemetry"] = ml_result["shadow_telemetry"]
+    return response
+
+def detect_eml_phishing(file_bytes: bytes, filename: str = "") -> dict:
     import email
     from email import policy
+    import re
+    
+    # Check if uploaded file is a PDF
+    if file_bytes.startswith(b'%PDF') or (filename and filename.lower().endswith('.pdf')):
+        return detect_pdf_phishing(file_bytes, filename=filename or "document.pdf")
     
     try:
         msg = email.message_from_bytes(file_bytes, policy=policy.default)
@@ -1076,39 +1238,74 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
         details = []
         anomaly_score = 0.0
         
-        # 1. Header Analysis
-        auth_results = str(msg.get('Authentication-Results', '')).lower()
-        if 'spf=fail' in auth_results or 'spf=softfail' in auth_results:
+        sender = str(msg.get('From', '')).strip()
+        recipient = str(msg.get('To', '')).strip()
+        subj = str(msg.get('Subject', '')).strip()
+        date_str = str(msg.get('Date', '')).strip()
+        return_path = str(msg.get('Return-Path', '')).strip()
+        
+        # 1. Header Authentication Analysis
+        auth_results = (str(msg.get('Authentication-Results', '')) + ' ' + str(msg.get('ARC-Authentication-Results', ''))).lower()
+        received_spf = str(msg.get('Received-SPF', '')).lower()
+        
+        if 'spf=pass' in auth_results or 'pass' in received_spf:
+            spf_status = "PASS"
+        elif 'spf=fail' in auth_results or 'fail' in received_spf:
+            spf_status = "FAIL"
             anomaly_score += 0.4
             details.append("Header Anomaly: SPF Authentication Failed (Sender IP not authorized)")
+        elif 'spf=softfail' in auth_results or 'softfail' in received_spf:
+            spf_status = "SOFTFAIL"
+            anomaly_score += 0.3
+            details.append("Header Anomaly: SPF Softfail (Sender IP not explicitly designated)")
+        else:
+            spf_status = "NONE"
             
-        if 'dkim=fail' in auth_results:
+        if 'dkim=pass' in auth_results:
+            dkim_status = "PASS"
+        elif 'dkim=fail' in auth_results:
+            dkim_status = "FAIL"
             anomaly_score += 0.4
-            details.append("Header Anomaly: DKIM Signature Failed (Email may have been tampered with or spoofed)")
+            details.append("Header Anomaly: DKIM Signature Failed (Email altered or signature invalid)")
+        elif msg.get('DKIM-Signature'):
+            dkim_status = "PRESENT"
+        else:
+            dkim_status = "NONE"
             
-        if 'dmarc=fail' in auth_results:
+        if 'dmarc=pass' in auth_results:
+            dmarc_status = "PASS"
+        elif 'dmarc=fail' in auth_results:
+            dmarc_status = "FAIL"
             anomaly_score += 0.5
             details.append("Header Anomaly: DMARC Policy Failed (High probability of spoofing)")
+        else:
+            dmarc_status = "NONE"
             
-        # 2. Mismatch Analysis
-        from_header = str(msg.get('From', ''))
-        return_path = str(msg.get('Return-Path', ''))
-        
+        # 2. Envelope Mismatch Analysis
         def extract_domain(addr):
             if '@' in addr:
-                return addr.split('@')[-1].strip('<>')
+                return addr.split('@')[-1].strip('<> \t\r\n')
             return ''
             
-        from_domain = extract_domain(from_header)
+        from_domain = extract_domain(sender)
         return_domain = extract_domain(return_path)
         
-        if from_domain and return_domain and from_domain.lower() != return_domain.lower():
-            anomaly_score += 0.5
-            details.append(f"Header Anomaly: 'From' domain ({from_domain}) does not match 'Return-Path' ({return_domain}). Classic spoofing tactic.")
+        if from_domain and return_domain:
+            if from_domain.lower() == return_domain.lower():
+                domain_alignment = f"ALIGNED ({from_domain})"
+            else:
+                domain_alignment = f"MISMATCH: {from_domain} != {return_domain}"
+                anomaly_score += 0.5
+                details.append(f"Header Anomaly: 'From' domain ({from_domain}) does not match 'Return-Path' ({return_domain}). Classic spoofing tactic.")
+        elif from_domain:
+            domain_alignment = f"UNALIGNED ({from_domain})"
+        else:
+            domain_alignment = "NOT EVALUATED"
             
-        # 3. Robust Multipart / Base64 / HTML Body & Payload Extraction
+        # 3. Robust Multipart / Body & Payload Extraction
         body_parts = []
         extracted_urls = []
+        attachments = []
         
         def decode_payload_bytes(payload_raw, charset=None) -> str:
             if not payload_raw:
@@ -1130,14 +1327,20 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
             for part in msg.walk():
                 ctype = part.get_content_type().lower()
                 c_disp = str(part.get('Content-Disposition', '')).lower()
-                
-                # Check for risky attachment extensions
                 fname = part.get_filename() or ''
-                if fname:
-                    fname_lower = fname.lower()
-                    if any(fname_lower.endswith(ext) for ext in ['.exe', '.scr', '.vbs', '.js', '.bat', '.iso', '.htm', '.html']):
-                        details.append(f"Attachment Anomaly: Suspicious executable/script attachment detected ({fname})")
-                        anomaly_score += 0.4
+                
+                # Check for attachments
+                if fname or 'attachment' in c_disp:
+                    fname_clean = fname or "unnamed_attachment"
+                    is_risky = any(fname_clean.lower().endswith(ext) for ext in ['.exe', '.scr', '.vbs', '.js', '.bat', '.iso', '.htm', '.html', '.zip', '.rar', '.docm', '.xlsm'])
+                    attachments.append({
+                        "filename": fname_clean,
+                        "content_type": ctype,
+                        "is_risky": is_risky
+                    })
+                    if is_risky:
+                        details.append(f"Attachment Anomaly: Suspicious executable/script attachment detected ({fname_clean})")
+                        anomaly_score += 0.45
                 
                 if 'attachment' in c_disp and not ctype.startswith('text/'):
                     continue
@@ -1180,7 +1383,11 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
 
         body_content = "\n\n".join(body_parts).strip()
         if not body_content:
-            body_content = str(msg.get('Subject', ''))
+            body_content = subj
+
+        # Also extract raw URLs from body text
+        regex_urls = re.findall(r'https?://[^\s<>"\'\)]+', body_content)
+        all_urls = list(dict.fromkeys(extracted_urls + regex_urls))[:12]
             
         # 3.5 Fake Job/Internship Detection
         job_keywords = ["internship", "job offer", "hiring", "salary", "work from home", "remote job", "interview", "recruitment"]
@@ -1196,10 +1403,15 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
                 if age_info["age_days"] is not None and age_info["age_days"] < 180:
                     anomaly_score += 0.4
                     details.append(f"Job Scam Heuristic: Job offer from a newly registered corporate domain ({age_info['age_days']} days old)")
+
+        # 3.6 Coercion Tactics
+        coercion_tactics = detect_coercion_tactics(body_content, subject=subj)
+        if len(coercion_tactics) >= 2:
+            anomaly_score += 0.25
+            details.append(f"Psychological Coercion: Multiple pressure tactics detected ({', '.join(coercion_tactics[:2])})")
                     
         # 4. Base ML Analysis & Evidential Shadow Evaluation
-        subj = str(msg.get('Subject', ''))
-        ml_result = detect_email_phishing(body_content, subject=subj, sender=from_header)
+        ml_result = detect_email_phishing(body_content, subject=subj, sender=sender)
         
         if ml_result["prediction"] == "Safe":
             base_ml_confidence = 1.0 - ml_result["confidence"]
@@ -1220,7 +1432,19 @@ def detect_eml_phishing(file_bytes: bytes) -> dict:
         response = {
             "prediction": final_prediction,
             "confidence": final_confidence if final_prediction != "Safe" else 1.0 - final_confidence,
-            "details": " | ".join(details)
+            "details": " | ".join(details),
+            "email_sender": sender or "Unknown Sender",
+            "email_recipient": recipient or "Unknown Recipient",
+            "email_subject": subj or "No Subject",
+            "email_date": date_str or "Date Unknown",
+            "email_return_path": return_path or "None",
+            "spf_status": spf_status,
+            "dkim_status": dkim_status,
+            "dmarc_status": dmarc_status,
+            "domain_alignment": domain_alignment,
+            "extracted_urls": all_urls,
+            "attachments": attachments,
+            "coercion_tactics": coercion_tactics
         }
         if "shadow_telemetry" in ml_result:
             response["shadow_telemetry"] = ml_result["shadow_telemetry"]

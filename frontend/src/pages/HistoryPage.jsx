@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getApiBaseUrl } from '../config/api';
 import UserControls from '../components/UserControls';
 import {
   History as HistoryIcon,
@@ -26,7 +27,7 @@ export default function HistoryPage() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/history`
+        `${getApiBaseUrl()}/api/history`
       );
       setHistory(response.data || []);
     } catch (err) {
@@ -70,29 +71,29 @@ export default function HistoryPage() {
               AUDIT ARCHIVE // LOGS
             </span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#0A0D14] dark:text-white">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
             Detection History &amp; Audit
           </h1>
-          <p className="text-sm font-medium text-[#64748B] dark:text-[#94A3B8] mt-1">
+          <p className="text-sm font-medium text-[#94A3B8] mt-1">
             Comprehensive audit ledger of scanned URLs, quishing payloads, and analyzed email communications.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <button
             onClick={exportHistory}
             disabled={history.length === 0}
-            className="px-4 py-2.5 bg-white dark:bg-[#0F131C] border border-[#E2E6EE] dark:border-[#1E2533] hover:border-[#0047FF] text-[#0A0D14] dark:text-white rounded-2xl transition-all flex items-center gap-2 font-['Silkscreen'] text-xs font-bold shadow-sm disabled:opacity-50 cursor-pointer"
+            className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-white dark:bg-[#0F131C] border border-[#E2E6EE] dark:border-[#1E2533] hover:border-[#0047FF] text-[#0A0D14] dark:text-white rounded-2xl transition-all flex items-center gap-1.5 sm:gap-2 font-['Silkscreen'] text-[11px] sm:text-xs font-bold shadow-sm disabled:opacity-50 cursor-pointer"
           >
-            <Download size={15} className="text-[#0047FF]" />
+            <Download size={14} className="text-[#0047FF]" />
             <span>EXPORT JSON</span>
           </button>
 
           <button
             onClick={fetchHistory}
-            className="px-4 py-2.5 bg-[#0047FF] hover:bg-[#0039CC] text-white rounded-2xl transition-all flex items-center gap-2 font-['Silkscreen'] text-xs font-bold shadow-sm shadow-[#0047FF]/20 cursor-pointer"
+            className="px-3.5 sm:px-4 py-2 sm:py-2.5 bg-[#0047FF] hover:bg-[#0039CC] text-white rounded-2xl transition-all flex items-center gap-1.5 sm:gap-2 font-['Silkscreen'] text-[11px] sm:text-xs font-bold shadow-sm shadow-[#0047FF]/20 cursor-pointer"
           >
-            <HistoryIcon size={15} />
+            <HistoryIcon size={14} />
             <span>REFRESH</span>
           </button>
 
@@ -101,7 +102,7 @@ export default function HistoryPage() {
       </div>
 
       {/* Main Table Bento Card */}
-      <div className="rounded-[32px] bg-white dark:bg-[#0F131C] border border-[#E2E6EE] dark:border-[#1E2533] shadow-sm overflow-hidden">
+      <div className="rounded-[24px] sm:rounded-[32px] bg-white dark:bg-[#0F131C] border border-[#E2E6EE] dark:border-[#1E2533] shadow-sm overflow-hidden">
         {/* Search & Filter Toolbar */}
         <div className="p-5 border-b border-[#E2E6EE] dark:border-[#1E2533] flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#F8FAFD] dark:bg-[#141A26]">
           <div className="flex-1 relative max-w-md">

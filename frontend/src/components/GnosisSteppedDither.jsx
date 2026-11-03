@@ -10,20 +10,33 @@ import React, { useEffect, useRef } from 'react';
 export default function GnosisSteppedDither({ className = '', height = 420 }) {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: -1000, y: -1000 });
+  const [currentHeight, setCurrentHeight] = React.useState(height);
 
   useEffect(() => {
+    const getResponsiveHeight = () => {
+      if (typeof window === 'undefined') return height;
+      if (window.innerWidth < 640) return Math.min(240, height);
+      if (window.innerWidth < 1024) return Math.min(320, height);
+      return height;
+    };
+
+    const initialH = getResponsiveHeight();
+    setCurrentHeight(initialH);
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     let animationFrameId;
 
     let width = (canvas.width = canvas.parentElement.clientWidth);
-    let h = (canvas.height = height);
+    let h = (canvas.height = initialH);
 
     const handleResize = () => {
       if (!canvas || !canvas.parentElement) return;
+      const newH = getResponsiveHeight();
+      setCurrentHeight(newH);
       width = canvas.width = canvas.parentElement.clientWidth;
-      h = canvas.height = height;
+      h = canvas.height = newH;
     };
     window.addEventListener('resize', handleResize);
 
@@ -34,7 +47,18 @@ export default function GnosisSteppedDither({ className = '', height = 420 }) {
         y: e.clientY - rect.top,
       };
     };
+
+    const handleTouchMove = (e) => {
+      if (!e.touches || e.touches.length === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
 
     // Resolution scale for retro dither pixelation effect
     const scale = 3;
@@ -113,21 +137,22 @@ export default function GnosisSteppedDither({ className = '', height = 420 }) {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
     };
   }, [height]);
 
   return (
     <div
-      className={`relative w-full overflow-hidden ${className}`}
+      className={`relative w-full overflow-hidden bg-[#080A0F] ${className}`}
       style={{
-        height: `${height}px`,
+        height: `${currentHeight}px`,
         // Exact geometric staircase proportions: moved very slightly closer to the header text
         clipPath: 'polygon(0% 38%, 42% 38%, 42% 22%, 63% 22%, 63% 6%, 94% 6%, 94% 13%, 100% 13%, 100% 100%, 0% 100%)',
       }}
     >
       <canvas
         ref={canvasRef}
-        style={{ width: '100%', height: `${height}px` }}
+        style={{ width: '100%', height: `${currentHeight}px` }}
         className="block"
       />
     </div>

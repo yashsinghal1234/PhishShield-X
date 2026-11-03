@@ -93,7 +93,7 @@ export default function EditorialFooter({ onLaunchScan }) {
             </div>
 
             {/* Headline */}
-            <h2 className="font-['Pixelify_Sans'] text-4xl sm:text-5xl lg:text-[54px] font-bold text-white tracking-tight leading-[1.06] mb-4">
+            <h2 className="font-['Pixelify_Sans'] text-3xl sm:text-5xl lg:text-[54px] font-bold text-white tracking-tight leading-[1.06] mb-4">
               Detect threats.<br />
               Eliminate zero-days.
             </h2>
@@ -105,11 +105,11 @@ export default function EditorialFooter({ onLaunchScan }) {
           </div>
 
           {/* Chamfered CTA Button */}
-          <div className="pt-8">
+          <div className="pt-6 sm:pt-8">
             <button
               type="button"
               onClick={handleAction}
-              className="inline-flex items-center justify-center px-8 py-3.5 bg-[#D9D3C7] hover:bg-white text-[#0A0D14] font-['Silkscreen'] text-xs font-bold tracking-[0.14em] uppercase transition-all cursor-pointer shadow-lg relative"
+              className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 bg-[#D9D3C7] hover:bg-white text-[#0A0D14] font-['Silkscreen'] text-[11px] sm:text-xs font-bold tracking-[0.14em] uppercase transition-all cursor-pointer shadow-lg relative"
               style={{
                 clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)'
               }}
@@ -220,10 +220,10 @@ export default function EditorialFooter({ onLaunchScan }) {
       <div className="border border-[#1E2533] bg-[#0047FF] text-[#0A0D14] relative overflow-hidden">
         
         {/* Inner Flex Header: Left Hatched Ticket Tab + Stats + Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-12 border-b border-[#0A0D14]/15">
+        <div className="grid grid-cols-2 md:grid-cols-12 border-b border-[#0A0D14]/15">
           
           {/* Hatched Ticket Notch Tab (Left) */}
-          <div className="md:col-span-2 border-b md:border-b-0 md:border-r border-[#0A0D14]/15 p-5 sm:p-6 flex items-center justify-center relative bg-[repeating-linear-gradient(45deg,_rgba(10,13,20,0.08)_0px,_rgba(10,13,20,0.08)_2px,_transparent_2px,_transparent_6px)]">
+          <div className="col-span-2 md:col-span-2 border-b md:border-b-0 md:border-r border-[#0A0D14]/15 p-4 sm:p-6 flex items-center justify-center relative bg-[repeating-linear-gradient(45deg,_rgba(10,13,20,0.08)_0px,_rgba(10,13,20,0.08)_2px,_transparent_2px,_transparent_6px)]">
             {/* Center diamond/flower logo mark */}
             <div className="w-9 h-9 rotate-45 border-2 border-[#0A0D14] flex items-center justify-center bg-[#0047FF] shadow-sm">
               <div className="w-3.5 h-3.5 bg-[#0A0D14]" />
@@ -231,28 +231,28 @@ export default function EditorialFooter({ onLaunchScan }) {
           </div>
 
           {/* Metric 1: Active Status */}
-          <div className="md:col-span-2 border-b md:border-b-0 md:border-r border-[#0A0D14]/15 p-5 sm:p-6 flex flex-col justify-center">
-            <span className="text-2xl sm:text-3xl font-extrabold text-[#0A0D14] tracking-tight">
+          <div className="col-span-1 md:col-span-2 border-r border-b md:border-b-0 border-[#0A0D14]/15 p-4 sm:p-6 flex flex-col justify-center">
+            <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#0A0D14] tracking-tight">
               Active
             </span>
-            <span className="font-['Silkscreen'] text-[9.5px] uppercase tracking-wider text-[#0A0D14]/75 mt-0.5">
+            <span className="font-['Silkscreen'] text-[9px] sm:text-[9.5px] uppercase tracking-wider text-[#0A0D14]/75 mt-0.5">
               Engine Status
             </span>
           </div>
 
           {/* Metric 2: Threats Evaluated */}
-          <div className="md:col-span-3 border-b md:border-b-0 md:border-r border-[#0A0D14]/15 p-5 sm:p-6 flex flex-col justify-center">
-            <span className="text-2xl sm:text-3xl font-extrabold text-[#0A0D14] tracking-tight font-mono">
+          <div className="col-span-1 md:col-span-3 border-b md:border-b-0 md:border-r border-[#0A0D14]/15 p-4 sm:p-6 flex flex-col justify-center">
+            <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#0A0D14] tracking-tight font-mono truncate">
               14,892,104
             </span>
-            <span className="font-['Silkscreen'] text-[9.5px] uppercase tracking-wider text-[#0A0D14]/75 mt-0.5">
+            <span className="font-['Silkscreen'] text-[9px] sm:text-[9.5px] uppercase tracking-wider text-[#0A0D14]/75 mt-0.5">
               Threats Evaluated
             </span>
           </div>
 
           {/* Description Paragraph (Right) */}
-          <div className="md:col-span-5 p-5 sm:p-6 flex items-center">
-            <p className="font-mono text-[11px] sm:text-[11.5px] text-[#0A0D14]/85 leading-relaxed tracking-tight">
+          <div className="col-span-2 md:col-span-5 p-4 sm:p-6 flex items-center">
+            <p className="font-mono text-[10.5px] sm:text-[11.5px] text-[#0A0D14]/85 leading-relaxed tracking-tight">
               PhishShield is an autonomous evidential threat intelligence operator. It cross-examines URL lexical patterns, ViT QR barcodes, and email consensus automatically, with mathematical uncertainty bounds.
             </p>
           </div>
@@ -264,7 +264,7 @@ export default function EditorialFooter({ onLaunchScan }) {
           <h1
             className="w-full text-center font-['Instrument_Serif',_Georgia,_serif] text-[#0A0D14] font-normal tracking-[-0.03em] leading-[0.82] select-none pointer-events-none"
             style={{
-              fontSize: 'clamp(5rem, 18vw, 17.5rem)',
+              fontSize: 'clamp(3rem, 16vw, 17.5rem)',
               textShadow: '0 2px 40px rgba(0,0,0,0.1)'
             }}
           >

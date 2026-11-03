@@ -34,6 +34,18 @@ class ScanResponse(BaseModel):
     entropy: Optional[float] = None
     subdomain_depth: Optional[int] = None
     decoded_url: Optional[str] = None
+    email_sender: Optional[str] = None
+    email_recipient: Optional[str] = None
+    email_subject: Optional[str] = None
+    email_date: Optional[str] = None
+    email_return_path: Optional[str] = None
+    spf_status: Optional[str] = None
+    dkim_status: Optional[str] = None
+    dmarc_status: Optional[str] = None
+    domain_alignment: Optional[str] = None
+    extracted_urls: Optional[List[str]] = None
+    attachments: Optional[List[dict]] = None
+    coercion_tactics: Optional[List[str]] = None
 
 class ExtensionLogRequest(BaseModel):
     url_hash: str

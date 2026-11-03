@@ -19,6 +19,7 @@ import {
 export default function Documentation() {
   const [activeTab, setActiveTab] = useState('edl'); // 'edl' | 'quishing' | 'lexical' | 'api'
   const [currentPage, setCurrentPage] = useState(1); // 1 to maxPages
+  const [mobileFlap, setMobileFlap] = useState('spec'); // 'spec' | 'evidence' for mobile view
   const [isFlipping, setIsFlipping] = useState(false);
   const [sheetOrder, setSheetOrder] = useState(['main', 'excerpt', 'receipt']); // stacking order (last is top)
   const [positions, setPositions] = useState({
@@ -268,8 +269,57 @@ export default function Documentation() {
           Left Flap: Small Artifacts (Pink Excerpt A + Yellow Torn Receipt)
           Right Flap: Main Documentation Page (White Punched Ledger with Math & Specs)
           ========================================================================= */}
-      <div className="max-w-[1520px] mx-auto relative pb-20 pr-12 sm:pr-16">
+      <div className="max-w-[1520px] mx-auto relative pb-20 pr-0 lg:pr-16">
         
+        {/* Mobile Dossier Horizontal Tabs (< lg) */}
+        <div className="flex lg:hidden overflow-x-auto pb-3 gap-2 no-scrollbar mb-2 px-1">
+          {dossierTabs.map((tab) => {
+            const isCurrent = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setCurrentPage(1);
+                  bringToFront('main');
+                }}
+                className={`shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-white font-mono text-xs uppercase shadow-md transition-all cursor-pointer ${tab.color} ${tab.hoverColor} ${
+                  isCurrent ? 'ring-2 ring-white font-bold opacity-100 scale-[1.02]' : 'opacity-80'
+                }`}
+              >
+                <span className="font-['Silkscreen'] text-[9px] tracking-wider">{tab.fileNo}</span>
+                <span className="text-[11px] font-sans font-medium">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Mobile Flap Selector (Ledger vs Evidence) */}
+        <div className="flex lg:hidden items-center justify-center p-1 bg-[#1053F3]/50 border border-blue-400/30 rounded-xl mb-3 text-xs font-mono">
+          <button
+            type="button"
+            onClick={() => setMobileFlap('spec')}
+            className={`flex-1 py-2 px-2 rounded-lg text-center font-bold transition-all cursor-pointer ${
+              mobileFlap === 'spec'
+                ? 'bg-white text-slate-900 shadow-md'
+                : 'text-white/80 hover:text-white'
+            }`}
+          >
+            📋 Specification (File 0{activeTab === 'edl' ? '1' : activeTab === 'quishing' ? '2' : activeTab === 'lexical' ? '3' : '4'})
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileFlap('evidence')}
+            className={`flex-1 py-2 px-2 rounded-lg text-center font-bold transition-all cursor-pointer ${
+              mobileFlap === 'evidence'
+                ? 'bg-[#F8A5B2] text-slate-900 shadow-md'
+                : 'text-white/80 hover:text-white'
+            }`}
+          >
+            📑 Evidence Slips (2)
+          </button>
+        </div>
+
         {/* Main Blue Folder Container */}
         <div className="relative rounded-[24px] sm:rounded-[36px] bg-[#1053F3] p-4 sm:p-7 lg:p-9 shadow-2xl min-h-[820px] border border-blue-400/25">
           
@@ -283,9 +333,9 @@ export default function Documentation() {
           </div>
 
           {/* -------------------------------------------------------------------
-              SIDE FILE TABS (Sticking outwards past the right edge of the folder)
+              SIDE FILE TABS (Sticking outwards past the right edge of the folder - DESKTOP ONLY)
               ------------------------------------------------------------------- */}
-          <div className="absolute -right-11 sm:-right-12 top-12 sm:top-18 flex flex-col gap-3 z-30">
+          <div className="hidden lg:flex absolute -right-11 sm:-right-12 top-12 sm:top-18 flex-col gap-3 z-30">
             {dossierTabs.map((tab) => {
               const isCurrent = activeTab === tab.id;
               return (
@@ -322,7 +372,9 @@ export default function Documentation() {
                 Top: Pink Excerpt A (Security Advisory Bulletin)
                 Bottom: Yellow Torn Audit Slip (Forensic Chain-of-Custody)
                 ================================================================= */}
-            <div className="flex flex-col justify-between gap-6 relative min-h-[660px] lg:min-h-[680px]">
+            <div className={`flex-col justify-between gap-6 relative min-h-[660px] lg:min-h-[680px] ${
+              mobileFlap === 'evidence' ? 'flex' : 'hidden lg:flex'
+            }`}>
               
               {/* SHEET 2: PINK EXCERPT SHEET ("Excerpt A" / Threat Bulletin) */}
               <div
@@ -467,7 +519,9 @@ export default function Documentation() {
                 RIGHT FLAP: PRIMARY WHITE DOSSIER PAGE (PAGINATED SPREAD)
                 Exact same height as left flap, interactive multi-page folding
                 ================================================================= */}
-            <div className="relative min-h-[660px] lg:min-h-[680px] flex flex-col">
+            <div className={`relative min-h-[660px] lg:min-h-[680px] flex flex-col ${
+              mobileFlap === 'spec' ? 'flex' : 'hidden lg:flex'
+            }`}>
               <div
                 onMouseDown={(e) => handleMouseDown('main', e)}
                 onTouchStart={(e) => handleTouchStart('main', e)}
@@ -477,20 +531,20 @@ export default function Documentation() {
                   zIndex: getZIndex('main'),
                   touchAction: 'none'
                 }}
-                className={`relative rounded-xl sm:rounded-2xl bg-[#FAF9F5] text-[#1A1A1A] p-5 sm:p-7 lg:p-8 shadow-2xl border border-black/10 select-none cursor-grab active:cursor-grabbing min-h-[660px] lg:min-h-[680px] flex flex-col justify-between ${
+                className={`relative rounded-xl sm:rounded-2xl bg-[#FAF9F5] text-[#1A1A1A] p-4 sm:p-7 lg:p-8 shadow-2xl border border-black/10 select-none cursor-grab active:cursor-grabbing min-h-[660px] lg:min-h-[680px] flex flex-col justify-between ${
                   draggingSheet === 'main' ? 'transition-none ring-4 ring-black/15 shadow-2xl' : 'transition-transform duration-200'
                 }`}
               >
                 
                 {/* 5 Binder Punch Holes along the Left Margin */}
-                <div className="absolute left-3 sm:left-4 top-8 bottom-8 flex flex-col justify-between pointer-events-none">
+                <div className="absolute left-2 sm:left-4 top-8 bottom-8 flex flex-col justify-between pointer-events-none">
                   {[...Array(5)].map((_, i) => (
-                    <div key={i} className="w-3.5 h-3.5 rounded-full bg-[#1053F3] shadow-inner border border-black/25" />
+                    <div key={i} className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 rounded-full bg-[#1053F3] shadow-inner border border-black/25" />
                   ))}
                 </div>
 
                 {/* Vertical Edge Barcode & Reference Tag */}
-                <div className="absolute right-3 sm:right-5 top-20 bottom-20 flex items-center pointer-events-none opacity-40">
+                <div className="hidden sm:flex absolute right-3 sm:right-5 top-20 bottom-20 items-center pointer-events-none opacity-40">
                   <span
                     className="font-mono text-[9px] tracking-[0.25em] text-black"
                     style={{ writingMode: 'vertical-rl' }}
@@ -501,12 +555,12 @@ export default function Documentation() {
 
                 {/* Top Section: Header inside White Sheet */}
                 <div>
-                  <div className="flex items-start justify-between border-b border-black/10 pb-3 mb-4 pl-5 sm:pl-7">
+                  <div className="flex items-start justify-between border-b border-black/10 pb-3 mb-4 pl-4 sm:pl-7">
                     <div>
-                      <span className="font-mono text-[9.5px] tracking-widest uppercase text-slate-500 block mb-0.5">
+                      <span className="font-mono text-[9px] sm:text-[9.5px] tracking-widest uppercase text-slate-500 block mb-0.5">
                         PHISHSHIELD-X ARCHITECTURAL SPECIFICATION
                       </span>
-                      <h2 className="font-['Instrument_Serif'] italic text-2xl sm:text-3xl text-slate-900 leading-tight">
+                      <h2 className="font-['Instrument_Serif'] italic text-xl sm:text-2xl md:text-3xl text-slate-900 leading-tight">
                         {activeTab === 'edl' && (
                           currentPage === 1 ? 'Evidential Deep Learning' :
                           currentPage === 2 ? 'Dynamic Routing & Detonation' :
@@ -1078,10 +1132,10 @@ export default function Documentation() {
                 </div>
 
                 {/* Bottom Section: Footer with Dynamic Multi-Page Folding & Clean Controls */}
-                <div className="mt-auto pt-4 border-t border-black/10 flex items-center justify-between text-slate-600 font-mono text-xs pl-5 sm:pl-7">
+                <div className="mt-auto pt-4 border-t border-black/10 flex flex-wrap items-center justify-between gap-2.5 text-slate-600 font-mono text-xs pl-4 sm:pl-7">
                   
-                  {/* Left: Project Branding (No dummy "that follows.") */}
-                  <div className="flex items-center gap-2">
+                  {/* Left: Project Branding */}
+                  <div className="hidden sm:flex items-center gap-2">
                     <ShieldAlert size={14} className="text-blue-600" />
                     <span className="font-mono text-[10px] tracking-wider text-slate-700 uppercase font-bold">
                       PHISHSHIELD-X // SPECIFICATION DOSSIER
@@ -1089,11 +1143,11 @@ export default function Documentation() {
                   </div>
 
                   {/* Center: Dynamic Multi-Page Turn Controls (< 01 02 03 ... >) */}
-                  <div className="flex items-center gap-1.5 bg-black/[0.04] p-1 rounded-lg border border-black/10 shadow-inner">
+                  <div className="flex items-center gap-1 sm:gap-1.5 bg-black/[0.04] p-1 rounded-lg border border-black/10 shadow-inner">
                     <button
                       onClick={() => changePage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="p-1 rounded text-slate-600 hover:text-black hover:bg-black/5 disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
+                      className="p-1 sm:p-1.5 rounded text-slate-600 hover:text-black hover:bg-black/5 disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
                       title="Previous Page"
                     >
                       <ChevronLeft size={13} />
@@ -1103,7 +1157,7 @@ export default function Documentation() {
                       <button
                         key={pageNum}
                         onClick={() => changePage(pageNum)}
-                        className={`px-2.5 py-1 rounded text-xs font-mono font-bold transition-all cursor-pointer ${
+                        className={`px-2 sm:px-2.5 py-1 rounded text-xs font-mono font-bold transition-all cursor-pointer ${
                           currentPage === pageNum
                             ? 'bg-slate-900 text-white shadow-xs'
                             : 'text-slate-600 hover:text-black hover:bg-black/5'
@@ -1117,19 +1171,19 @@ export default function Documentation() {
                     <button
                       onClick={() => changePage(Math.min(maxPages, currentPage + 1))}
                       disabled={currentPage === maxPages}
-                      className="p-1 rounded text-slate-600 hover:text-black hover:bg-black/5 disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
+                      className="p-1 sm:p-1.5 rounded text-slate-600 hover:text-black hover:bg-black/5 disabled:opacity-25 disabled:pointer-events-none transition-all cursor-pointer"
                       title="Next Page"
                     >
                       <ChevronRight size={13} />
                     </button>
                   </div>
 
-                  {/* Right: Page Counter (No dummy "1 2 9 3 8") */}
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 hidden sm:inline">
+                  {/* Right: Page Counter */}
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 hidden md:inline">
                       CLASSIFIED SPEC
                     </span>
-                    <span className="font-bold text-slate-900 font-mono text-xs">
+                    <span className="font-bold text-slate-900 font-mono text-xs whitespace-nowrap">
                       PAGE 0{currentPage} / 0{maxPages}
                     </span>
                   </div>

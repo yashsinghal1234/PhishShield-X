@@ -10,11 +10,12 @@ import HistoryPage from './pages/HistoryPage';
 import Documentation from './pages/Documentation';
 import EditorialFooter from './components/EditorialFooter';
 import { ThemeProvider } from './context/ThemeContext';
+import { getApiBaseUrl } from './config/api';
 
 function App() {
   React.useEffect(() => {
     // Proactively warm up cloud backend on initial entry
-    const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const backendUrl = getApiBaseUrl();
     fetch(`${backendUrl}/health`, { mode: 'no-cors' }).catch(() => {});
   }, []);
 

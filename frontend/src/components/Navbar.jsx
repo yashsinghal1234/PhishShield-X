@@ -150,6 +150,14 @@ export default function Navbar() {
               <span>{link.label}</span>
             </Link>
           ))}
+          <Link
+            to="/history"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center gap-3 py-2 text-base font-medium text-white hover:text-[#38BDF8]"
+          >
+            <DotMatrixGlyph type="aperture" className="text-white/80" />
+            <span>Audit History</span>
+          </Link>
           <div className="pt-2">
             <a
               href="/phishshield-extension.zip"

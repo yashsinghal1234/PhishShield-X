@@ -22,7 +22,7 @@ export default function LinguisticLimitsSection() {
         <div className="lg:col-span-7 flex flex-col justify-center space-y-6 sm:space-y-7 z-10">
 
           {/* The Block-Highlighted Typography Headline */}
-          <div className="font-['Plus_Jakarta_Sans'] text-3xl sm:text-5xl md:text-6xl lg:text-[62px] font-extrabold tracking-tight leading-[1.28] sm:leading-[1.2] text-[#0A0D14] dark:text-white">
+          <div className="font-['Plus_Jakarta_Sans'] text-2xl sm:text-4xl md:text-5xl lg:text-[62px] font-extrabold tracking-tight leading-[1.3] sm:leading-[1.2] text-[#0A0D14] dark:text-white">
             
             {/* Line 1: [The] limits of [my] */}
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2.5 sm:mb-3.5">
