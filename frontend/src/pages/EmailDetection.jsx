@@ -488,44 +488,10 @@ export default function EmailDetection() {
       </div>
 
       {/* =========================================================================
-          QUICK LOAD DEMO PAYLOADS & RAW INPUT EXPANDER
+          RAW INPUT EXPANDER & USER GUIDE
           ========================================================================= */}
       <div className="max-w-xl mx-auto space-y-3 text-center">
         
-        {/* Subtle Demo Buttons Row */}
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          <span className="font-['Silkscreen'] text-[10px] text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
-            TRY DEMO:
-          </span>
-          <button
-            type="button"
-            onClick={() => loadSample('phish')}
-            className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-            title="Inspect a simulated urgent payroll credential harvesting email"
-          >
-            <Flame size={12} className="text-red-400" />
-            <span>🚨 Payroll Phish (.eml)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => loadSample('pdf')}
-            className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-            title="Inspect an adversarial overdue invoice PDF with embedded links"
-          >
-            <FileText size={12} className="text-amber-400" />
-            <span>📑 Fake Invoice (.pdf)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => loadSample('legit')}
-            className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-            title="Inspect a legitimate cryptographic GitHub security notice"
-          >
-            <ShieldCheck size={12} className="text-emerald-400" />
-            <span>🛡️ Valid Notice (.eml)</span>
-          </button>
-        </div>
-
         {/* Minimal Collapsible Toggle for Raw Text / SMTP Headers */}
         <div>
           <button
