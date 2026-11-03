@@ -217,15 +217,11 @@ export default function EmailDetection() {
       />
 
       {/* Clean Minimal Header */}
-      <div className="text-center space-y-2.5">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0047FF]/10 border border-[#0047FF]/25 text-[#0047FF] dark:text-[#9BBFE0] text-xs font-['Silkscreen'] uppercase tracking-wider">
-          <Mail size={13} />
-          <span>Vector 03 // Email &amp; Document Intelligence</span>
-        </div>
+      <div className="text-center space-y-1.5">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
           Email &amp; PDF Threat Ingestion
         </h1>
-        <p className="text-[#94A3B8] text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
+        <p className="text-[12.5px] text-[#94A3B8] max-w-full mx-auto sm:whitespace-nowrap">
           Ingest raw RFC-822 (.eml, .msg) messages or PDF documents to inspect cryptographic SPF/DKIM/DMARC signatures, malicious links, and hidden embedded payloads.
         </p>
       </div>
