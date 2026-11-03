@@ -303,36 +303,30 @@ export default function EmailDetection() {
                   </div>
                 </div>
               ) : !file ? (
-                /* CASE 2: IDLE STATE -> 3D INTERACTIVE ENVELOPE */
+                /* CASE 2: IDLE STATE -> ICONIC RETRO WHITE ENVELOPE (Matches Reference Artwork) */
                 <div className="relative z-20 flex flex-col items-center justify-center w-full py-2">
                   
-                  {/* 3D Envelope Container */}
-                  <div
-                    className="relative w-48 sm:w-56 h-32 sm:h-36 transition-transform duration-300 group-hover:scale-105"
-                    style={{ perspective: '800px' }}
-                  >
+                  {/* Interactive Envelope Housing */}
+                  <div className="relative w-48 sm:w-56 h-32 sm:h-36 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                     
-                    {/* Envelope Back Body */}
-                    <div className="absolute inset-0 bg-[#CBD5E1] rounded-2xl shadow-inner border border-slate-400 z-0"></div>
-
-                    {/* Sliding Letter/Payload on hover (starts tucked inside, slides up on hover) */}
+                    {/* Emerging Document/Payload (Slides up from inside envelope on hover) */}
                     <div
-                      className={`absolute left-1/2 -translate-x-1/2 w-40 sm:w-48 h-28 bg-white rounded-t-xl shadow-2xl p-2.5 transition-all duration-500 ease-out z-20 flex flex-col justify-between border border-blue-200 text-left pointer-events-none ${
+                      className={`absolute left-1/2 -translate-x-1/2 w-40 sm:w-48 bg-white rounded-xl shadow-2xl p-2.5 border border-blue-200 transition-all duration-500 ease-out z-10 flex flex-col justify-between text-left pointer-events-none ${
                         isDragOver
-                          ? '-translate-y-16 scale-105 shadow-cyan-500/20'
-                          : 'translate-y-2 group-hover:-translate-y-14'
+                          ? '-translate-y-16 scale-105 opacity-100 shadow-cyan-500/30'
+                          : 'translate-y-2 opacity-0 group-hover:-translate-y-14 group-hover:opacity-100'
                       }`}
                     >
                       <div className="flex items-center justify-between border-b border-blue-100 pb-1">
-                        <span className="font-['Silkscreen'] text-[8.5px] text-[#0047FF] font-bold">
+                        <span className="font-['Silkscreen'] text-[8px] text-[#0047FF] font-bold">
                           INGESTION.PAYLOAD
                         </span>
-                        <span className="text-[7.5px] font-mono text-slate-500 uppercase font-bold">
+                        <span className="text-[7.5px] font-mono text-slate-600 uppercase font-bold">
                           .EML • .PDF
                         </span>
                       </div>
 
-                      <div className="space-y-1.5 py-1">
+                      <div className="space-y-1 py-1">
                         <div className="h-1 bg-blue-100 rounded w-4/5"></div>
                         <div className="h-1 bg-slate-200 rounded w-full"></div>
                         <div className="h-1 bg-slate-100 rounded w-2/3"></div>
@@ -345,28 +339,76 @@ export default function EmailDetection() {
                       </div>
                     </div>
 
-                    {/* 3D Envelope Flap (Flips 180° open upwards on hover) */}
-                    <div
-                      className={`absolute top-0 left-0 right-0 h-16 origin-top transition-transform duration-500 ease-out z-10 ${
-                        isDragOver
-                          ? 'scale-y-[-1]'
-                          : 'group-hover:scale-y-[-1]'
-                      }`}
-                      style={{ transformOrigin: 'top center' }}
-                    >
-                      <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-md fill-[#E2E8F0] stroke-slate-300 stroke-[1]">
-                        <polygon points="0,0 50,48 100,0" />
+                    {/* The Iconic Bold White Envelope Icon (Direct Recreation of Reference Artwork) */}
+                    <div className="relative z-20 w-40 sm:w-48 h-26 sm:h-32 transition-all duration-300">
+                      <svg
+                        viewBox="0 0 160 110"
+                        className="w-full h-full filter drop-shadow-[0_6px_16px_rgba(0,0,0,0.5)]"
+                      >
+                        {/* Envelope Body Outline (Deep Blue fill, Thick White Border) */}
+                        <rect
+                          x="7"
+                          y="8"
+                          width="146"
+                          height="94"
+                          rx="16"
+                          fill="#002B9E"
+                          stroke="#FFFFFF"
+                          strokeWidth="8.5"
+                          strokeLinejoin="round"
+                        />
+
+                        {/* Top 'V' Flap (Folds open upwards on hover) */}
+                        <g
+                          className="transition-transform duration-500 ease-out"
+                          style={{
+                            transformOrigin: '80px 12px',
+                            transform: isDragOver ? 'scaleY(-1)' : undefined,
+                          }}
+                        >
+                          <path
+                            d="M 11 12 L 80 66 L 149 12"
+                            fill="none"
+                            stroke="#FFFFFF"
+                            strokeWidth="8.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="transition-transform duration-500 ease-out group-hover:scale-y-[-1]"
+                            style={{ transformOrigin: '80px 12px' }}
+                          />
+                        </g>
+
+                        {/* Front Pocket Cutout (Prevents letter from spilling over bottom border) */}
+                        <path
+                          d="M 11 100 L 58 58 M 149 100 L 102 58"
+                          stroke="#FFFFFF"
+                          strokeWidth="6"
+                          strokeLinecap="round"
+                          opacity="0.3"
+                        />
                       </svg>
                     </div>
 
-                    {/* Envelope Front Pocket (Lower half of envelope covering bottom of letter) */}
-                    <div className="absolute inset-x-0 bottom-0 h-20 bg-[#F1F5F9] rounded-b-2xl border-t border-slate-300 z-30 shadow-lg flex items-end justify-center pb-2.5 overflow-hidden">
-                      <svg viewBox="0 0 100 50" className="absolute inset-0 w-full h-full fill-[#F1F5F9] stroke-slate-300 stroke-[0.8]">
-                        <polygon points="0,50 50,18 100,50" />
-                      </svg>
-                      <span className="relative z-40 font-['Silkscreen'] text-[9.5px] uppercase tracking-wider text-slate-700 font-bold drop-shadow-2xs">
-                        {isDragOver ? 'DROP ARTIFACT' : 'HOVER TO OPEN'}
-                      </span>
+                    {/* Pixel Pointer Hand from Reference Image */}
+                    <div className="absolute -right-2 -bottom-2 z-30 pointer-events-none transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
+                      <div className="relative">
+                        <svg
+                          width="38"
+                          height="38"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                        >
+                          <path
+                            d="M9 2v9l-2-2-1.5 1.5 4.5 4.5h5l2.5-5v-5h-2v3h-1.5v-5h-2v5h-1.5v-7h-2z"
+                            fill="#FFFFFF"
+                            stroke="#000000"
+                            strokeWidth="1.2"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span className="absolute -top-1 -right-1 text-yellow-300 text-[10px] animate-ping font-bold">✦</span>
+                      </div>
                     </div>
 
                   </div>
@@ -374,7 +416,7 @@ export default function EmailDetection() {
                   {/* Monospace Screen Prompt */}
                   <div className="mt-4 relative z-20 space-y-1">
                     <span className="font-['Silkscreen'] text-xs sm:text-sm uppercase tracking-wider text-white font-extrabold block drop-shadow-md">
-                      {isDragOver ? '⚡ RELEASE TO SCAN PAYLOAD ⚡' : 'CLICK TO UPLOAD OR DROP FILE'}
+                      {isDragOver ? '⚡ RELEASE TO SCAN PAYLOAD ⚡' : 'CLICK ENVELOPE OR DROP FILE'}
                     </span>
                     <p className="text-[11px] font-mono text-blue-100/90 font-medium">
                       Supports: .EML • .MSG • .PDF • .TXT • .MBOX
