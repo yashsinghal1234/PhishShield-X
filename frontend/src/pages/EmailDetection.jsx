@@ -111,7 +111,7 @@ export default function EmailDetection() {
         `${getApiBaseUrl()}/api/detect/email`,
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 60000,
         }
       );
       setResult(response.data);
@@ -122,7 +122,14 @@ export default function EmailDetection() {
         }
       }, 100);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to scan email. Verify backend server is running on port 8000.');
+      console.error('Email scan error:', err);
+      const serverMsg = err.response?.data?.detail;
+      setError(
+        serverMsg ||
+        (err.code === 'ECONNABORTED'
+          ? 'Scan request timed out. The cloud server may be waking up—please try again in a few seconds.'
+          : 'Failed to scan document. Please check the file format or try again.')
+      );
     } finally {
       setLoading(false);
     }

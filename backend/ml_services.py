@@ -1129,7 +1129,12 @@ def detect_coercion_tactics(text: str, subject: str = "") -> list:
 def detect_pdf_phishing(file_bytes: bytes, filename: str = "document.pdf") -> dict:
     import io
     import re
-    import pypdf
+    try:
+        import pypdf
+        has_pypdf = True
+    except ImportError:
+        pypdf = None
+        has_pypdf = False
     
     details = []
     anomaly_score = 0.0
@@ -1160,38 +1165,50 @@ def detect_pdf_phishing(file_bytes: bytes, filename: str = "document.pdf") -> di
     pdf_title = filename
     pdf_date = "N/A"
     
-    try:
-        reader = pypdf.PdfReader(io.BytesIO(file_bytes))
-        if reader.metadata:
-            meta = reader.metadata
-            pdf_author = str(meta.author or meta.creator or "Unknown Creator")
-            pdf_title = str(meta.title or filename)
-            if meta.creation_date:
-                pdf_date = str(meta.creation_date)
-                
-        for p_idx, page in enumerate(reader.pages):
-            try:
-                page_text = page.extract_text() or ""
-                body_text += f"\n--- Page {p_idx+1} ---\n" + page_text
-            except Exception:
-                pass
-                
-            if "/Annots" in page:
+    if has_pypdf:
+        try:
+            reader = pypdf.PdfReader(io.BytesIO(file_bytes))
+            if reader.metadata:
+                meta = reader.metadata
+                pdf_author = str(meta.author or meta.creator or "Unknown Creator")
+                pdf_title = str(meta.title or filename)
+                if meta.creation_date:
+                    pdf_date = str(meta.creation_date)
+                    
+            for p_idx, page in enumerate(reader.pages):
                 try:
-                    annots = page["/Annots"]
-                    for annot_ref in annots:
-                        annot = annot_ref.get_object() if hasattr(annot_ref, 'get_object') else annot_ref
-                        if annot and isinstance(annot, dict) and "/A" in annot:
-                            action = annot["/A"]
-                            if hasattr(action, 'get_object'): action = action.get_object()
-                            if action and isinstance(action, dict) and action.get("/S") == "/URI":
-                                uri = str(action.get("/URI", "")).strip()
-                                if uri.startswith(('http://', 'https://')):
-                                    extracted_urls.append(uri)
+                    page_text = page.extract_text() or ""
+                    body_text += f"\n--- Page {p_idx+1} ---\n" + page_text
                 except Exception:
                     pass
-    except Exception as e:
-        details.append(f"PDF Parsing Notice: {str(e)[:100]}")
+                    
+                if "/Annots" in page:
+                    try:
+                        annots = page["/Annots"]
+                        for annot_ref in annots:
+                            annot = annot_ref.get_object() if hasattr(annot_ref, 'get_object') else annot_ref
+                            if annot and isinstance(annot, dict) and "/A" in annot:
+                                action = annot["/A"]
+                                if hasattr(action, 'get_object'): action = action.get_object()
+                                if action and isinstance(action, dict) and action.get("/S") == "/URI":
+                                    uri = str(action.get("/URI", "")).strip()
+                                    if uri.startswith(('http://', 'https://')):
+                                        extracted_urls.append(uri)
+                    except Exception:
+                        pass
+        except Exception as e:
+            details.append(f"PDF Parsing Notice: {str(e)[:100]}")
+    else:
+        # Graceful stream fallback when pypdf is not installed
+        text_matches = re.findall(r'\(([^\)\\]{3,})\)', raw_str)
+        if text_matches:
+            body_text = " ".join(text_matches[:300])
+        author_match = re.search(r'/Author\s*\(([^)]+)\)', raw_str)
+        if author_match:
+            pdf_author = author_match.group(1).strip()
+        title_match = re.search(r'/Title\s*\(([^)]+)\)', raw_str)
+        if title_match:
+            pdf_title = title_match.group(1).strip()
         
     regex_urls = re.findall(r'https?://[^\s<>"\'\)]+', body_text + " " + raw_str)
     all_urls = list(dict.fromkeys(extracted_urls + regex_urls))[:12]
