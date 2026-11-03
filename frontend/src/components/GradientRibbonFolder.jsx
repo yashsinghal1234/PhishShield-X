@@ -54,6 +54,10 @@ export default function GradientRibbonFolder({
       className={`group relative w-full min-h-[480px] sm:min-h-[540px] overflow-hidden flex flex-col items-center justify-center select-none transition-all duration-300 ${
         isDragOver ? 'bg-white/[0.02]' : ''
       }`}
+      style={{
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 50px, black calc(100% - 50px), transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 50px, black calc(100% - 50px), transparent 100%)'
+      }}
     >
       {/* Hidden native input */}
       <input
@@ -150,10 +154,10 @@ export default function GradientRibbonFolder({
         {/* ---------------------------------------------------------------------
             SOURCE GLOW NODES (Soft atmospheric ambient glows at screen left edge)
             --------------------------------------------------------------------- */}
-        <circle cx="-10" cy="60" r="70" fill="#00F5D4" opacity="0.28" filter="url(#ambientSourceGlow)" />
-        <circle cx="-10" cy="190" r="75" fill="#A855F7" opacity="0.30" filter="url(#ambientSourceGlow)" />
-        <circle cx="-10" cy="310" r="70" fill="#F59E0B" opacity="0.25" filter="url(#ambientSourceGlow)" />
-        <circle cx="-10" cy="430" r="75" fill="#F43F5E" opacity="0.30" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="75" r="55" fill="#00F5D4" opacity="0.22" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="190" r="65" fill="#A855F7" opacity="0.25" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="310" r="65" fill="#F59E0B" opacity="0.22" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="415" r="55" fill="#F43F5E" opacity="0.24" filter="url(#ambientSourceGlow)" />
 
         {/* ---------------------------------------------------------------------
             THE 4 CONVERGING 3D GRADIENT RIBBONS

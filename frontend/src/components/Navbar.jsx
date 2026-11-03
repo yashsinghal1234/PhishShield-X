@@ -112,7 +112,7 @@ export default function Navbar() {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`group transition-all flex items-center gap-2.5 py-1.5 relative ${
+                  className={`group transition-all inline-flex items-center gap-2.5 py-1 ${
                     isActive
                       ? 'text-[#38BDF8] font-semibold'
                       : 'text-white/80 hover:text-[#38BDF8]'
@@ -121,16 +121,17 @@ export default function Navbar() {
                   <DotMatrixGlyph
                     type={link.icon}
                     isActive={isActive}
-                    className={isActive ? 'text-[#38BDF8]' : 'text-white/70'}
+                    className={`shrink-0 ${isActive ? 'text-[#38BDF8]' : 'text-white/70'}`}
                   />
-                  <span
-                    className={`tracking-tight transition-all pb-1 ${
-                      isActive
-                        ? 'border-b-2 border-dotted border-[#38BDF8] text-[#38BDF8]'
-                        : 'border-b-2 border-transparent group-hover:border-dotted group-hover:border-[#38BDF8]/40'
-                    }`}
-                  >
+                  <span className="tracking-tight leading-none relative">
                     {link.label}
+                    <span
+                      className={`absolute left-0 right-0 -bottom-1.5 border-b-2 border-dotted transition-all pointer-events-none ${
+                        isActive
+                          ? 'border-[#38BDF8] opacity-100'
+                          : 'border-transparent opacity-0 group-hover:border-[#38BDF8]/40 group-hover:opacity-100'
+                      }`}
+                    />
                   </span>
                 </Link>
               );
@@ -181,9 +182,9 @@ export default function Navbar() {
                   <DotMatrixGlyph
                     type={link.icon}
                     isActive={isActive}
-                    className={isActive ? 'text-[#38BDF8]' : 'text-white/70'}
+                    className={`shrink-0 ${isActive ? 'text-[#38BDF8]' : 'text-white/70'}`}
                   />
-                  <span className={isActive ? 'border-b-2 border-dotted border-[#38BDF8] pb-0.5' : ''}>
+                  <span className="leading-none">
                     {link.label}
                   </span>
                 </div>
@@ -206,9 +207,9 @@ export default function Navbar() {
               <DotMatrixGlyph
                 type="aperture"
                 isActive={location.pathname === '/history'}
-                className={location.pathname === '/history' ? 'text-[#38BDF8]' : 'text-white/70'}
+                className={`shrink-0 ${location.pathname === '/history' ? 'text-[#38BDF8]' : 'text-white/70'}`}
               />
-              <span className={location.pathname === '/history' ? 'border-b-2 border-dotted border-[#38BDF8] pb-0.5' : ''}>
+              <span className="leading-none">
                 Audit History
               </span>
             </div>
