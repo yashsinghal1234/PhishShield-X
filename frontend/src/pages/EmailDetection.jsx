@@ -80,6 +80,7 @@ export default function EmailDetection() {
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -300,14 +301,10 @@ export default function EmailDetection() {
 
         </div>
 
-        {/* MODE 1: RETRO COMPUTER TERMINAL UPLOAD ZONE (VINTAGE BEIGE PC + 3D OPENING ENVELOPE) */}
+        {/* MODE 1: RETRO COMPUTER TERMINAL UPLOAD ZONE (STANDALONE VINTAGE PC + 3D OPENING ENVELOPE) */}
         {inputMode === 'upload' && (
-          <div className="relative w-full rounded-[28px] overflow-hidden bg-gradient-to-b from-[#081126] via-[#050C1D] to-[#040814] p-4 sm:p-8 md:p-10 border border-blue-900/40 shadow-2xl select-none">
+          <div className="relative w-full py-4 sm:py-6 flex flex-col items-center justify-center select-none">
             
-            {/* Cyber Grid Background lines */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#132752_1px,transparent_1px),linear-gradient(to_bottom,#132752_1px,transparent_1px)] bg-[size:32px_32px] opacity-40 pointer-events-none" />
-            <div className="absolute inset-0 bg-radial-vignette opacity-70 pointer-events-none" />
-
             {/* Hidden File Input */}
             <input
               ref={fileInputRef}
@@ -317,168 +314,166 @@ export default function EmailDetection() {
               onChange={handleFileChange}
             />
 
-            {/* -------------------------------------------------------------
-                TOP BLUE SYSTEM BANNER (HOME • EDIT • VIEW • SELECT • 100%)
-                ------------------------------------------------------------- */}
-            <div className="relative z-20 max-w-2xl mx-auto mb-6 sm:mb-8 flex items-center justify-between px-4 sm:px-6 py-2 rounded-xl bg-[#0047FF] text-white shadow-lg border border-blue-400/40 font-mono text-[11px] sm:text-xs">
-              <div className="flex items-center gap-3 sm:gap-6 font-bold tracking-wider font-['Silkscreen'] text-[10px] sm:text-xs">
-                <span className="hover:text-blue-200 transition-colors cursor-pointer">HOME</span>
-                <span className="hover:text-blue-200 transition-colors cursor-pointer">EDIT</span>
-                <span className="hover:text-blue-200 transition-colors cursor-pointer">VIEW</span>
-                <span className="text-amber-300 font-extrabold underline decoration-2 underline-offset-4 cursor-pointer">SELECT</span>
-              </div>
-              <div className="flex items-center gap-1.5 font-bold font-mono">
-                <div className="w-5 h-2.5 rounded-sm border border-white flex items-center p-0.5">
-                  <div className="w-full h-full bg-emerald-400 rounded-2xs animate-pulse"></div>
-                </div>
-                <span>100%</span>
-              </div>
-            </div>
-
-            {/* -------------------------------------------------------------
-                BIG STYLIZED TITLE: "OPEN YOUR EMAIL" (Graffiti 3D Typography)
-                ------------------------------------------------------------- */}
-            <div className="relative z-20 text-center mb-6 sm:mb-10">
-              <h2
-                className="font-black italic tracking-tighter text-4xl sm:text-6xl md:text-7xl uppercase text-[#1B57FF] drop-shadow-[0_8px_20px_rgba(0,40,160,0.8)] leading-none select-none"
-                style={{
-                  WebkitTextStroke: '2.5px #FFFFFF',
-                  textShadow: '0 4px 0 #002288, 0 8px 16px rgba(0,20,80,0.9)',
-                }}
-              >
-                OPEN YOUR EMAIL
-              </h2>
-              <p className="mt-2 text-xs sm:text-sm font-['Silkscreen'] uppercase tracking-widest text-blue-200/80 drop-shadow">
-                INGEST RAW .EML • .MSG • .PDF TO AUDIT THREAT VECTORS
-              </p>
-            </div>
-
-            {/* -------------------------------------------------------------
-                THE VINTAGE BEIGE CRT COMPUTER TERMINAL
-                ------------------------------------------------------------- */}
-            <div className="relative z-20 max-w-xl mx-auto">
+            {/* THE RETRO VINTAGE COMPUTER TERMINAL (STANDALONE) */}
+            <div className="relative w-full max-w-[540px] sm:max-w-[620px] mx-auto filter drop-shadow-[0_25px_35px_rgba(0,0,0,0.85)]">
               
-              {/* Outer Beige Monitor Case */}
+              {/* Computer Monitor Chassis (Vintage Warm Beige with 3D Bevels) */}
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative group rounded-t-[32px] bg-[#D4D0C0] p-4 sm:p-7 border-t-2 border-l-2 border-[#FFFFFF] border-r-4 border-b-4 border-[#888373] shadow-2xl transition-all duration-300 cursor-pointer ${
-                  isDragOver ? 'ring-4 ring-cyan-400 scale-[1.02]' : 'hover:shadow-blue-900/40'
+                className={`relative group rounded-t-[36px] bg-gradient-to-b from-[#E6E1D3] via-[#DDD8CA] to-[#C8C2B3] p-4 sm:p-6 pb-5 sm:pb-7 border-t-2 border-l-2 border-white/90 border-r-[5px] border-b-[5px] border-[#8D887A] transition-all duration-300 shadow-2xl ${
+                  isDragOver ? 'ring-4 ring-cyan-400 scale-[1.01]' : ''
                 }`}
               >
                 
-                {/* Monitor Top Ventilation Louvers */}
-                <div className="flex justify-center gap-1.5 mb-3 sm:mb-4 opacity-70">
-                  <div className="w-8 h-1 bg-[#888373] rounded-full"></div>
-                  <div className="w-12 h-1 bg-[#888373] rounded-full"></div>
-                  <div className="w-12 h-1 bg-[#888373] rounded-full"></div>
-                  <div className="w-8 h-1 bg-[#888373] rounded-full"></div>
+                {/* Top Recessed Ventilation Louvers / Cooling Grille */}
+                <div className="flex justify-center items-center gap-1.5 mb-3 sm:mb-4 opacity-75">
+                  <div className="w-6 h-1 bg-[#8D887A] rounded-full shadow-inner" />
+                  <div className="w-12 h-1 bg-[#8D887A] rounded-full shadow-inner" />
+                  <div className="w-16 h-1 bg-[#8D887A] rounded-full shadow-inner" />
+                  <div className="w-12 h-1 bg-[#8D887A] rounded-full shadow-inner" />
+                  <div className="w-6 h-1 bg-[#8D887A] rounded-full shadow-inner" />
+                </div>
+
+                {/* Top Badge & Serial Header */}
+                <div className="flex items-center justify-between px-2 mb-2 font-mono text-[9px] text-[#706B5F]">
+                  <div className="flex items-center gap-1.5">
+                    {/* Rainbow-styled retro badge stripe */}
+                    <div className="flex h-3 w-4 rounded-2xs overflow-hidden border border-[#9A9586] shadow-2xs">
+                      <div className="w-1/4 bg-red-500" />
+                      <div className="w-1/4 bg-amber-400" />
+                      <div className="w-1/4 bg-emerald-500" />
+                      <div className="w-1/4 bg-blue-500" />
+                    </div>
+                    <span className="font-['Silkscreen'] text-[9.5px] font-bold text-[#555045] tracking-wider">
+                      PHISH-SHIELD // 84
+                    </span>
+                  </div>
+                  <span className="tracking-widest uppercase opacity-80 font-semibold text-[8.5px]">
+                    AUTONOMOUS CRT TERMINAL
+                  </span>
                 </div>
 
                 {/* Recessed Dark CRT Monitor Bezel */}
-                <div className="rounded-[22px] bg-[#1E232E] p-3 sm:p-5 border-4 border-[#9E9A8A] shadow-inner relative overflow-hidden">
+                <div className="rounded-[24px] bg-[#1A1E27] p-3 sm:p-4 border-4 border-[#A39E8F] shadow-[inset_0_5px_15px_rgba(0,0,0,0.8)] relative overflow-hidden">
                   
-                  {/* The CRT Screen Display (Royal Blue Glowing Phosphor) */}
+                  {/* The CRT Glass Display (Deep Glowing Royal Blue Phosphor) */}
                   <div
-                    className={`relative rounded-xl overflow-hidden min-h-[260px] sm:min-h-[300px] flex flex-col items-center justify-center p-4 sm:p-6 text-center select-none transition-all duration-300 ${
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    onClick={() => {
+                      if (!loading) fileInputRef.current?.click();
+                    }}
+                    className={`relative rounded-xl overflow-hidden min-h-[290px] sm:min-h-[330px] flex flex-col items-center justify-center p-4 sm:p-6 text-center select-none transition-all duration-300 cursor-pointer ${
                       isDragOver
-                        ? 'bg-gradient-to-b from-[#003BCC] via-[#0047FF] to-[#002FA8] ring-4 ring-cyan-300'
-                        : 'bg-gradient-to-b from-[#0038C4] via-[#002FA8] to-[#001D6E]'
+                        ? 'bg-gradient-to-b from-[#0047FF] via-[#0035B8] to-[#001D6E] ring-4 ring-cyan-300'
+                        : isHovered
+                        ? 'bg-gradient-to-b from-[#003DCF] via-[#002B9E] to-[#00155A]'
+                        : 'bg-gradient-to-b from-[#0038C4] via-[#00248A] to-[#00124D]'
                     }`}
                   >
-                    {/* CRT Scanline and curvature effects */}
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.3)_50%)] bg-[size:100%_4px] pointer-events-none opacity-50 z-10" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(0,10,40,0.7)_100%)] pointer-events-none z-10" />
+                    {/* CRT Scanline overlay effect */}
+                    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.35)_50%)] bg-[size:100%_4px] pointer-events-none opacity-60 z-10" />
                     
-                    {/* Ambient Blue CRT Phosphor Glow */}
+                    {/* Radial Glass Curvature & Corner Vignette */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(0,8,30,0.75)_100%)] pointer-events-none z-10" />
+                    
+                    {/* Glass Reflection Highlight across top-left */}
+                    <div className="absolute -top-16 -left-16 w-48 h-48 bg-gradient-to-br from-white/15 to-transparent rounded-full blur-xl pointer-events-none z-10" />
+                    
+                    {/* Ambient Blue Phosphor Inner Glow */}
                     <div className="absolute inset-0 bg-blue-500/10 blur-xl pointer-events-none" />
 
-                    {/* CASE A: NO FILE SELECTED YET -> SHOW INTERACTIVE 3D ENVELOPE */}
+                    {/* SCREEN CONTENT - STATE 1: NO FILE LOADED (3D INTERACTIVE ENVELOPE) */}
                     {!file ? (
-                      <div className="relative z-20 flex flex-col items-center justify-center w-full py-4">
+                      <div className="relative z-20 flex flex-col items-center justify-center w-full py-2">
                         
-                        {/* 3D Interactive Animated Envelope */}
-                        <div className="relative w-40 sm:w-48 h-26 sm:h-32 transition-transform duration-300 group-hover:scale-105">
+                        {/* 3D Interactive Envelope Container */}
+                        <div
+                          className={`relative w-44 sm:w-52 h-28 sm:h-34 transition-transform duration-300 ${
+                            isHovered || isDragOver ? 'scale-105' : ''
+                          }`}
+                          style={{ perspective: '800px' }}
+                        >
                           
-                          {/* Letter / Payload sliding up on hover */}
+                          {/* Confidential Document / Letter sliding up out of the envelope on hover */}
                           <div
-                            className={`absolute left-1/2 -translate-x-1/2 w-32 sm:w-40 h-24 bg-white rounded-t-lg shadow-xl p-2.5 transition-all duration-500 ease-out z-10 flex flex-col justify-between border border-blue-200 text-left ${
-                              isDragOver
+                            className={`absolute left-1/2 -translate-x-1/2 w-36 sm:w-44 h-28 bg-[#FFFFFF] rounded-t-lg shadow-2xl p-2.5 sm:p-3 transition-all duration-500 ease-out z-10 flex flex-col justify-between border border-blue-200 text-left ${
+                              isHovered || isDragOver
                                 ? '-translate-y-20 scale-105'
-                                : 'translate-y-0 group-hover:-translate-y-16'
+                                : 'translate-y-0'
                             }`}
                           >
                             <div className="flex items-center justify-between border-b border-blue-100 pb-1">
-                              <span className="font-['Silkscreen'] text-[8px] text-[#0047FF] font-bold">
-                                INGESTION.PAYLOAD
+                              <span className="font-['Silkscreen'] text-[8.5px] text-[#0047FF] font-bold">
+                                PAYLOAD INGESTION
                               </span>
                               <span className="text-[7.5px] font-mono text-slate-500 uppercase font-semibold">
-                                .EML • .PDF
+                                EML • PDF
                               </span>
                             </div>
 
                             <div className="space-y-1.5 py-1">
-                              <div className="h-1 bg-blue-100 rounded w-4/5"></div>
-                              <div className="h-1 bg-slate-200 rounded w-full"></div>
-                              <div className="h-1 bg-slate-100 rounded w-2/3"></div>
+                              <div className="h-1 bg-blue-200/80 rounded w-4/5" />
+                              <div className="h-1 bg-slate-200 rounded w-full" />
+                              <div className="h-1 bg-slate-100 rounded w-3/4" />
                             </div>
 
-                            <div className="bg-[#0047FF]/10 rounded px-1.5 py-1 text-center border border-[#0047FF]/20">
-                              <span className="font-['Silkscreen'] text-[7.5px] text-[#0047FF] font-bold uppercase tracking-wider block">
-                                CLICK TO CHOOSE FILE
+                            <div className="bg-[#0047FF]/10 rounded px-2 py-1 text-center border border-[#0047FF]/25">
+                              <span className="font-['Silkscreen'] text-[8px] text-[#0047FF] font-bold uppercase tracking-wider block">
+                                CLICK TO BROWSE FILE
                               </span>
                             </div>
                           </div>
 
                           {/* Envelope Back Body */}
-                          <div className="absolute inset-0 bg-[#E2E8F0] rounded-b-2xl shadow-inner border border-slate-300 z-0"></div>
+                          <div className="absolute inset-0 bg-[#CBD5E1] rounded-b-2xl shadow-inner border border-slate-300 z-0" />
 
-                          {/* 3D Envelope Flap (Rotates 180deg upward on hover) */}
+                          {/* 3D Envelope Flap (Flips 180deg upward on hover) */}
                           <div
-                            className={`absolute top-0 left-0 right-0 h-14 origin-top transition-all duration-500 ease-out z-20 ${
-                              isDragOver
-                                ? 'scale-y-[-1] -translate-y-full opacity-60'
-                                : 'group-hover:scale-y-[-1] group-hover:-translate-y-full'
-                            }`}
-                            style={{ transformOrigin: 'top center' }}
+                            className="absolute top-0 left-0 right-0 h-16 origin-top transition-transform duration-500 ease-out z-20"
+                            style={{
+                              transformOrigin: 'top center',
+                              transform: isHovered || isDragOver ? 'rotateX(180deg)' : 'rotateX(0deg)',
+                              zIndex: isHovered || isDragOver ? 5 : 20,
+                            }}
                           >
-                            <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-md fill-[#CBD5E1] stroke-slate-300 stroke-[1]">
+                            <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-md fill-[#E2E8F0] stroke-slate-300 stroke-[1]">
                               <polygon points="0,0 50,48 100,0" />
                             </svg>
                           </div>
 
-                          {/* Envelope Front Pocket */}
-                          <div className="absolute inset-x-0 bottom-0 h-16 bg-white/95 rounded-b-2xl border-t border-slate-200 z-30 shadow-lg flex items-end justify-center pb-2.5 overflow-hidden">
+                          {/* Envelope Front Pocket with Notch */}
+                          <div className="absolute inset-x-0 bottom-0 h-18 sm:h-20 bg-white/95 rounded-b-2xl border-t border-slate-200 z-30 shadow-lg flex items-end justify-center pb-2.5 overflow-hidden">
                             <svg viewBox="0 0 100 50" className="absolute inset-0 w-full h-full fill-white stroke-slate-200 stroke-[0.8]">
-                              <polygon points="0,50 50,16 100,50" />
+                              <polygon points="0,50 50,18 100,50" />
                             </svg>
-                            <span className="relative z-40 font-['Silkscreen'] text-[9px] uppercase tracking-wider text-slate-800 font-bold">
-                              {isDragOver ? 'DROP ARTIFACT' : 'HOVER TO OPEN'}
+                            <span className="relative z-40 font-['Silkscreen'] text-[9px] sm:text-[9.5px] uppercase tracking-wider text-slate-800 font-bold">
+                              {isDragOver ? 'DROP PAYLOAD' : isHovered ? 'CLICK TO BROWSE' : 'HOVER TO OPEN'}
                             </span>
                           </div>
 
                         </div>
 
-                        {/* Prompt Below Envelope */}
-                        <div className="mt-5 relative z-20 space-y-1">
-                          <span className="font-['Silkscreen'] text-xs sm:text-sm uppercase tracking-wider text-white font-extrabold block drop-shadow-md">
-                            {isDragOver ? '⚡ RELEASE TO SCAN PAYLOAD ⚡' : 'CLICK SCREEN OR DROP ARTIFACT'}
+                        {/* CRT Screen Bottom Instruction Text */}
+                        <div className="mt-4 sm:mt-5 relative z-20 space-y-1">
+                          <span className="font-['Silkscreen'] text-xs sm:text-sm uppercase tracking-wider text-white font-extrabold block drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                            {isDragOver ? '⚡ RELEASE TO INGEST PAYLOAD ⚡' : 'CLICK TO UPLOAD EMAIL OR PDF'}
                           </span>
-                          <p className="text-[11px] font-mono text-blue-100/90 font-medium">
-                            Supports: .EML • .MSG • .PDF • .TXT • .MBOX
+                          <p className="text-[10.5px] sm:text-[11px] font-mono text-blue-100/80 font-medium">
+                            Supports .EML • .MSG • .PDF • .TXT • .MBOX
                           </p>
                         </div>
                       </div>
                     ) : (
-                      /* CASE B: FILE IS LOADED -> SHOW LOADED FILE DETAILS ON CRT SCREEN */
-                      <div className="relative z-20 flex flex-col items-center justify-center w-full py-4 space-y-3">
+                      /* SCREEN CONTENT - STATE 2: FILE LOADED INTO MEMORY */
+                      <div className="relative z-20 flex flex-col items-center justify-center w-full py-3 space-y-3">
                         <div
-                          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg border ${
+                          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl border ${
                             file.name.toLowerCase().endsWith('.pdf')
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
-                              : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+                              ? 'bg-amber-500/25 text-amber-300 border-amber-400/50'
+                              : 'bg-emerald-500/25 text-emerald-300 border-emerald-400/50'
                           }`}
                         >
                           {file.name.toLowerCase().endsWith('.pdf') ? (
@@ -488,7 +483,7 @@ export default function EmailDetection() {
                           )}
                         </div>
 
-                        <div className="space-y-1 max-w-xs">
+                        <div className="space-y-1 max-w-sm px-2">
                           <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-['Silkscreen'] uppercase tracking-wider font-bold bg-white/20 text-white border border-white/30">
                             {file.name.toLowerCase().endsWith('.pdf') ? 'PDF DOCUMENT' : 'EML RFC-822'}
                           </span>
@@ -496,15 +491,51 @@ export default function EmailDetection() {
                             {file.name}
                           </span>
                           <span className="text-[11px] font-mono text-blue-200 block">
-                            {(file.size / 1024).toFixed(1)} KB // Ready for evidential triage
+                            {(file.size / 1024).toFixed(1)} KB // Ingested in memory
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2 pt-2">
-                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
                           <span className="font-['Silkscreen'] text-[10px] text-emerald-300 uppercase tracking-widest font-bold">
-                            READY TO ANALYZE
+                            ● READY FOR EVIDENTIAL ANALYSIS
                           </span>
+                        </div>
+
+                        {/* Interactive Buttons on CRT Screen */}
+                        <div className="flex items-center gap-3 pt-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFile(null);
+                              setResult(null);
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-[10px] font-mono font-semibold transition-all cursor-pointer"
+                          >
+                            ✕ Eject File
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleScan(e);
+                            }}
+                            disabled={loading}
+                            className="px-4 py-1.5 rounded-lg bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-[10.5px] font-bold tracking-wider transition-all flex items-center gap-1.5 shadow-lg shadow-[#0047FF]/40 cursor-pointer"
+                          >
+                            {loading ? (
+                              <>
+                                <Loader2 className="animate-spin h-3 w-3" />
+                                <span>SCANNING...</span>
+                              </>
+                            ) : (
+                              <>
+                                <span>ANALYZE NOW</span>
+                                <ArrowRight size={12} />
+                              </>
+                            )}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -512,163 +543,47 @@ export default function EmailDetection() {
                   </div>
                 </div>
 
-                {/* CRT Monitor Bottom Controls (Power LED, Buttons) */}
-                <div className="mt-3 flex items-center justify-between px-2 text-[#686354]">
+                {/* CRT Monitor Lower Bezel Deck (3.5" Floppy Slot + Power LED + Controls) */}
+                <div className="mt-3.5 sm:mt-4 px-2 sm:px-3 flex items-center justify-between text-[#686354]">
+                  
+                  {/* Left: Glowing Phosphor Power LED & Label */}
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                    <span className="font-['Silkscreen'] text-[9px] uppercase tracking-wider font-bold">POWER</span>
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
+                    </span>
+                    <span className="font-['Silkscreen'] text-[9px] uppercase tracking-wider font-bold text-[#555045]">
+                      PWR
+                    </span>
                   </div>
-                  <span className="font-mono text-[9px] tracking-widest uppercase opacity-70">PHISHSHIELD-X // V2.4</span>
-                </div>
 
-              </div>
-
-              {/* Angled Beige Keyboard Tray */}
-              <div className="relative rounded-b-[24px] bg-[#C6C1B0] p-3 sm:p-4 border-t border-[#FFFFFF] border-r-4 border-b-4 border-[#7A7565] shadow-xl">
-                
-                {/* Keyboard Deck Grill & Keys Texture */}
-                <div className="grid grid-cols-12 gap-1 px-2 py-1 bg-[#B5B09E] rounded-xl border border-[#9E9886] shadow-inner mb-2">
-                  {Array.from({ length: 24 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-3 sm:h-4 bg-[#DCD8CA] rounded-xs border-t border-l border-white border-b border-r border-[#8E8876] shadow-xs"
-                    />
-                  ))}
-                </div>
-
-                {/* Keyboard Spacebar & Indicator */}
-                <div className="flex items-center justify-between px-3 text-[9px] font-mono text-[#635E4E]">
-                  <span>[ CTRL • ALT • INGEST ]</span>
-                  <div className="h-2 w-28 bg-[#DCD8CA] rounded-sm border-t border-l border-white border-b border-r border-[#8E8876]"></div>
-                  <span>[ VERIFIED HOST ]</span>
-                </div>
-              </div>
-
-              {/* -----------------------------------------------------------
-                  FLOATING RETRO WINDOWS & PIXEL ACCENTS (From Reference Artwork)
-                  ----------------------------------------------------------- */}
-              
-              {/* Retro Window 1 (Left): "System message [X]" */}
-              <div className="hidden lg:block absolute -left-10 xl:-left-14 bottom-20 xl:bottom-24 w-52 xl:w-56 bg-[#C0C0C0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-black shadow-2xl p-1 z-30 select-none">
-                <div className="flex items-center justify-between px-2 py-0.5 bg-[#000080] text-white font-mono text-[10px] font-bold">
-                  <span>System message</span>
-                  <span className="cursor-pointer px-1 bg-[#C0C0C0] text-black font-extrabold border border-white text-[8px] leading-3">✕</span>
-                </div>
-                <div className="p-2.5 font-mono text-[10px] text-black leading-snug space-y-2 bg-[#D8D8D8]">
-                  <p>Awaiting raw .eml, .msg, or .pdf payload for evidential evaluation.</p>
-                  <div className="flex items-center justify-end gap-1.5 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="px-2 py-0.5 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-black text-[9px] font-bold active:border-black active:border-t-black cursor-pointer shadow-xs"
-                    >
-                      Ok
-                    </button>
-                    <button
-                      type="button"
-                      className="px-2 py-0.5 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-black text-[9px] active:border-black cursor-pointer shadow-xs"
-                    >
-                      Cancel
-                    </button>
+                  {/* Center: 3.5" Retro Floppy Drive Slot */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative w-32 sm:w-44 h-2.5 bg-[#1C2028] rounded-xs border-t border-[#8D887A] border-b border-white/60 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)] flex items-center justify-end px-1.5">
+                      {/* Floppy shutter slot */}
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#3A3F4B]" />
+                    </div>
+                    {/* Floppy eject button */}
+                    <div className="w-3.5 h-2 bg-[#DDD8CA] border-t border-l border-white border-b border-r border-[#8D887A] shadow-2xs rounded-2xs" />
                   </div>
-                </div>
-              </div>
 
-              {/* Retro Window 2 (Right): "Loading..." Dialog with segmented progress */}
-              <div className="hidden lg:block absolute -right-10 xl:-right-14 bottom-6 xl:bottom-8 w-48 xl:w-52 bg-[#C0C0C0] border-t-2 border-l-2 border-white border-b-2 border-r-2 border-black shadow-2xl p-1 z-30 select-none">
-                <div className="flex items-center justify-between px-2 py-0.5 bg-[#000080] text-white font-mono text-[10px] font-bold">
-                  <span>Loading...</span>
-                  <span className="cursor-pointer px-1 bg-[#C0C0C0] text-black font-extrabold border border-white text-[8px] leading-3">✕</span>
-                </div>
-                <div className="p-2.5 font-mono text-[10px] text-black leading-snug space-y-2 bg-[#D8D8D8]">
-                  {/* Segmented blue progress blocks */}
-                  <div className="flex items-center gap-0.5 p-1 bg-white border border-gray-600 rounded-2xs">
-                    <div className="h-3 w-2.5 bg-[#000080]"></div>
-                    <div className="h-3 w-2.5 bg-[#000080]"></div>
-                    <div className="h-3 w-2.5 bg-[#000080]"></div>
-                    <div className="h-3 w-2.5 bg-[#000080]"></div>
-                    <div className="h-3 w-2.5 bg-[#000080]"></div>
-                    <div className="h-3 w-2.5 bg-[#000080]"></div>
-                    <div className="h-3 w-2.5 bg-[#000080]"></div>
-                    <div className="h-3 w-2.5 bg-gray-200"></div>
-                    <div className="h-3 w-2.5 bg-gray-200"></div>
+                  {/* Right: HDD / Activity LED */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-500/70 border border-amber-400/50" />
+                    <span className="font-mono text-[8.5px] uppercase tracking-wider text-[#686354] font-semibold">
+                      DISK
+                    </span>
                   </div>
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      className="px-2 py-0.5 bg-[#C0C0C0] border-t border-l border-white border-b border-r border-black text-[9px] active:border-black cursor-pointer shadow-xs"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+
                 </div>
+
               </div>
 
-              {/* Pixel Cursor Arrow pointing at monitor */}
-              <div className="hidden sm:block absolute left-8 sm:left-14 top-1/2 -translate-y-8 pointer-events-none z-30">
-                <span className="text-2xl sm:text-3xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">↖</span>
-              </div>
-
-              {/* Pixel Pointer Hand with Sparkle */}
-              <div className="hidden sm:block absolute right-8 sm:right-16 top-1/2 translate-y-2 pointer-events-none z-30 animate-bounce duration-1000">
-                <div className="relative">
-                  <span className="text-3xl sm:text-4xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">👆</span>
-                  <span className="absolute -top-2 -right-1 text-yellow-300 text-xs animate-ping">✦</span>
-                  <span className="absolute -bottom-1 -left-2 text-cyan-300 text-xs">✧</span>
-                </div>
-              </div>
+              {/* Monitor Pedestal Base / Stand (Gives the computer realistic 3D tabletop presence) */}
+              <div className="relative mx-auto w-44 sm:w-56 h-4 sm:h-5 bg-gradient-to-b from-[#C4BEAF] to-[#A8A294] border-l-2 border-r-[4px] border-[#7F796C] shadow-md" />
+              <div className="relative mx-auto w-56 sm:w-72 h-3 sm:h-4 rounded-b-xl bg-gradient-to-b from-[#B8B2A4] to-[#9E988A] border-t border-white/80 border-l border-r-2 border-b-2 border-[#6B6559] shadow-xl" />
 
             </div>
-
-            {/* -------------------------------------------------------------
-                BOTTOM TELEMETRY PROGRESS: "192.168.0.0/16 SENT YOUR CODE"
-                ------------------------------------------------------------- */}
-            <div className="relative z-20 max-w-xl mx-auto mt-6 sm:mt-8 space-y-1.5 font-mono text-[11px] sm:text-xs">
-              <div className="flex items-center justify-between text-white/90">
-                <span className="font-bold tracking-wider">192.168.0.0/16</span>
-                <span className="text-blue-300 font-semibold tracking-widest font-['Silkscreen'] text-[10px]">
-                  SENT YOUR CODE
-                </span>
-              </div>
-              <div className="h-2 w-full bg-[#002277] rounded-full overflow-hidden border border-blue-400/30 p-0.5">
-                <div className="h-full bg-gradient-to-r from-[#0047FF] via-cyan-400 to-[#0047FF] rounded-full w-3/5 animate-pulse"></div>
-              </div>
-            </div>
-
-            {/* File action buttons when a file is selected */}
-            {file && (
-              <div className="relative z-20 max-w-xl mx-auto mt-5 flex items-center justify-between gap-4 pt-3 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFile(null);
-                    setResult(null);
-                  }}
-                  className="text-xs font-mono text-red-400 hover:text-red-300 underline cursor-pointer"
-                >
-                  ✕ Remove selected file
-                </button>
-
-                <button
-                  type="button"
-                  onClick={(e) => handleScan(e)}
-                  disabled={loading}
-                  className="px-6 py-2.5 rounded-xl bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-xs font-bold tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-[#0047FF]/30 cursor-pointer"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin h-3.5 w-3.5" />
-                      <span>EVALUATING ARTIFACT...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>ANALYZE PAYLOAD NOW</span>
-                      <ArrowRight size={13} />
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
 
           </div>
         )}
