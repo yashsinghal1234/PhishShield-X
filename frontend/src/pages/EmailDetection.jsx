@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { getApiBaseUrl } from '../config/api';
-import UserControls from '../components/UserControls';
 import {
   Mail,
   AlertTriangle,
@@ -80,7 +79,6 @@ export default function EmailDetection() {
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -207,474 +205,408 @@ export default function EmailDetection() {
   };
 
   return (
-    <div className="space-y-8 font-['Plus_Jakarta_Sans'] animate-in fade-in duration-300 pb-0">
+    <div className="max-w-4xl mx-auto py-6 sm:py-10 space-y-8 font-['Plus_Jakarta_Sans'] animate-in fade-in duration-300 pb-12">
       
-      {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="h-2 w-2 rounded-full bg-[#0047FF]"></span>
-            <span className="font-['Silkscreen'] text-xs uppercase tracking-widest text-[#0047FF] dark:text-[#9BBFE0]">
-              VECTOR 03 // EMAIL INTELLIGENCE
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
-            Email Phishing &amp; Spoofing Defense
-          </h1>
-          <p className="text-sm font-medium text-[#94A3B8] mt-1 max-w-2xl">
-            Inspect raw .eml RFC 822 messages, cross-examine cryptographic SPF/DKIM/DMARC alignments, and detect psychological coercion lures.
-          </p>
-        </div>
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".eml,.msg,.txt,.mbox,.pdf,application/pdf"
+        onChange={handleFileChange}
+      />
 
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <UserControls />
+      {/* Clean Minimal Header */}
+      <div className="text-center space-y-2.5">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0047FF]/10 border border-[#0047FF]/25 text-[#0047FF] dark:text-[#9BBFE0] text-xs font-['Silkscreen'] uppercase tracking-wider">
+          <Mail size={13} />
+          <span>Vector 03 // Email &amp; Document Intelligence</span>
         </div>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
+          Email &amp; PDF Threat Ingestion
+        </h1>
+        <p className="text-[#94A3B8] text-xs sm:text-sm max-w-lg mx-auto leading-relaxed">
+          Ingest raw RFC-822 (.eml, .msg) messages or PDF documents to inspect cryptographic SPF/DKIM/DMARC signatures, malicious links, and hidden embedded payloads.
+        </p>
       </div>
 
-      {/* Main Container Bento Card */}
-      <div className="rounded-[24px] sm:rounded-[32px] bg-white dark:bg-[#0F131C] border border-[#E2E6EE] dark:border-[#1E2533] p-5 sm:p-7 md:p-8 shadow-sm space-y-6">
+      {/* =========================================================================
+          THE VINTAGE CRT COMPUTER TERMINAL (CENTERPIECE)
+          ========================================================================= */}
+      <div className="w-full max-w-[580px] mx-auto select-none">
         
-        {/* Top Control Bar: Mode Toggle + Quick Demo Samples */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#E2E6EE] dark:border-[#1E2533]">
-          
-          {/* Input Mode Selector */}
-          <div className="inline-flex p-1 rounded-xl bg-[#F1F5F9] dark:bg-[#141A26] border border-[#E2E6EE] dark:border-[#1E2533] text-xs font-['Silkscreen'] font-bold">
-            <button
-              type="button"
-              onClick={() => setInputMode('upload')}
-              className={`px-3.5 py-2 rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
-                inputMode === 'upload'
-                  ? 'bg-[#0047FF] text-white shadow-sm'
-                  : 'text-[#64748B] dark:text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              <UploadCloud size={14} />
-              <span>TERMINAL UPLOAD (.EML / .PDF)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setInputMode('paste')}
-              className={`px-3.5 py-2 rounded-lg transition-all cursor-pointer flex items-center gap-2 ${
-                inputMode === 'paste'
-                  ? 'bg-[#0047FF] text-white shadow-sm'
-                  : 'text-[#64748B] dark:text-[#94A3B8] hover:text-white'
-              }`}
-            >
-              <FileText size={14} />
-              <span>PASTE TEXT / HEADERS</span>
-            </button>
+        {/* Outer Beige Monitor Case */}
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => {
+            if (!file && !loading) fileInputRef.current?.click();
+          }}
+          className={`relative group rounded-t-[32px] bg-[#DDD9C8] p-4 sm:p-7 border-t-2 border-l-2 border-[#FFFFFF] border-r-4 border-b-4 border-[#8B8676] shadow-2xl transition-all duration-300 ${
+            !file && !loading ? 'cursor-pointer hover:shadow-blue-900/30' : ''
+          } ${isDragOver ? 'ring-4 ring-cyan-400 scale-[1.01]' : ''}`}
+        >
+          {/* Top Cooling Ventilation Louvers */}
+          <div className="flex justify-center gap-2 mb-3.5 opacity-60">
+            <div className="w-10 h-1 bg-[#8B8676] rounded-full"></div>
+            <div className="w-16 h-1 bg-[#8B8676] rounded-full"></div>
+            <div className="w-16 h-1 bg-[#8B8676] rounded-full"></div>
+            <div className="w-10 h-1 bg-[#8B8676] rounded-full"></div>
           </div>
 
-          {/* Quick Demo Preloaded Samples (Essential for frictionless evaluator exploration) */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-['Silkscreen'] text-[10px] text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider hidden sm:inline">
-              TRY DEMO:
+          {/* Recessed Dark CRT Monitor Bezel */}
+          <div className="rounded-[22px] bg-[#161B26] p-3 sm:p-5 border-4 border-[#9E9988] shadow-[inset_0_4px_16px_rgba(0,0,0,0.85)] relative overflow-hidden">
+            
+            {/* The CRT Glass Screen Display */}
+            <div
+              className={`relative rounded-xl overflow-hidden min-h-[290px] sm:min-h-[330px] flex flex-col items-center justify-center p-4 sm:p-6 text-center transition-all duration-300 ${
+                isDragOver
+                  ? 'bg-gradient-to-b from-[#003BCC] via-[#0047FF] to-[#002FA8] ring-4 ring-cyan-300'
+                  : 'bg-gradient-to-b from-[#002FA8] via-[#00227D] to-[#00144D]'
+              }`}
+            >
+              {/* CRT Scanline & Curved Vignette Effects */}
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.3)_50%)] bg-[size:100%_4px] pointer-events-none opacity-60 z-10" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(0,10,35,0.75)_100%)] pointer-events-none z-10" />
+              <div className="absolute inset-0 bg-blue-500/10 blur-xl pointer-events-none" />
+
+              {/* Glass Diagonal Sheen Reflection */}
+              <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+
+              {/* CASE 1: LOADING / SCANNING STATE */}
+              {loading ? (
+                <div className="relative z-20 flex flex-col items-center justify-center w-full py-6 space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-400/20 border border-cyan-300/40 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                    <Loader2 className="h-6 w-6 text-cyan-300 animate-spin" />
+                  </div>
+                  <div className="space-y-1.5 font-mono text-left max-w-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping"></span>
+                      <span className="text-[11px] font-['Silkscreen'] text-cyan-300 uppercase font-bold tracking-wider">
+                        EVALUATING ARTIFACT...
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-blue-200">
+                      &gt; Ingesting MIME headers &amp; payloads
+                    </p>
+                    <p className="text-[10px] text-blue-300">
+                      &gt; Auditing SPF, DKIM &amp; DMARC records
+                    </p>
+                    <p className="text-[10px] text-cyan-200">
+                      &gt; Computing Evidential Dirichlet density
+                    </p>
+                  </div>
+                  {/* Segmented CRT Progress Bar */}
+                  <div className="w-48 h-2 bg-blue-950/80 rounded-full overflow-hidden border border-cyan-400/30 p-0.5">
+                    <div className="h-full bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 rounded-full animate-pulse w-4/5"></div>
+                  </div>
+                </div>
+              ) : !file ? (
+                /* CASE 2: IDLE STATE -> 3D INTERACTIVE ENVELOPE */
+                <div className="relative z-20 flex flex-col items-center justify-center w-full py-2">
+                  
+                  {/* 3D Envelope Container */}
+                  <div
+                    className="relative w-48 sm:w-56 h-32 sm:h-36 transition-transform duration-300 group-hover:scale-105"
+                    style={{ perspective: '800px' }}
+                  >
+                    
+                    {/* Envelope Back Body */}
+                    <div className="absolute inset-0 bg-[#CBD5E1] rounded-2xl shadow-inner border border-slate-400 z-0"></div>
+
+                    {/* Sliding Letter/Payload on hover (starts tucked inside, slides up on hover) */}
+                    <div
+                      className={`absolute left-1/2 -translate-x-1/2 w-40 sm:w-48 h-28 bg-white rounded-t-xl shadow-2xl p-2.5 transition-all duration-500 ease-out z-20 flex flex-col justify-between border border-blue-200 text-left pointer-events-none ${
+                        isDragOver
+                          ? '-translate-y-16 scale-105 shadow-cyan-500/20'
+                          : 'translate-y-2 group-hover:-translate-y-14'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between border-b border-blue-100 pb-1">
+                        <span className="font-['Silkscreen'] text-[8.5px] text-[#0047FF] font-bold">
+                          INGESTION.PAYLOAD
+                        </span>
+                        <span className="text-[7.5px] font-mono text-slate-500 uppercase font-bold">
+                          .EML • .PDF
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 py-1">
+                        <div className="h-1 bg-blue-100 rounded w-4/5"></div>
+                        <div className="h-1 bg-slate-200 rounded w-full"></div>
+                        <div className="h-1 bg-slate-100 rounded w-2/3"></div>
+                      </div>
+
+                      <div className="bg-[#0047FF] rounded-md px-2 py-1 text-center shadow-xs">
+                        <span className="font-['Silkscreen'] text-[8px] text-white font-bold uppercase tracking-wider block">
+                          CLICK TO CHOOSE FILE
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 3D Envelope Flap (Flips 180° open upwards on hover) */}
+                    <div
+                      className={`absolute top-0 left-0 right-0 h-16 origin-top transition-transform duration-500 ease-out z-10 ${
+                        isDragOver
+                          ? 'scale-y-[-1]'
+                          : 'group-hover:scale-y-[-1]'
+                      }`}
+                      style={{ transformOrigin: 'top center' }}
+                    >
+                      <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-md fill-[#E2E8F0] stroke-slate-300 stroke-[1]">
+                        <polygon points="0,0 50,48 100,0" />
+                      </svg>
+                    </div>
+
+                    {/* Envelope Front Pocket (Lower half of envelope covering bottom of letter) */}
+                    <div className="absolute inset-x-0 bottom-0 h-20 bg-[#F1F5F9] rounded-b-2xl border-t border-slate-300 z-30 shadow-lg flex items-end justify-center pb-2.5 overflow-hidden">
+                      <svg viewBox="0 0 100 50" className="absolute inset-0 w-full h-full fill-[#F1F5F9] stroke-slate-300 stroke-[0.8]">
+                        <polygon points="0,50 50,18 100,50" />
+                      </svg>
+                      <span className="relative z-40 font-['Silkscreen'] text-[9.5px] uppercase tracking-wider text-slate-700 font-bold drop-shadow-2xs">
+                        {isDragOver ? 'DROP ARTIFACT' : 'HOVER TO OPEN'}
+                      </span>
+                    </div>
+
+                  </div>
+
+                  {/* Monospace Screen Prompt */}
+                  <div className="mt-4 relative z-20 space-y-1">
+                    <span className="font-['Silkscreen'] text-xs sm:text-sm uppercase tracking-wider text-white font-extrabold block drop-shadow-md">
+                      {isDragOver ? '⚡ RELEASE TO SCAN PAYLOAD ⚡' : 'CLICK TO UPLOAD OR DROP FILE'}
+                    </span>
+                    <p className="text-[11px] font-mono text-blue-100/90 font-medium">
+                      Supports: .EML • .MSG • .PDF • .TXT • .MBOX
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* CASE 3: FILE LOADED STATE */
+                <div className="relative z-20 flex flex-col items-center justify-center w-full py-4 space-y-3.5">
+                  <div
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg border ${
+                      file.name.toLowerCase().endsWith('.pdf')
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-400/40 shadow-amber-500/20'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 shadow-emerald-500/20'
+                    }`}
+                  >
+                    {file.name.toLowerCase().endsWith('.pdf') ? (
+                      <FileText size={28} />
+                    ) : (
+                      <Mail size={28} />
+                    )}
+                  </div>
+
+                  <div className="space-y-1 max-w-xs">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-['Silkscreen'] uppercase tracking-wider font-bold bg-white/20 text-white border border-white/30">
+                      {file.name.toLowerCase().endsWith('.pdf') ? 'PDF DOCUMENT' : 'EML RFC-822'}
+                    </span>
+                    <span className="font-mono text-xs sm:text-sm text-white font-bold block truncate" title={file.name}>
+                      {file.name}
+                    </span>
+                    <span className="text-[11px] font-mono text-blue-200 block">
+                      {(file.size / 1024).toFixed(1)} KB // Ready for evidential triage
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleScan(e);
+                      }}
+                      className="px-5 py-2 rounded-xl bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-xs font-bold tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-[#0047FF]/40 cursor-pointer border border-blue-400/40"
+                    >
+                      <span>ANALYZE PAYLOAD NOW</span>
+                      <ArrowRight size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFile(null);
+                        setResult(null);
+                      }}
+                      className="px-3 py-1.5 text-[11px] font-mono text-blue-200/80 hover:text-white underline cursor-pointer"
+                    >
+                      ✕ Change file
+                    </button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+
+          {/* CRT Monitor Bottom Controls (Power LED, Floppy Slot, Model Badge) */}
+          <div className="mt-3.5 flex items-center justify-between px-2 text-[#686354]">
+            
+            {/* Power LED Indicator */}
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 border border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse"></span>
+              <span className="font-['Silkscreen'] text-[9px] uppercase tracking-wider font-bold">POWER</span>
+            </div>
+
+            {/* Simulated 3.5" Floppy Slot */}
+            <div className="flex items-center gap-2 bg-[#C8C3B2] px-2.5 py-1 rounded-sm border border-[#9E9886] shadow-inner">
+              <div className="w-16 h-1 bg-[#4A463B] rounded-2xs"></div>
+              <div className={`w-1.5 h-1.5 rounded-full ${loading ? 'bg-amber-500 animate-ping' : 'bg-emerald-600'}`}></div>
+              <span className="text-[8px] font-mono uppercase text-[#4A463B] font-bold">3.5" DISK</span>
+            </div>
+
+            {/* Model Badge */}
+            <span className="font-mono text-[9px] tracking-widest uppercase opacity-75 font-semibold">
+              PHISHSHIELD // CRT-84
             </span>
-            <button
-              type="button"
-              onClick={() => loadSample('phish')}
-              className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Inspect a simulated urgent payroll credential harvesting email"
-            >
-              <Flame size={12} className="text-red-400" />
-              <span>🚨 Payroll Phish (.eml)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => loadSample('pdf')}
-              className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Inspect an adversarial overdue invoice PDF with embedded links"
-            >
-              <FileText size={12} className="text-amber-400" />
-              <span>📑 Fake Invoice (.pdf)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => loadSample('legit')}
-              className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Inspect a legitimate cryptographic GitHub security notice"
-            >
-              <ShieldCheck size={12} className="text-emerald-400" />
-              <span>🛡️ Valid Notice (.eml)</span>
-            </button>
           </div>
 
         </div>
 
-        {/* MODE 1: RETRO COMPUTER TERMINAL UPLOAD ZONE (STANDALONE VINTAGE PC + 3D OPENING ENVELOPE) */}
-        {inputMode === 'upload' && (
-          <div className="relative w-full py-4 sm:py-6 flex flex-col items-center justify-center select-none">
-            
-            {/* Hidden File Input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept=".eml,.msg,.txt,.mbox,.pdf,application/pdf"
-              onChange={handleFileChange}
-            />
-
-            {/* THE RETRO VINTAGE COMPUTER TERMINAL (STANDALONE) */}
-            <div className="relative w-full max-w-[540px] sm:max-w-[620px] mx-auto filter drop-shadow-[0_25px_35px_rgba(0,0,0,0.85)]">
-              
-              {/* Computer Monitor Chassis (Vintage Warm Beige with 3D Bevels) */}
+        {/* Angled Beige Keyboard Base */}
+        <div className="relative rounded-b-[24px] bg-[#C6C1B0] p-3 sm:p-4 border-t border-[#FFFFFF] border-r-4 border-b-4 border-[#7A7565] shadow-xl">
+          
+          {/* Keyboard Deck Grill & Keys Grid Texture */}
+          <div className="grid grid-cols-12 gap-1 px-2 py-1.5 bg-[#B5B09E] rounded-xl border border-[#9E9886] shadow-inner mb-2">
+            {Array.from({ length: 24 }).map((_, i) => (
               <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                className={`relative group rounded-t-[36px] bg-gradient-to-b from-[#E6E1D3] via-[#DDD8CA] to-[#C8C2B3] p-4 sm:p-6 pb-5 sm:pb-7 border-t-2 border-l-2 border-white/90 border-r-[5px] border-b-[5px] border-[#8D887A] transition-all duration-300 shadow-2xl ${
-                  isDragOver ? 'ring-4 ring-cyan-400 scale-[1.01]' : ''
-                }`}
-              >
-                
-                {/* Top Recessed Ventilation Louvers / Cooling Grille */}
-                <div className="flex justify-center items-center gap-1.5 mb-3 sm:mb-4 opacity-75">
-                  <div className="w-6 h-1 bg-[#8D887A] rounded-full shadow-inner" />
-                  <div className="w-12 h-1 bg-[#8D887A] rounded-full shadow-inner" />
-                  <div className="w-16 h-1 bg-[#8D887A] rounded-full shadow-inner" />
-                  <div className="w-12 h-1 bg-[#8D887A] rounded-full shadow-inner" />
-                  <div className="w-6 h-1 bg-[#8D887A] rounded-full shadow-inner" />
-                </div>
-
-                {/* Top Badge & Serial Header */}
-                <div className="flex items-center justify-between px-2 mb-2 font-mono text-[9px] text-[#706B5F]">
-                  <div className="flex items-center gap-1.5">
-                    {/* Rainbow-styled retro badge stripe */}
-                    <div className="flex h-3 w-4 rounded-2xs overflow-hidden border border-[#9A9586] shadow-2xs">
-                      <div className="w-1/4 bg-red-500" />
-                      <div className="w-1/4 bg-amber-400" />
-                      <div className="w-1/4 bg-emerald-500" />
-                      <div className="w-1/4 bg-blue-500" />
-                    </div>
-                    <span className="font-['Silkscreen'] text-[9.5px] font-bold text-[#555045] tracking-wider">
-                      PHISH-SHIELD // 84
-                    </span>
-                  </div>
-                  <span className="tracking-widest uppercase opacity-80 font-semibold text-[8.5px]">
-                    AUTONOMOUS CRT TERMINAL
-                  </span>
-                </div>
-
-                {/* Recessed Dark CRT Monitor Bezel */}
-                <div className="rounded-[24px] bg-[#1A1E27] p-3 sm:p-4 border-4 border-[#A39E8F] shadow-[inset_0_5px_15px_rgba(0,0,0,0.8)] relative overflow-hidden">
-                  
-                  {/* The CRT Glass Display (Deep Glowing Royal Blue Phosphor) */}
-                  <div
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                    onClick={() => {
-                      if (!loading) fileInputRef.current?.click();
-                    }}
-                    className={`relative rounded-xl overflow-hidden min-h-[290px] sm:min-h-[330px] flex flex-col items-center justify-center p-4 sm:p-6 text-center select-none transition-all duration-300 cursor-pointer ${
-                      isDragOver
-                        ? 'bg-gradient-to-b from-[#0047FF] via-[#0035B8] to-[#001D6E] ring-4 ring-cyan-300'
-                        : isHovered
-                        ? 'bg-gradient-to-b from-[#003DCF] via-[#002B9E] to-[#00155A]'
-                        : 'bg-gradient-to-b from-[#0038C4] via-[#00248A] to-[#00124D]'
-                    }`}
-                  >
-                    {/* CRT Scanline overlay effect */}
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.35)_50%)] bg-[size:100%_4px] pointer-events-none opacity-60 z-10" />
-                    
-                    {/* Radial Glass Curvature & Corner Vignette */}
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(0,8,30,0.75)_100%)] pointer-events-none z-10" />
-                    
-                    {/* Glass Reflection Highlight across top-left */}
-                    <div className="absolute -top-16 -left-16 w-48 h-48 bg-gradient-to-br from-white/15 to-transparent rounded-full blur-xl pointer-events-none z-10" />
-                    
-                    {/* Ambient Blue Phosphor Inner Glow */}
-                    <div className="absolute inset-0 bg-blue-500/10 blur-xl pointer-events-none" />
-
-                    {/* SCREEN CONTENT - STATE 1: NO FILE LOADED (3D INTERACTIVE ENVELOPE) */}
-                    {!file ? (
-                      <div className="relative z-20 flex flex-col items-center justify-center w-full py-2">
-                        
-                        {/* 3D Interactive Envelope Container */}
-                        <div
-                          className={`relative w-44 sm:w-52 h-28 sm:h-34 transition-transform duration-300 ${
-                            isHovered || isDragOver ? 'scale-105' : ''
-                          }`}
-                          style={{ perspective: '800px' }}
-                        >
-                          
-                          {/* Confidential Document / Letter sliding up out of the envelope on hover */}
-                          <div
-                            className={`absolute left-1/2 -translate-x-1/2 w-36 sm:w-44 h-28 bg-[#FFFFFF] rounded-t-lg shadow-2xl p-2.5 sm:p-3 transition-all duration-500 ease-out z-10 flex flex-col justify-between border border-blue-200 text-left ${
-                              isHovered || isDragOver
-                                ? '-translate-y-20 scale-105'
-                                : 'translate-y-0'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between border-b border-blue-100 pb-1">
-                              <span className="font-['Silkscreen'] text-[8.5px] text-[#0047FF] font-bold">
-                                PAYLOAD INGESTION
-                              </span>
-                              <span className="text-[7.5px] font-mono text-slate-500 uppercase font-semibold">
-                                EML • PDF
-                              </span>
-                            </div>
-
-                            <div className="space-y-1.5 py-1">
-                              <div className="h-1 bg-blue-200/80 rounded w-4/5" />
-                              <div className="h-1 bg-slate-200 rounded w-full" />
-                              <div className="h-1 bg-slate-100 rounded w-3/4" />
-                            </div>
-
-                            <div className="bg-[#0047FF]/10 rounded px-2 py-1 text-center border border-[#0047FF]/25">
-                              <span className="font-['Silkscreen'] text-[8px] text-[#0047FF] font-bold uppercase tracking-wider block">
-                                CLICK TO BROWSE FILE
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Envelope Back Body */}
-                          <div className="absolute inset-0 bg-[#CBD5E1] rounded-b-2xl shadow-inner border border-slate-300 z-0" />
-
-                          {/* 3D Envelope Flap (Flips 180deg upward on hover) */}
-                          <div
-                            className="absolute top-0 left-0 right-0 h-16 origin-top transition-transform duration-500 ease-out z-20"
-                            style={{
-                              transformOrigin: 'top center',
-                              transform: isHovered || isDragOver ? 'rotateX(180deg)' : 'rotateX(0deg)',
-                              zIndex: isHovered || isDragOver ? 5 : 20,
-                            }}
-                          >
-                            <svg viewBox="0 0 100 50" className="w-full h-full drop-shadow-md fill-[#E2E8F0] stroke-slate-300 stroke-[1]">
-                              <polygon points="0,0 50,48 100,0" />
-                            </svg>
-                          </div>
-
-                          {/* Envelope Front Pocket with Notch */}
-                          <div className="absolute inset-x-0 bottom-0 h-18 sm:h-20 bg-white/95 rounded-b-2xl border-t border-slate-200 z-30 shadow-lg flex items-end justify-center pb-2.5 overflow-hidden">
-                            <svg viewBox="0 0 100 50" className="absolute inset-0 w-full h-full fill-white stroke-slate-200 stroke-[0.8]">
-                              <polygon points="0,50 50,18 100,50" />
-                            </svg>
-                            <span className="relative z-40 font-['Silkscreen'] text-[9px] sm:text-[9.5px] uppercase tracking-wider text-slate-800 font-bold">
-                              {isDragOver ? 'DROP PAYLOAD' : isHovered ? 'CLICK TO BROWSE' : 'HOVER TO OPEN'}
-                            </span>
-                          </div>
-
-                        </div>
-
-                        {/* CRT Screen Bottom Instruction Text */}
-                        <div className="mt-4 sm:mt-5 relative z-20 space-y-1">
-                          <span className="font-['Silkscreen'] text-xs sm:text-sm uppercase tracking-wider text-white font-extrabold block drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                            {isDragOver ? '⚡ RELEASE TO INGEST PAYLOAD ⚡' : 'CLICK TO UPLOAD EMAIL OR PDF'}
-                          </span>
-                          <p className="text-[10.5px] sm:text-[11px] font-mono text-blue-100/80 font-medium">
-                            Supports .EML • .MSG • .PDF • .TXT • .MBOX
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      /* SCREEN CONTENT - STATE 2: FILE LOADED INTO MEMORY */
-                      <div className="relative z-20 flex flex-col items-center justify-center w-full py-3 space-y-3">
-                        <div
-                          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl border ${
-                            file.name.toLowerCase().endsWith('.pdf')
-                              ? 'bg-amber-500/25 text-amber-300 border-amber-400/50'
-                              : 'bg-emerald-500/25 text-emerald-300 border-emerald-400/50'
-                          }`}
-                        >
-                          {file.name.toLowerCase().endsWith('.pdf') ? (
-                            <FileText size={28} />
-                          ) : (
-                            <Mail size={28} />
-                          )}
-                        </div>
-
-                        <div className="space-y-1 max-w-sm px-2">
-                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-['Silkscreen'] uppercase tracking-wider font-bold bg-white/20 text-white border border-white/30">
-                            {file.name.toLowerCase().endsWith('.pdf') ? 'PDF DOCUMENT' : 'EML RFC-822'}
-                          </span>
-                          <span className="font-mono text-xs sm:text-sm text-white font-bold block truncate" title={file.name}>
-                            {file.name}
-                          </span>
-                          <span className="text-[11px] font-mono text-blue-200 block">
-                            {(file.size / 1024).toFixed(1)} KB // Ingested in memory
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-2 pt-1">
-                          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                          <span className="font-['Silkscreen'] text-[10px] text-emerald-300 uppercase tracking-widest font-bold">
-                            ● READY FOR EVIDENTIAL ANALYSIS
-                          </span>
-                        </div>
-
-                        {/* Interactive Buttons on CRT Screen */}
-                        <div className="flex items-center gap-3 pt-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFile(null);
-                              setResult(null);
-                            }}
-                            className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-[10px] font-mono font-semibold transition-all cursor-pointer"
-                          >
-                            ✕ Eject File
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleScan(e);
-                            }}
-                            disabled={loading}
-                            className="px-4 py-1.5 rounded-lg bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-[10.5px] font-bold tracking-wider transition-all flex items-center gap-1.5 shadow-lg shadow-[#0047FF]/40 cursor-pointer"
-                          >
-                            {loading ? (
-                              <>
-                                <Loader2 className="animate-spin h-3 w-3" />
-                                <span>SCANNING...</span>
-                              </>
-                            ) : (
-                              <>
-                                <span>ANALYZE NOW</span>
-                                <ArrowRight size={12} />
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-
-                {/* CRT Monitor Lower Bezel Deck (3.5" Floppy Slot + Power LED + Controls) */}
-                <div className="mt-3.5 sm:mt-4 px-2 sm:px-3 flex items-center justify-between text-[#686354]">
-                  
-                  {/* Left: Glowing Phosphor Power LED & Label */}
-                  <div className="flex items-center gap-2">
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 border border-emerald-300 shadow-[0_0_8px_rgba(16,185,129,0.9)]" />
-                    </span>
-                    <span className="font-['Silkscreen'] text-[9px] uppercase tracking-wider font-bold text-[#555045]">
-                      PWR
-                    </span>
-                  </div>
-
-                  {/* Center: 3.5" Retro Floppy Drive Slot */}
-                  <div className="flex items-center gap-2">
-                    <div className="relative w-32 sm:w-44 h-2.5 bg-[#1C2028] rounded-xs border-t border-[#8D887A] border-b border-white/60 shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)] flex items-center justify-end px-1.5">
-                      {/* Floppy shutter slot */}
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#3A3F4B]" />
-                    </div>
-                    {/* Floppy eject button */}
-                    <div className="w-3.5 h-2 bg-[#DDD8CA] border-t border-l border-white border-b border-r border-[#8D887A] shadow-2xs rounded-2xs" />
-                  </div>
-
-                  {/* Right: HDD / Activity LED */}
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-amber-500/70 border border-amber-400/50" />
-                    <span className="font-mono text-[8.5px] uppercase tracking-wider text-[#686354] font-semibold">
-                      DISK
-                    </span>
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* Monitor Pedestal Base / Stand (Gives the computer realistic 3D tabletop presence) */}
-              <div className="relative mx-auto w-44 sm:w-56 h-4 sm:h-5 bg-gradient-to-b from-[#C4BEAF] to-[#A8A294] border-l-2 border-r-[4px] border-[#7F796C] shadow-md" />
-              <div className="relative mx-auto w-56 sm:w-72 h-3 sm:h-4 rounded-b-xl bg-gradient-to-b from-[#B8B2A4] to-[#9E988A] border-t border-white/80 border-l border-r-2 border-b-2 border-[#6B6559] shadow-xl" />
-
-            </div>
-
-          </div>
-        )}
-
-        {/* MODE 2: PASTE EMAIL TEXT / SMTP HEADERS */}
-        {inputMode === 'paste' && (
-          <form onSubmit={handleScan} className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="font-['Silkscreen'] text-xs uppercase tracking-wider text-white">
-                  Email Message Body &amp; Optional Headers
-                </label>
-                <span className="text-[11px] font-mono text-[#94A3B8]">
-                  Paste full email text or 'Show Original' headers
-                </span>
-              </div>
-              <textarea
-                className="block w-full p-4 border border-[#E2E6EE] dark:border-[#1E2533] rounded-2xl bg-[#F8FAFD] dark:bg-[#141A26] text-white placeholder-[#94A3B8] focus:outline-none focus:border-[#0047FF] focus:ring-2 focus:ring-[#0047FF]/20 transition-all min-h-[160px] font-mono text-xs leading-relaxed"
-                placeholder="From: Security Alert <service-notice@account-billing.xyz>&#10;Subject: URGENT: Your account credentials expired&#10;&#10;Dear user, please re-authenticate immediately at https://portal-id-verify.top to prevent suspension..."
-                value={content}
-                onChange={(e) => {
-                  setContent(e.target.value);
-                  setFile(null);
-                }}
+                key={i}
+                className="h-3 sm:h-3.5 bg-[#DCD8CA] rounded-xs border-t border-l border-white border-b border-r border-[#8E8876] shadow-xs"
               />
-            </div>
+            ))}
+          </div>
 
+          {/* Keyboard Spacebar & Indicator Labels */}
+          <div className="flex items-center justify-between px-3 text-[9px] font-mono text-[#635E4E]">
+            <span>[ CTRL • ALT • INGEST ]</span>
+            <div className="h-2 w-28 bg-[#DCD8CA] rounded-sm border-t border-l border-white border-b border-r border-[#8E8876]"></div>
+            <span>[ VERIFIED HOST ]</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* =========================================================================
+          QUICK LOAD DEMO PAYLOADS & RAW INPUT EXPANDER
+          ========================================================================= */}
+      <div className="max-w-xl mx-auto space-y-3 text-center">
+        
+        {/* Subtle Demo Buttons Row */}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <span className="font-['Silkscreen'] text-[10px] text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
+            TRY DEMO:
+          </span>
+          <button
+            type="button"
+            onClick={() => loadSample('phish')}
+            className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            title="Inspect a simulated urgent payroll credential harvesting email"
+          >
+            <Flame size={12} className="text-red-400" />
+            <span>🚨 Payroll Phish (.eml)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => loadSample('pdf')}
+            className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            title="Inspect an adversarial overdue invoice PDF with embedded links"
+          >
+            <FileText size={12} className="text-amber-400" />
+            <span>📑 Fake Invoice (.pdf)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => loadSample('legit')}
+            className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10.5px] font-mono font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+            title="Inspect a legitimate cryptographic GitHub security notice"
+          >
+            <ShieldCheck size={12} className="text-emerald-400" />
+            <span>🛡️ Valid Notice (.eml)</span>
+          </button>
+        </div>
+
+        {/* Minimal Collapsible Toggle for Raw Text / SMTP Headers */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setInputMode(inputMode === 'paste' ? 'upload' : 'paste')}
+            className="text-xs font-mono text-[#94A3B8] hover:text-white transition-colors underline decoration-dotted underline-offset-4 cursor-pointer inline-flex items-center gap-1.5"
+          >
+            <FileText size={13} />
+            <span>
+              {inputMode === 'paste'
+                ? '▲ Hide raw text / headers form'
+                : 'Need to paste raw text or SMTP headers instead?'}
+            </span>
+          </button>
+        </div>
+
+        {/* Collapsed Raw Text / Headers Area */}
+        {inputMode === 'paste' && (
+          <form onSubmit={handleScan} className="space-y-3 pt-2 text-left animate-in fade-in">
+            <textarea
+              className="block w-full p-4 border border-[#E2E6EE] dark:border-[#1E2533] rounded-2xl bg-[#0F131C] text-white placeholder-[#94A3B8] focus:outline-none focus:border-[#0047FF] focus:ring-2 focus:ring-[#0047FF]/20 transition-all min-h-[140px] font-mono text-xs leading-relaxed"
+              placeholder="From: Security Alert <service-notice@account-billing.xyz>&#10;Subject: URGENT: Your account credentials expired&#10;&#10;Paste raw email body or RFC-822 headers here..."
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                setFile(null);
+              }}
+            />
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={loading || !content.trim()}
-                className="px-6 py-3 rounded-xl bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-xs font-bold tracking-wider disabled:opacity-50 transition-all flex items-center gap-2 shadow-md shadow-[#0047FF]/20 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#0047FF] hover:bg-[#0039CC] text-white font-['Silkscreen'] text-xs font-bold tracking-wider disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer shadow-md"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="animate-spin h-3.5 w-3.5" />
-                    <span>EVALUATING NLP INTENT...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>■ ANALYZE EMAIL PAYLOAD</span>
-                    <ArrowRight size={13} />
-                  </>
-                )}
+                {loading ? <Loader2 className="animate-spin h-3.5 w-3.5" /> : <ArrowRight size={13} />}
+                <span>ANALYZE TEXT PAYLOAD</span>
               </button>
             </div>
           </form>
         )}
 
         {/* User Guide Accordion: How to export .eml */}
-        <div className="border-t border-[#E2E6EE] dark:border-[#1E2533] pt-4">
+        <div className="pt-2">
           <button
             type="button"
             onClick={() => setShowGuide(!showGuide)}
-            className="flex items-center justify-between w-full text-left text-xs font-mono text-[#94A3B8] hover:text-white transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-[#94A3B8]/80 hover:text-white transition-colors cursor-pointer"
           >
-            <span className="flex items-center gap-1.5">
-              <HelpCircle size={14} className="text-[#0047FF]" />
-              <span>How do I export an .eml file from Gmail or Outlook?</span>
-            </span>
-            {showGuide ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            <HelpCircle size={13} className="text-[#0047FF]" />
+            <span>How to export .eml from Gmail / Outlook</span>
+            {showGuide ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
 
           {showGuide && (
-            <div className="mt-3 p-4 rounded-xl bg-[#141A26] border border-[#1E2533] text-xs font-mono text-[#94A3B8] space-y-3 animate-in fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-3 p-4 rounded-xl bg-[#0F131C] border border-[#1E2533] text-xs font-mono text-[#94A3B8] text-left space-y-3 animate-in fade-in max-w-xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <span className="text-white font-bold block">// GMAIL (WEB)</span>
-                  <p>1. Open the suspicious email in Gmail.</p>
-                  <p>2. Click the three vertical dots (⋮) in the top-right corner.</p>
-                  <p>3. Select <strong>"Download message"</strong>. Saves as an authentic <code>.eml</code> file.</p>
+                  <p>1. Open the suspicious email.</p>
+                  <p>2. Click the three dots (⋮) top-right.</p>
+                  <p>3. Click <strong>"Download message"</strong> (.eml).</p>
                 </div>
                 <div className="space-y-1">
                   <span className="text-white font-bold block">// OUTLOOK / APPLE MAIL</span>
-                  <p>1. In Outlook, simply drag the email from your inbox directly into this dropzone, or click <em>File → Save As → .msg/.eml</em>.</p>
-                  <p>2. In Apple Mail, choose <em>File → Save As → Raw Message Source</em>.</p>
+                  <p>1. Drag email directly from your inbox into the computer screen above.</p>
+                  <p>2. Or click <em>File → Save As → .eml/.msg</em>.</p>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="p-4 rounded-2xl bg-red-950/20 border border-red-900/40 text-red-300 text-sm flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
-            <span>{error}</span>
-          </div>
-        )}
-
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="max-w-xl mx-auto p-4 rounded-2xl bg-red-950/20 border border-red-900/40 text-red-300 text-sm flex items-center gap-3">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-red-400" />
+          <span>{error}</span>
+        </div>
+      )}
 
       {/* =========================================================================
           DETECTION VERDICT & FORENSIC INVESTIGATION BENTO
