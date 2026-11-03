@@ -584,19 +584,51 @@ export default function EmailDetection() {
           </button>
 
           {showGuide && (
-            <div className="mt-3 p-4 rounded-xl bg-[#0F131C] border border-[#1E2533] text-xs font-mono text-[#94A3B8] text-left space-y-3 animate-in fade-in max-w-xl mx-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-white font-bold block">// GMAIL (WEB)</span>
-                  <p>1. Open the suspicious email.</p>
-                  <p>2. Click the three dots (⋮) top-right.</p>
-                  <p>3. Click <strong>"Download message"</strong> (.eml).</p>
+            <div className="mt-4 p-5 sm:p-6 rounded-2xl bg-[#0F131C] border border-[#1E2533] text-left animate-in fade-in duration-200 max-w-2xl mx-auto shadow-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                
+                {/* Gmail Guide Card */}
+                <div className="space-y-3 bg-[#141A26] p-4 rounded-xl border border-[#1E2533]">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-['Silkscreen'] font-bold">
+                      GMAIL (WEB)
+                    </span>
+                  </div>
+                  <ol className="space-y-2.5 text-xs text-[#94A3B8]">
+                    <li className="flex items-start gap-2.5">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-[#1E2533] text-[#CBD5E1] text-[10px] font-bold flex items-center justify-center">1</span>
+                      <span className="leading-snug pt-0.5">Open the suspicious email.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-[#1E2533] text-[#CBD5E1] text-[10px] font-bold flex items-center justify-center">2</span>
+                      <span className="leading-snug pt-0.5">Click the more options menu <strong className="text-white">(⋮)</strong> in the top-right corner.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-[#1E2533] text-[#CBD5E1] text-[10px] font-bold flex items-center justify-center">3</span>
+                      <span className="leading-snug pt-0.5">Select <strong className="text-white">"Download message"</strong> to save the <code className="text-[#38BDF8] bg-blue-500/10 px-1 py-0.5 rounded font-mono text-[10.5px]">.eml</code> file.</span>
+                    </li>
+                  </ol>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-white font-bold block">// OUTLOOK / APPLE MAIL</span>
-                  <p>1. Drag email directly from your inbox into the computer screen above.</p>
-                  <p>2. Or click <em>File → Save As → .eml/.msg</em>.</p>
+
+                {/* Outlook / Apple Mail Guide Card */}
+                <div className="space-y-3 bg-[#141A26] p-4 rounded-xl border border-[#1E2533]">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-[#38BDF8] border border-blue-500/20 text-[10px] font-['Silkscreen'] font-bold">
+                      OUTLOOK &amp; APPLE MAIL
+                    </span>
+                  </div>
+                  <ol className="space-y-2.5 text-xs text-[#94A3B8]">
+                    <li className="flex items-start gap-2.5">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-[#1E2533] text-[#CBD5E1] text-[10px] font-bold flex items-center justify-center">1</span>
+                      <span className="leading-snug pt-0.5">Drag the email directly from your inbox into the computer screen above.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-[#1E2533] text-[#CBD5E1] text-[10px] font-bold flex items-center justify-center">2</span>
+                      <span className="leading-snug pt-0.5">Or choose <strong className="text-white">File &rarr; Save As</strong> and pick <code className="text-[#38BDF8] bg-blue-500/10 px-1 py-0.5 rounded font-mono text-[10.5px]">.eml</code> or <code className="text-[#38BDF8] bg-blue-500/10 px-1 py-0.5 rounded font-mono text-[10.5px]">.msg</code> format.</span>
+                    </li>
+                  </ol>
                 </div>
+
               </div>
             </div>
           )}
