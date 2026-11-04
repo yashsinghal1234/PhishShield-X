@@ -3,373 +3,780 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ShadowLens Security Shield</title>
+  <title>ShadowLens Evidential Shield</title>
   <style>
     :root {
-      --bg: #080A0F;
-      --card: #0F1420;
-      --card-inner: #141A28;
-      --border: #1E2533;
-      --border-light: rgba(255, 255, 255, 0.08);
-      --text: #F1F5F9;
-      --muted: #94A3B8;
-      --primary: #38BDF8;
-      --blue: #0047FF;
-      --safe: #10B981;
-      --warn: #F59E0B;
-      --danger: #EF4444;
-      --purple: #A855F7;
+      --bg: #070A11;
+      --card-bg: rgba(14, 19, 29, 0.88);
+      --glass-surface: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(56, 189, 248, 0.18);
+      --glass-active: rgba(0, 229, 255, 0.18);
+      --glass-active-border: rgba(0, 229, 255, 0.55);
+      --cyber-cyan: #00E5FF;
+      --cyber-blue: #0066FF;
+      --neon-sky: #38BDF8;
+      --accent-emerald: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-crimson: #EF4444;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
     }
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    body {
-      width: 340px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    html, body {
+      width: 360px;
+      height: 575px;
+      max-height: 575px;
       background: var(--bg);
       color: var(--text);
-      padding: 16px;
-      margin: 0;
-      overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", -system-ui, "Segoe UI", Roboto, sans-serif;
+      position: relative;
+      overflow: hidden !important;
       user-select: none;
+      scrollbar-width: none !important;
+    }
+    ::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
     }
 
-    /* Ambient Background Glow */
-    .ambient-glow {
+    /* Ambient Cyber-Blue Lighting */
+    .ambient-bg {
       position: absolute;
-      top: -40px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 200px;
-      height: 80px;
-      background: radial-gradient(ellipse, rgba(56, 189, 248, 0.15), transparent 70%);
+      inset: 0;
       pointer-events: none;
+      background: 
+        radial-gradient(circle at 65% 50%, rgba(0, 102, 255, 0.22) 0%, rgba(0, 229, 255, 0.08) 35%, transparent 65%),
+        radial-gradient(circle at 20% 15%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 100%, #000000 0%, transparent 100%);
       z-index: 0;
     }
 
-    /* Brand Header */
-    .header {
+    /* Top Brand & Status Header */
+    .top-bar {
       position: relative;
-      z-index: 1;
+      z-index: 10;
+      padding: 14px 18px 2px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 12px;
-      margin-bottom: 14px;
+      height: 46px;
     }
-    .brand-wrap {
+    .brand-group {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .brand-logo {
-      width: 24px;
-      height: 24px;
-      object-fit: contain;
-      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.35));
-    }
-    .brand-title {
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: #fff;
-    }
-    .status-badge {
-      display: inline-flex;
+    .brand-icon-box {
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      background: #FFFFFF;
+      display: flex;
       align-items: center;
-      gap: 5px;
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 9999px;
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      color: #34D399;
+      justify-content: center;
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+      flex-shrink: 0;
     }
-    .pulse-dot {
-      width: 5px;
-      height: 5px;
+    .brand-icon-box img {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+    .brand-name {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #FFFFFF;
+    }
+    .status-clock-group {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .clock-text {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--neon-sky);
+      letter-spacing: 0.04em;
+    }
+    .radar-icon-wrap {
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
-      background: #10B981;
-      box-shadow: 0 0 6px #10B981;
-      animation: pulse 2s infinite;
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyber-cyan);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
+    .radar-pulse {
+      animation: radar-sweep 2.8s infinite linear;
+    }
+    @keyframes radar-sweep {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
-    /* Target URL Chip */
-    .url-chip {
+    /* Hero Heading */
+    .hero-heading {
       position: relative;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 7px 10px;
-      font-size: 11px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      color: var(--muted);
+      z-index: 10;
+      padding: 0 18px;
+      height: 48px;
+    }
+    .hero-heading h1 {
+      font-size: 23px;
+      font-weight: 400;
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      color: #FFFFFF;
+    }
+    .hero-heading h1 span {
+      display: block;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    /* Dial & Radial Petals Viewport */
+    .dial-viewport {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      height: 195px;
+      margin-top: -4px;
+    }
+
+    /* Luminous Cyber-Blue Spotlight Beam beneath Active Petal */
+    .spotlight-beam {
+      position: absolute;
+      top: 105px;
+      left: 36%;
+      width: 130px;
+      height: 120px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0, 229, 255, 0.35) 0%, rgba(0, 102, 255, 0.12) 55%, transparent 75%);
+      filter: blur(12px);
+      pointer-events: none;
+      z-index: 4;
+      transform: rotate(10deg);
+      transition: opacity 0.4s ease;
+    }
+
+    /* Central Glowing Sensor Core (Electric Cyber Blue) */
+    .sensor-core {
+      position: absolute;
+      top: 95px;
+      left: 150px;
+      transform: translate(-50%, -50%);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00F0FF 0%, #0066FF 100%);
+      box-shadow: 0 0 24px rgba(0, 229, 255, 0.75), 0 0 55px rgba(0, 102, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 8;
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sensor-core:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 0 32px rgba(0, 229, 255, 0.9), 0 0 70px rgba(0, 102, 255, 0.5);
+    }
+    .sensor-pupil {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #070A11;
+    }
+    .sensor-pulse-ring {
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0, 229, 255, 0.6);
+      animation: pulse-ring 2.4s infinite cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.9; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+
+    /* Dynamic Sensor Threat States */
+    .sensor-core.phishing {
+      background: linear-gradient(135deg, #FF453A 0%, #B91C1C 100%) !important;
+      box-shadow: 0 0 28px rgba(239, 68, 68, 0.8), 0 0 65px rgba(239, 68, 68, 0.45) !important;
+    }
+    .sensor-core.phishing .sensor-pulse-ring {
+      border-color: rgba(239, 68, 68, 0.7) !important;
+    }
+    .sensor-core.suspicious {
+      background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%) !important;
+      box-shadow: 0 0 28px rgba(245, 158, 11, 0.8), 0 0 65px rgba(245, 158, 11, 0.45) !important;
+    }
+    .sensor-core.suspicious .sensor-pulse-ring {
+      border-color: rgba(245, 158, 11, 0.7) !important;
+    }
+    .sensor-core.scanning {
+      animation: scan-pulse 0.8s infinite alternate ease-in-out;
+    }
+    @keyframes scan-pulse {
+      0% { transform: translate(-50%, -50%) scale(0.95); filter: brightness(1); }
+      100% { transform: translate(-50%, -50%) scale(1.12); filter: brightness(1.3); }
+    }
+
+    /* Balanced Non-Overlapping Radial Petals */
+    .petal {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      color: rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 6;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    }
+    .petal:hover {
+      background: rgba(0, 229, 255, 0.1);
+      border-color: rgba(0, 229, 255, 0.35);
+      color: #FFFFFF;
+      transform: translateY(-2px);
+    }
+    .petal.active {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.24), rgba(0, 229, 255, 0.12));
+      border: 1px solid var(--glass-active-border);
+      color: #FFFFFF;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+    }
+    .petal-icon {
+      margin-bottom: 3px;
+      opacity: 0.9;
+    }
+    .petal-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 12px;
+    }
+
+    /* Calibrated Non-Overlapping Coordinates */
+    .petal-top { /* Heuristics */
+      left: 95px;
+      top: 8px;
+      width: 110px;
+      height: 54px;
+      border-radius: 18px 18px 10px 10px;
+    }
+    .petal-right { /* SSL Trust */
+      left: 185px;
+      top: 68px;
+      width: 96px;
+      height: 54px;
+      border-radius: 10px 18px 18px 10px;
+    }
+    .petal-active-main { /* Active URL */
+      left: 110px;
+      top: 128px;
+      width: 115px;
+      height: 58px;
+      border-radius: 12px 12px 22px 22px;
+    }
+    .petal-left { /* Uncertainty */
+      left: 18px;
+      top: 68px;
+      width: 96px;
+      height: 54px;
+      border-radius: 18px 10px 10px 18px;
+    }
+
+    /* Floating Vertical Right Dock */
+    .side-dock {
+      position: absolute;
+      right: 10px;
+      top: 235px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 25;
+    }
+    .dock-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+    .dock-btn:hover {
+      background: rgba(0, 229, 255, 0.2);
+      border-color: var(--cyber-cyan);
+      color: #FFFFFF;
+      transform: scale(1.08);
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
+    }
+    .dock-btn.active {
+      background: #FFFFFF;
+      color: #070A11;
+      border-color: #FFFFFF;
+      box-shadow: 0 0 18px rgba(0, 229, 255, 0.6);
+    }
+
+    /* Bottom Frosted Glassmorphic Card */
+    .bottom-card {
+      position: absolute;
+      bottom: 10px;
+      left: 12px;
+      right: 54px; /* Leaves clear breathing space for the floating dock */
+      background: var(--card-bg);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-radius: 22px;
+      padding: 12px 14px 10px 14px;
+      z-index: 15;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+    .bottom-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    .status-tag-row {
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .url-dot {
-      width: 4px;
-      height: 4px;
+    .cat-name {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: var(--primary);
-      flex-shrink: 0;
+      background: var(--cyber-cyan);
+      box-shadow: 0 0 8px var(--cyber-cyan);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .status-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--neon-sky);
     }
 
-    /* Primary Evidential Verdict Box */
+    /* Verdict Pill (verdict-box) */
     .verdict-box {
-      position: relative;
-      text-align: center;
-      padding: 16px 12px;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      border: 1px solid transparent;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: rgba(0, 229, 255, 0.14);
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      color: var(--cyber-cyan);
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.25s ease;
     }
     .verdict-box.safe {
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.14) 0%, rgba(16, 185, 129, 0.04) 100%);
+      background: rgba(16, 185, 129, 0.16);
       border-color: rgba(16, 185, 129, 0.45);
-      box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.15);
+      color: #34D399;
     }
-    .verdict-box.safe .title { color: #34D399; }
     .verdict-box.suspicious {
-      background: linear-gradient(180deg, rgba(245, 158, 11, 0.14) 0%, rgba(245, 158, 11, 0.04) 100%);
+      background: rgba(245, 158, 11, 0.16);
       border-color: rgba(245, 158, 11, 0.45);
-      box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.15);
+      color: #FBBF24;
     }
-    .verdict-box.suspicious .title { color: #FBBF24; }
     .verdict-box.phishing {
-      background: linear-gradient(180deg, rgba(239, 68, 68, 0.16) 0%, rgba(239, 68, 68, 0.04) 100%);
-      border-color: rgba(239, 68, 68, 0.5);
-      box-shadow: 0 4px 20px -2px rgba(239, 68, 68, 0.2);
-    }
-    .verdict-box.phishing .title { color: #F87171; }
-
-    .verdict-box .title {
-      font-size: 16px;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    }
-    .verdict-box .subtitle {
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.7);
-      line-height: 1.4;
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.55);
+      color: #F87171;
     }
 
-    /* Embedded QR Barcode Alert */
+    /* Embedded QR Alert */
     .qr-alert {
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.5);
       border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 12px;
+      padding: 6px 8px;
+      margin-bottom: 6px;
       color: #FCA5A5;
-      font-size: 11px;
+      font-size: 9.5px;
+      line-height: 1.3;
     }
     .qr-alert-badge {
-      display: inline-block;
       font-weight: 800;
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: #F87171;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
 
-    /* Telemetry 2-Card Grid */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .metric-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 9px 8px;
-      text-align: center;
-    }
-    .metric-card .val {
-      font-size: 15px;
-      font-weight: 800;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      color: #fff;
-    }
-    .metric-card .lbl {
-      font-size: 9.5px;
-      font-weight: 600;
-      color: var(--muted);
-      margin-top: 2px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    /* Dirichlet Uncertainty Gauge */
-    .uncertainty-section {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 11px 12px;
-      margin-bottom: 12px;
-    }
-    .uncertainty-header {
+    /* Hero Metric Row */
+    .metric-row {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      align-items: baseline;
+      gap: 5px;
+      margin-bottom: 2px;
+    }
+    .metric-big {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      color: #FFFFFF;
+      line-height: 1;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    }
+    .metric-unit {
       font-size: 11px;
-      margin-bottom: 7px;
+      font-weight: 500;
+      color: var(--neon-sky);
     }
-    .uncertainty-title {
-      color: var(--muted);
+    .metric-delta {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--neon-sky);
       font-weight: 600;
-      font-size: 10.5px;
+      margin-bottom: 6px;
     }
-    .uncertainty-score {
-      font-weight: 800;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 12px;
+    .delta-arrow {
+      font-size: 9px;
+      color: var(--cyber-cyan);
     }
-    .progress-bar {
-      height: 6px;
-      background: #1E2533;
+
+    /* Telemetry Sinusoidal Graph */
+    .waveform-wrap {
+      width: 100%;
+      height: 32px;
+      position: relative;
+      margin-bottom: 6px;
+    }
+    .waveform-svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* Epistemic Uncertainty Micro-Strip */
+    .uncertainty-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+      padding: 4px 7px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(0, 229, 255, 0.12);
+      border-radius: 7px;
+      font-size: 9px;
+    }
+    .u-progress-box {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 9999px;
       overflow: hidden;
     }
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #10B981 0%, #38BDF8 50%, #EF4444 100%);
       width: 0%;
+      background: linear-gradient(90deg, #00E5FF 0%, #38BDF8 60%, #EF4444 100%);
       border-radius: 9999px;
       transition: width 0.4s ease;
     }
-    .uncertainty-footer {
-      display: flex;
-      justify-content: space-between;
-      font-size: 9px;
-      color: var(--muted);
-      margin-top: 5px;
+
+    /* Active Target URL Bar */
+    .url-target-box {
+      font-size: 9.5px;
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 7px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 229, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .url-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--cyber-cyan);
+      box-shadow: 0 0 6px var(--cyber-cyan);
+      flex-shrink: 0;
     }
 
-    /* Action Buttons */
-    .btn-override {
+    /* Action Button */
+    .btn-action {
       width: 100%;
-      background: var(--card-inner);
-      border: 1px solid var(--border);
-      color: #CBD5E1;
-      padding: 9px 12px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      color: #FFFFFF;
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
     }
-    .btn-override:hover {
-      background: #1E2533;
-      color: #fff;
-      border-color: #38BDF8;
+    .btn-action:hover {
+      background: rgba(0, 229, 255, 0.18);
+      border-color: var(--cyber-cyan);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
     }
 
-    /* Legal / Telemetry Notice */
-    .irb-note {
-      font-size: 9px;
-      color: #475569;
-      text-align: center;
-      margin-top: 10px;
-      line-height: 1.35;
+    /* Hidden bridge for popup.js */
+    .bridge-hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div class="ambient-glow"></div>
+  <div class="ambient-bg"></div>
 
-  <!-- Header -->
-  <div class="header">
-    <div class="brand-wrap">
-      <img src="icons/icon48.png" alt="ShadowLens Mascot" class="brand-logo" />
-      <span class="brand-title">SHADOWLENS</span>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="brand-group">
+      <div class="brand-icon-box">
+        <img src="icons/icon48.png" alt="ShadowLens Mascot" />
+      </div>
+      <span class="brand-name">SHADOWLENS</span>
     </div>
-    <div class="status-badge">
-      <span class="pulse-dot"></span>
-      <span>ACTIVE DEFENSE</span>
-    </div>
-  </div>
-
-  <!-- Active Target URL Chip -->
-  <div class="url-chip">
-    <span class="url-dot"></span>
-    <span id="url-text">Checking active tab...</span>
-  </div>
-
-  <!-- Main Verdict Card -->
-  <div class="verdict-box safe" id="verdict-box">
-    <div class="title" id="verdict-title">ANALYZING...</div>
-    <div class="subtitle" id="verdict-subtitle">Querying neural consensus &amp; certificate transparency</div>
-  </div>
-
-  <!-- Embedded QR Code Alert (Hidden by default) -->
-  <div class="qr-alert" id="qr-alert" style="display:none;">
-    <div class="qr-alert-badge">⚠ Embedded QR Vector Detected</div>
-    <div id="qr-alert-text"></div>
-  </div>
-
-  <!-- Metrics Grid -->
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="val" id="val-conf">--%</div>
-      <div class="lbl">Model Confidence</div>
-    </div>
-    <div class="metric-card">
-      <div class="val" id="val-lat">-- ms</div>
-      <div class="lbl">Inference Latency</div>
+    <div class="status-clock-group">
+      <span class="clock-text" id="status-clock">DEFENSE ON</span>
+      <div class="radar-icon-wrap" id="radar-trigger" title="Live Autonomous Radar">
+        <svg class="radar-pulse" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" stroke-dasharray="2 4"/>
+          <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+        </svg>
+      </div>
     </div>
   </div>
 
-  <!-- Epistemic Uncertainty Gauge -->
-  <div class="uncertainty-section">
-    <div class="uncertainty-header">
-      <span class="uncertainty-title">Epistemic Uncertainty (u)</span>
-      <span class="uncertainty-score" id="val-u">--</span>
+  <!-- Hero Heading -->
+  <div class="hero-heading">
+    <h1>Threat<span>Monitoring</span></h1>
+  </div>
+
+  <!-- Ambient Cyber-Blue Spotlight Beam -->
+  <div class="spotlight-beam" id="spotlight-beam"></div>
+
+  <!-- Central Radial Dial Viewport -->
+  <div class="dial-viewport">
+    <!-- Petal 1: Heuristics (Top) -->
+    <div class="petal petal-top" id="petal-heuristics" title="Neural NLP & Heuristic Intent">
+      <div class="petal-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="6" r="3"/>
+          <circle cx="6" cy="18" r="3"/>
+          <circle cx="18" cy="18" r="3"/>
+          <line x1="12" y1="9" x2="6" y2="15"/>
+          <line x1="12" y1="9" x2="18" y2="15"/>
+        </svg>
+      </div>
+      <span class="petal-label">Heuristics</span>
     </div>
-    <div class="progress-bar">
-      <div class="progress-fill" id="u-bar"></div>
+
+    <!-- Petal 2: SSL Trust (Right) -->
+    <div class="petal petal-right" id="petal-ssl" title="eTLD+1 & Certificate Trust">
+      <div class="petal-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 3a9 9 0 0 0 0 18"/>
+          <path d="M12 3a9 9 0 0 1 0 18"/>
+        </svg>
+      </div>
+      <span class="petal-label">SSL Trust</span>
     </div>
-    <div class="uncertainty-footer">
-      <span>Evidence Strength: <strong id="val-s" style="color:#F1F5F9;">--</strong></span>
-      <span>Head: Dirichlet EDL</span>
+
+    <!-- Petal 3: Active URL (Bottom - Main Active) -->
+    <div class="petal petal-active-main active" id="petal-url" title="Active URL Neural Consensus">
+      <div class="petal-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="6" r="3"/>
+          <circle cx="18" cy="18" r="3"/>
+          <line x1="8.7" y1="10.7" x2="15.3" y2="7.3"/>
+          <line x1="8.7" y1="13.3" x2="15.3" y2="16.7"/>
+        </svg>
+      </div>
+      <span class="petal-label">Active URL</span>
+    </div>
+
+    <!-- Petal 4: Uncertainty (Left) -->
+    <div class="petal petal-left" id="petal-edl" title="Dirichlet Evidential Uncertainty">
+      <div class="petal-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="2"/>
+          <circle cx="12" cy="6" r="1.5"/>
+          <circle cx="12" cy="18" r="1.5"/>
+          <circle cx="6" cy="12" r="1.5"/>
+          <circle cx="18" cy="12" r="1.5"/>
+        </svg>
+      </div>
+      <span class="petal-label">Uncertainty</span>
+    </div>
+
+    <!-- Central Glowing Sensor Core (Electric Cyber Blue) -->
+    <div class="sensor-core" id="sensor-core" title="Click to Run Instant Neural Scan">
+      <div class="sensor-pulse-ring"></div>
+      <div class="sensor-pupil"></div>
     </div>
   </div>
 
-  <!-- Action Button -->
-  <button class="btn-override" id="btn-override">
-    <span>⚑ Report False Positive / Security Feedback</span>
-  </button>
+  <!-- Floating Vertical Right Dock -->
+  <div class="side-dock">
+    <!-- Button 1: White circle with 6 dots (Grid ::: - Trigger Live Scan) -->
+    <div class="dock-btn active" id="dock-scan" title="Instant Neural Scan">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="7" cy="7" r="2.2"/>
+        <circle cx="17" cy="7" r="2.2"/>
+        <circle cx="7" cy="12" r="2.2"/>
+        <circle cx="17" cy="12" r="2.2"/>
+        <circle cx="7" cy="17" r="2.2"/>
+        <circle cx="17" cy="17" r="2.2"/>
+      </svg>
+    </div>
+    <!-- Button 2: Telemetry Metrics -->
+    <div class="dock-btn" id="dock-stats" title="View Evidential Telemetry">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="6" y1="20" x2="6" y2="14"/>
+        <line x1="12" y1="20" x2="12" y2="8"/>
+        <line x1="18" y1="20" x2="18" y2="11"/>
+      </svg>
+    </div>
+    <!-- Button 3: Scan History -->
+    <div class="dock-btn" id="dock-history" title="Recent Verifications">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="4" width="18" height="18" rx="3" ry="3"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+    </div>
+    <!-- Button 4: Protection Status -->
+    <div class="dock-btn" id="dock-settings" title="Autonomous Protection Status">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="3.2"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </div>
+    <!-- Button 5: Security Feedback -->
+    <div class="dock-btn" id="dock-feedback" title="Report / Snooze">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
+  </div>
 
-  <div class="irb-note">
-    ShadowLens Autonomous Defense // Epistemic Uncertainty &amp; Zero-Day Isolation
+  <!-- Bottom Frosted Glassmorphic Card -->
+  <div class="bottom-card">
+    <div class="bottom-card-header">
+      <div class="status-tag-row">
+        <span class="cat-name" id="card-cat-title">ACTIVE TARGET</span>
+        <span class="live-dot" id="live-dot"></span>
+        <span class="status-label" id="card-status-label">Protected</span>
+      </div>
+      <div class="verdict-box safe" id="verdict-box">
+        <span id="verdict-title">SAFE</span>
+      </div>
+    </div>
+
+    <!-- Hidden Subtitle bridge -->
+    <div class="bridge-hidden" id="verdict-subtitle">Querying neural consensus</div>
+
+    <!-- Embedded QR Code Alert -->
+    <div class="qr-alert" id="qr-alert" style="display:none;">
+      <div class="qr-alert-badge">⚠ Embedded QR Vector Detected</div>
+      <div id="qr-alert-text"></div>
+    </div>
+
+    <!-- Hero Metric Row -->
+    <div class="metric-row">
+      <span class="metric-big" id="val-conf">99.4%</span>
+      <span class="metric-unit" id="metric-unit-label">confidence</span>
+    </div>
+    <div class="metric-delta">
+      <span class="delta-arrow">▲</span>
+      <span><span id="val-lat">12 ms</span> latency &middot; u: <span id="val-u">0.021</span></span>
+    </div>
+
+    <!-- Telemetry Sinusoidal Graph (Cyber Blue Waves) -->
+    <div class="waveform-wrap">
+      <svg class="waveform-svg" viewBox="0 0 260 32" fill="none">
+        <line x1="0" y1="24" x2="260" y2="24" stroke="rgba(0,229,255,0.12)" stroke-dasharray="3 3"/>
+        <!-- Secondary subtle cyan wave -->
+        <path d="M 0 22 C 35 10, 70 28, 105 18 C 140 8, 175 26, 210 20 C 235 14, 250 22, 260 16" stroke="rgba(56,189,248,0.25)" stroke-width="1.2" fill="none"/>
+        <!-- Primary luminous electric cyan wave -->
+        <path id="primary-wave" d="M 0 26 C 35 16, 70 4, 105 20 C 140 32, 175 8, 210 12 C 235 16, 250 6, 260 18" stroke="#00E5FF" stroke-width="1.8" fill="none"/>
+        <!-- Node dots -->
+        <circle cx="105" cy="20" r="3" fill="#FFFFFF" stroke="rgba(0,229,255,0.5)" stroke-width="3"/>
+        <circle id="wave-highlight-dot" cx="210" cy="12" r="2.8" fill="#00E5FF" stroke="rgba(0,229,255,0.4)" stroke-width="3"/>
+        <text x="65" y="30" fill="rgba(0,229,255,0.45)" font-size="7.5" font-family="monospace">&gt;20</text>
+        <text x="235" y="30" fill="rgba(0,229,255,0.45)" font-size="7.5" font-family="monospace">140</text>
+      </svg>
+    </div>
+
+    <!-- Epistemic Uncertainty Micro-Strip -->
+    <div class="uncertainty-strip">
+      <span style="color:var(--text-muted);">Uncertainty (u)</span>
+      <div class="u-progress-box">
+        <div class="progress-fill" id="u-bar"></div>
+      </div>
+      <span style="color:var(--neon-sky); font-family:monospace;">S: <strong id="val-s" style="color:#FFF;">2.0</strong></span>
+    </div>
+
+    <!-- Active Target URL Bar -->
+    <div class="url-target-box" id="url-target-box" title="Click to copy URL">
+      <span class="url-dot"></span>
+      <span id="url-text">Checking active tab...</span>
+    </div>
+
+    <!-- Action Button -->
+    <button class="btn-action" id="btn-override">
+      <span>⚑ Report False Positive / Security Feedback</span>
+    </button>
   </div>
 
   <script src="popup.js"></script>

@@ -51,12 +51,12 @@ export default function GradientRibbonFolder({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`group relative w-full min-h-[480px] sm:min-h-[540px] overflow-hidden flex flex-col items-center justify-center select-none transition-all duration-300 ${
+      className={`group relative w-full min-h-[380px] sm:min-h-[420px] overflow-hidden flex flex-col items-center justify-center select-none transition-all duration-300 ${
         isDragOver ? 'bg-white/[0.02]' : ''
       }`}
       style={{
-        maskImage: 'linear-gradient(to bottom, transparent 0%, black 50px, black calc(100% - 50px), transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 50px, black calc(100% - 50px), transparent 100%)'
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 15px, black calc(100% - 15px), transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15px, black calc(100% - 15px), transparent 100%)'
       }}
     >
       {/* Hidden native input */}
@@ -72,22 +72,12 @@ export default function GradientRibbonFolder({
         className="hidden"
       />
 
-      {/* Subtle top credits watermark from original reference artwork */}
-      <div className="absolute top-6 inset-x-0 text-center pointer-events-none z-10 opacity-40 group-hover:opacity-70 transition-opacity">
-        <span className="font-['Silkscreen'] text-[10px] tracking-widest uppercase text-white/70 block">
-          PHYSICAL RECONNAISSANCE // QUISHNET-V2
-        </span>
-        <span className="text-[11px] font-mono text-white/50 block mt-0.5">
-          Drop physical barcode or click folder to inspect
-        </span>
-      </div>
-
       {/* =========================================================================
           BACKGROUND SVG: 3D GLOWING GRADIENT RIBBONS + HORIZONTAL LIGHT BEAM
           Spans continuously from the screen's left edge to the right edge
           ========================================================================= */}
       <svg
-        viewBox="0 0 1600 500"
+        viewBox="0 0 1600 450"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="none"
@@ -122,14 +112,24 @@ export default function GradientRibbonFolder({
             <stop offset="100%" stopColor="#E11D48" />
           </linearGradient>
 
-          {/* Right Expanding Ambient Light Cone Gradient */}
-          <linearGradient id="ambientLaserCone" x1="0%" y1="50%" x2="100%" y2="50%">
-            <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.55" />
-            <stop offset="15%" stopColor="#60A5FA" stopOpacity="0.38" />
-            <stop offset="45%" stopColor="#3B82F6" stopOpacity="0.22" />
-            <stop offset="80%" stopColor="#1D4ED8" stopOpacity="0.10" />
-            <stop offset="100%" stopColor="#1E3A8A" stopOpacity="0.0" />
+          {/* Multi-stop Connector Line Gradient */}
+          <linearGradient id="flowPipeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#FE70A3" />
+            <stop offset="28%" stopColor="#FE70A3" />
+            <stop offset="48%" stopColor="#FFA048" />
+            <stop offset="78%" stopColor="#FEE140" />
+            <stop offset="100%" stopColor="#A78BFA" />
           </linearGradient>
+
+          {/* Badge Drop Shadows */}
+          <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="150%">
+            <feDropShadow dx="0" dy="8" stdDeviation="12" floodColor="#000000" floodOpacity="0.45" />
+          </filter>
+
+          <filter id="pipeGlow" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
 
           {/* Glow Filters */}
           <filter id="tubularGlow" x="-30%" y="-30%" width="160%" height="160%">
@@ -154,10 +154,10 @@ export default function GradientRibbonFolder({
         {/* ---------------------------------------------------------------------
             SOURCE GLOW NODES (Soft atmospheric ambient glows at screen left edge)
             --------------------------------------------------------------------- */}
-        <circle cx="-10" cy="75" r="55" fill="#00F5D4" opacity="0.22" filter="url(#ambientSourceGlow)" />
-        <circle cx="-10" cy="190" r="65" fill="#A855F7" opacity="0.25" filter="url(#ambientSourceGlow)" />
-        <circle cx="-10" cy="310" r="65" fill="#F59E0B" opacity="0.22" filter="url(#ambientSourceGlow)" />
-        <circle cx="-10" cy="415" r="55" fill="#F43F5E" opacity="0.24" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="35" r="55" fill="#00F5D4" opacity="0.22" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="130" r="65" fill="#A855F7" opacity="0.25" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="250" r="65" fill="#F59E0B" opacity="0.22" filter="url(#ambientSourceGlow)" />
+        <circle cx="-10" cy="355" r="55" fill="#F43F5E" opacity="0.24" filter="url(#ambientSourceGlow)" />
 
         {/* ---------------------------------------------------------------------
             THE 4 CONVERGING 3D GRADIENT RIBBONS
@@ -166,7 +166,7 @@ export default function GradientRibbonFolder({
         
         {/* Ribbon 1: Cyan Loop (Upper Left from start of screen) */}
         <path
-          d="M -30 60 C 260 60 320 230 520 230 C 620 230 690 250 760 255"
+          d="M -30 20 C 260 20 320 170 520 170 C 620 170 690 186 760 191"
           stroke="url(#ribbonCyan)"
           strokeWidth="32"
           strokeLinecap="round"
@@ -174,14 +174,14 @@ export default function GradientRibbonFolder({
           filter="url(#tubularGlow)"
         />
         <path
-          d="M -30 60 C 260 60 320 230 520 230 C 620 230 690 250 760 255"
+          d="M -30 20 C 260 20 320 170 520 170 C 620 170 690 186 760 191"
           stroke="url(#ribbonCyan)"
           strokeWidth="20"
           strokeLinecap="round"
           className="transition-all duration-300 group-hover:stroke-width-[22]"
         />
         <path
-          d="M -30 59 C 260 59 320 229 520 229 C 620 229 690 249 760 254"
+          d="M -30 19 C 260 19 320 169 520 169 C 620 169 690 185 760 190"
           stroke="#FFFFFF"
           strokeWidth="3"
           strokeLinecap="round"
@@ -190,7 +190,7 @@ export default function GradientRibbonFolder({
 
         {/* Ribbon 2: Purple High Arch (Upper Arch from start of screen) */}
         <path
-          d="M -30 190 C 220 160 260 75 440 85 C 600 95 670 225 760 252"
+          d="M -30 130 C 220 100 260 25 440 35 C 600 45 670 162 760 188"
           stroke="url(#ribbonPurple)"
           strokeWidth="34"
           strokeLinecap="round"
@@ -198,13 +198,13 @@ export default function GradientRibbonFolder({
           filter="url(#tubularGlow)"
         />
         <path
-          d="M -30 190 C 220 160 260 75 440 85 C 600 95 670 225 760 252"
+          d="M -30 130 C 220 100 260 25 440 35 C 600 45 670 162 760 188"
           stroke="url(#ribbonPurple)"
           strokeWidth="22"
           strokeLinecap="round"
         />
         <path
-          d="M -30 189 C 220 159 260 74 440 84 C 600 94 670 224 760 251"
+          d="M -30 129 C 220 99 260 24 440 34 C 600 44 670 161 760 187"
           stroke="#FFFFFF"
           strokeWidth="3.5"
           strokeLinecap="round"
@@ -213,7 +213,7 @@ export default function GradientRibbonFolder({
 
         {/* Ribbon 3: Amber / Yellow Mid Ribbon (from start of screen) */}
         <path
-          d="M -30 310 C 260 310 380 195 540 215 C 620 225 690 250 760 258"
+          d="M -30 250 C 260 250 380 135 540 155 C 620 165 690 188 760 194"
           stroke="url(#ribbonAmber)"
           strokeWidth="30"
           strokeLinecap="round"
@@ -221,13 +221,13 @@ export default function GradientRibbonFolder({
           filter="url(#tubularGlow)"
         />
         <path
-          d="M -30 310 C 260 310 380 195 540 215 C 620 225 690 250 760 258"
+          d="M -30 250 C 260 250 380 135 540 155 C 620 165 690 188 760 194"
           stroke="url(#ribbonAmber)"
           strokeWidth="19"
           strokeLinecap="round"
         />
         <path
-          d="M -30 309 C 260 309 380 194 540 214 C 620 224 690 249 760 257"
+          d="M -30 249 C 260 249 380 134 540 154 C 620 164 690 187 760 193"
           stroke="#FFFFFF"
           strokeWidth="3"
           strokeLinecap="round"
@@ -236,7 +236,7 @@ export default function GradientRibbonFolder({
 
         {/* Ribbon 4: Hot Coral Bottom Curve (from start of screen) */}
         <path
-          d="M -30 430 C 240 430 320 370 460 370 C 580 370 670 290 760 262"
+          d="M -30 370 C 240 370 320 310 460 310 C 580 310 670 230 760 198"
           stroke="url(#ribbonCoral)"
           strokeWidth="36"
           strokeLinecap="round"
@@ -244,13 +244,13 @@ export default function GradientRibbonFolder({
           filter="url(#tubularGlow)"
         />
         <path
-          d="M -30 430 C 240 430 320 370 460 370 C 580 370 670 290 760 262"
+          d="M -30 370 C 240 370 320 310 460 310 C 580 310 670 230 760 198"
           stroke="url(#ribbonCoral)"
           strokeWidth="24"
           strokeLinecap="round"
         />
         <path
-          d="M -30 429 C 240 429 320 369 460 369 C 580 369 670 289 760 261"
+          d="M -30 369 C 240 369 320 309 460 309 C 580 309 670 229 760 197"
           stroke="#FFFFFF"
           strokeWidth="4"
           strokeLinecap="round"
@@ -258,24 +258,169 @@ export default function GradientRibbonFolder({
         />
 
         {/* ---------------------------------------------------------------------
-            THE HORIZONTAL EXPANDING AMBIENT LIGHT SPREAD (Outer Fan Only)
-            Centered at the exact vertical midpoint of the folder (y = 224)
-            Shoots straight out to the Far Right Screen Edge (x = 1640)
+            CYBER SECURITY PIPELINE (ShadowLens Evidential Flow)
+            Replaces the empty light beam with a clean, connected security pipeline
+            --------------------------------------------------------------------- */}
+
+        {/* The Smooth Connecting Flow Pipes (Pink -> Orange -> Yellow -> Purple) */}
+        {/* Segment 1: Origin from folder right edge towards Decode */}
+        <path
+          d="M 915 192 L 965 192 Q 1005 192 1005 160 L 1005 100 Q 1005 65 1040 65 L 1070 65"
+          stroke="url(#flowPipeGradient)"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+          filter="url(#pipeGlow)"
+        />
+        {/* Segment 2: Downwards curve to Analyze */}
+        <path
+          d="M 1005 130 L 1005 250 Q 1005 284 1035 284 L 1065 284"
+          stroke="url(#flowPipeGradient)"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+          filter="url(#pipeGlow)"
+        />
+        {/* Segment 3: Analyze to Verify */}
+        <path
+          d="M 1235 284 L 1300 284 Q 1340 284 1340 250 L 1340 145 Q 1340 114 1375 114 L 1400 114"
+          stroke="url(#flowPipeGradient)"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+          filter="url(#pipeGlow)"
+        />
+        {/* Segment 4: Verify to Shield */}
+        <path
+          d="M 1500 114 L 1525 114 Q 1550 114 1550 145 L 1550 250 Q 1550 284 1525 284 L 1495 284"
+          stroke="url(#flowPipeGradient)"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          fill="none"
+          filter="url(#pipeGlow)"
+        />
+
+        {/* Sleek Cyber Junction Nodes (No cartoon avatars) */}
+        <g filter="url(#pipeGlow)">
+          <circle cx="1005" cy="130" r="8" fill="#080A10" stroke="#FE70A3" strokeWidth="2.5" />
+          <circle cx="1005" cy="130" r="3.2" fill="#FE70A3" />
+
+          <circle cx="1270" cy="284" r="8" fill="#080A10" stroke="#FFA048" strokeWidth="2.5" />
+          <circle cx="1270" cy="284" r="3.2" fill="#FFA048" />
+
+          <circle cx="1550" cy="199" r="8" fill="#080A10" stroke="#FEE140" strokeWidth="2.5" />
+          <circle cx="1550" cy="199" r="3.2" fill="#FEE140" />
+        </g>
+
+        {/* ---------------------------------------------------------------------
+            THE 4 CURATED CYBER SECURITY BADGES (Decode -> Analyze -> Verify -> Shield)
             --------------------------------------------------------------------- */}
         
-        {/* Outer Atmospheric Haze Cone (Shifted slightly down to y = 236) */}
-        <polygon
-          points="800,236 1640,26 1640,446"
-          fill="url(#ambientLaserCone)"
-          filter="url(#atmosphericHaze)"
-          opacity="0.85"
-        />
+        {/* Stage 1: Decode (Pink) - Barcode & payload extraction */}
+        <g filter="url(#badgeShadow)" className="cursor-pointer transition-transform duration-200 hover:scale-105">
+          <rect
+            x="1070"
+            y="30"
+            width="170"
+            height="68"
+            rx="24"
+            ry="24"
+            fill="#FE70A3"
+          />
+          <text
+            x="1155"
+            y="75"
+            textAnchor="middle"
+            fontFamily="'Plus Jakarta Sans', -apple-system, sans-serif"
+            fontSize="28"
+            fontWeight="800"
+            fill="#080A10"
+            letterSpacing="-0.01em"
+          >
+            Decode
+          </text>
+        </g>
+
+        {/* Stage 2: Analyze (Warm Amber) - Multi-modal heuristics */}
+        <g filter="url(#badgeShadow)" className="cursor-pointer transition-transform duration-200 hover:scale-105">
+          <rect
+            x="1065"
+            y="250"
+            width="170"
+            height="68"
+            rx="24"
+            ry="24"
+            fill="#FFA048"
+          />
+          <text
+            x="1150"
+            y="295"
+            textAnchor="middle"
+            fontFamily="'Plus Jakarta Sans', -apple-system, sans-serif"
+            fontSize="28"
+            fontWeight="800"
+            fill="#080A10"
+            letterSpacing="-0.01em"
+          >
+            Analyze
+          </text>
+        </g>
+
+        {/* Stage 3: Verify (Sunny Yellow) - Dirichlet evidential consensus */}
+        <g filter="url(#badgeShadow)" className="cursor-pointer transition-transform duration-200 hover:scale-105">
+          <rect
+            x="1400"
+            y="80"
+            width="155"
+            height="68"
+            rx="24"
+            ry="24"
+            fill="#FEE140"
+          />
+          <text
+            x="1477"
+            y="125"
+            textAnchor="middle"
+            fontFamily="'Plus Jakarta Sans', -apple-system, sans-serif"
+            fontSize="28"
+            fontWeight="800"
+            fill="#080A10"
+            letterSpacing="-0.01em"
+          >
+            Verify
+          </text>
+        </g>
+
+        {/* Stage 4: Shield (Lavender) - Threat neutralization & isolation */}
+        <g filter="url(#badgeShadow)" className="cursor-pointer transition-transform duration-200 hover:scale-105">
+          <rect
+            x="1380"
+            y="250"
+            width="155"
+            height="68"
+            rx="24"
+            ry="24"
+            fill="#A78BFA"
+          />
+          <text
+            x="1457"
+            y="295"
+            textAnchor="middle"
+            fontFamily="'Plus Jakarta Sans', -apple-system, sans-serif"
+            fontSize="28"
+            fontWeight="800"
+            fill="#080A10"
+            letterSpacing="-0.01em"
+          >
+            Shield
+          </text>
+        </g>
       </svg>
 
       {/* =========================================================================
           THE MACOS FROSTED FOLDER (Positioned at Convergence Point)
           ========================================================================= */}
-      <div className="relative z-10 flex flex-col items-center my-auto pt-6">
+      <div className="relative z-10 flex flex-col items-center justify-center my-auto pt-0">
         
         {/* Only clicking directly on the folder (or text below) triggers file selection */}
         <div

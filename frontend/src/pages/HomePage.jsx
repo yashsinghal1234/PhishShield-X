@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import GnosisSteppedDither from '../components/GnosisSteppedDither';
-import PhysicalLoopRibbon from '../components/PhysicalLoopRibbon';
+import ThreatToCertaintyWire from '../components/ThreatToCertaintyWire';
 import LinguisticLimitsSection from '../components/LinguisticLimitsSection';
 import UniqodeBentoCollage from '../components/UniqodeBentoCollage';
 import KeyValuesAndPerformanceSection from '../components/KeyValuesAndPerformanceSection';
@@ -40,9 +40,10 @@ export default function HomePage() {
       </section>
 
       {/* =========================================================================
-          SECTION 2: PHYSICAL LOOP TELEMETRY RIBBON (27flows Editorial Aesthetic)
+          SECTION 2: ADVERSARIAL THREAT TO MATHEMATICAL CERTAINTY PROCESS WIRE
+          Curated editorial artwork inspired by the iconic non-linear design graphic
           ========================================================================= */}
-      <PhysicalLoopRibbon />
+      <ThreatToCertaintyWire />
 
       {/* =========================================================================
           SECTION 3: LINGUISTIC LIMITS EDITORIAL ARTWORK SECTION (NOT A CARD)

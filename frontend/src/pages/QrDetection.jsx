@@ -174,10 +174,10 @@ export default function QrDetection() {
   const payloadUrl = getCleanPayload(result);
 
   return (
-    <div className="max-w-5xl mx-auto py-8 sm:py-12 space-y-10 font-['Plus_Jakarta_Sans'] animate-in fade-in duration-300 pb-16">
+    <div className="max-w-5xl mx-auto pt-2 sm:pt-4 pb-16 space-y-3 font-['Plus_Jakarta_Sans'] animate-in fade-in duration-300">
       
       {/* Clean Minimalist Header */}
-      <div className="text-center space-y-3">
+      <div className="text-center space-y-2">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white">
           QR Phishing (Quishing) Defense
         </h1>
@@ -187,7 +187,7 @@ export default function QrDetection() {
       </div>
 
       {/* 3D Gradient Ribbons + Centerpiece macOS Folder - Full Screen Edge-to-Edge */}
-      <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden my-4">
+      <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden mt-4 sm:mt-6 mb-2">
         <GradientRibbonFolder
           file={file}
           preview={preview}
