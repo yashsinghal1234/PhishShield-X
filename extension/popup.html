@@ -3,87 +3,197 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PhishShield-EDL Shield</title>
+  <title>ShadowLens Security Shield</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #38bdf8;
-      --safe: #10b981;
-      --warn: #f59e0b;
-      --danger: #ef4444;
+      --bg: #080A0F;
+      --card: #0F1420;
+      --card-inner: #141A28;
+      --border: #1E2533;
+      --border-light: rgba(255, 255, 255, 0.08);
+      --text: #F1F5F9;
+      --muted: #94A3B8;
+      --primary: #38BDF8;
+      --blue: #0047FF;
+      --safe: #10B981;
+      --warn: #F59E0B;
+      --danger: #EF4444;
+      --purple: #A855F7;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
     body {
-      margin: 0;
-      padding: 16px;
-      width: 320px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 340px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
       background: var(--bg);
       color: var(--text);
+      padding: 16px;
+      margin: 0;
+      overflow-x: hidden;
+      user-select: none;
     }
+
+    /* Ambient Background Glow */
+    .ambient-glow {
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 80px;
+      background: radial-gradient(ellipse, rgba(56, 189, 248, 0.15), transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Brand Header */
     .header {
+      position: relative;
+      z-index: 1;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 10px;
-      margin-bottom: 12px;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
     }
-    .header h1 {
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.35));
+    }
+    .brand-title {
       font-size: 14px;
-      margin: 0;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 9.5px;
       font-weight: 700;
-      color: var(--primary);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34D399;
     }
-    .badge-mv3 {
-      font-size: 10px;
-      background: #0284c7;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 600;
+    .pulse-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 6px #10B981;
+      animation: pulse 2s infinite;
     }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Target URL Chip */
     .url-chip {
+      position: relative;
       background: var(--card);
-      padding: 6px 10px;
-      border-radius: 6px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
       font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       margin-bottom: 12px;
-      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+    .url-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--primary);
+      flex-shrink: 0;
+    }
+
+    /* Primary Evidential Verdict Box */
     .verdict-box {
+      position: relative;
       text-align: center;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 16px 12px;
+      border-radius: 12px;
       margin-bottom: 12px;
       border: 1px solid transparent;
-      transition: all 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .verdict-box.safe { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.4); }
-    .verdict-box.safe .title { color: var(--safe); }
-    .verdict-box.suspicious { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.4); }
-    .verdict-box.suspicious .title { color: var(--warn); }
-    .verdict-box.phishing { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.4); }
-    .verdict-box.phishing .title { color: var(--danger); }
+    .verdict-box.safe {
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.14) 0%, rgba(16, 185, 129, 0.04) 100%);
+      border-color: rgba(16, 185, 129, 0.45);
+      box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.15);
+    }
+    .verdict-box.safe .title { color: #34D399; }
+    .verdict-box.suspicious {
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.14) 0%, rgba(245, 158, 11, 0.04) 100%);
+      border-color: rgba(245, 158, 11, 0.45);
+      box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.15);
+    }
+    .verdict-box.suspicious .title { color: #FBBF24; }
+    .verdict-box.phishing {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.16) 0%, rgba(239, 68, 68, 0.04) 100%);
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 4px 20px -2px rgba(239, 68, 68, 0.2);
+    }
+    .verdict-box.phishing .title { color: #F87171; }
+
     .verdict-box .title {
       font-size: 16px;
-      font-weight: 800;
+      font-weight: 900;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 1px;
       margin-bottom: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
     .verdict-box .subtitle {
-      font-size: 12px;
-      color: var(--muted);
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.4;
     }
+
+    /* Embedded QR Barcode Alert */
+    .qr-alert {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      color: #FCA5A5;
+      font-size: 11px;
+    }
+    .qr-alert-badge {
+      display: inline-block;
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #F87171;
+      margin-bottom: 3px;
+    }
+
+    /* Telemetry 2-Card Grid */
     .metrics-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -93,102 +203,144 @@
     .metric-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px;
+      border-radius: 8px;
+      padding: 9px 8px;
       text-align: center;
     }
     .metric-card .val {
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 800;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       color: #fff;
     }
     .metric-card .lbl {
-      font-size: 10px;
+      font-size: 9.5px;
+      font-weight: 600;
       color: var(--muted);
       margin-top: 2px;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
+
+    /* Dirichlet Uncertainty Gauge */
     .uncertainty-section {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px;
+      border-radius: 10px;
+      padding: 11px 12px;
       margin-bottom: 12px;
     }
-    .uncertainty-label-bar {
+    .uncertainty-header {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       font-size: 11px;
-      margin-bottom: 6px;
+      margin-bottom: 7px;
+    }
+    .uncertainty-title {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 10.5px;
+    }
+    .uncertainty-score {
+      font-weight: 800;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
     }
     .progress-bar {
       height: 6px;
-      background: #334155;
-      border-radius: 3px;
+      background: #1E2533;
+      border-radius: 9999px;
       overflow: hidden;
     }
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+      background: linear-gradient(90deg, #10B981 0%, #38BDF8 50%, #EF4444 100%);
       width: 0%;
-      transition: width 0.3s ease;
+      border-radius: 9999px;
+      transition: width 0.4s ease;
     }
+    .uncertainty-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* Action Buttons */
     .btn-override {
       width: 100%;
-      background: transparent;
-      border: 1px solid #64748b;
-      color: #cbd5e1;
-      padding: 8px;
-      border-radius: 6px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: #CBD5E1;
+      padding: 9px 12px;
+      border-radius: 8px;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.02em;
       cursor: pointer;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
     .btn-override:hover {
-      background: #334155;
+      background: #1E2533;
       color: #fff;
-      border-color: #94a3b8;
+      border-color: #38BDF8;
     }
+
+    /* Legal / Telemetry Notice */
     .irb-note {
       font-size: 9px;
-      color: #64748b;
+      color: #475569;
       text-align: center;
-      margin-top: 8px;
-      line-height: 1.3;
-    }
-    .qr-alert {
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      border-radius: 6px;
-      padding: 8px;
-      margin-bottom: 12px;
-      color: #fca5a5;
+      margin-top: 10px;
+      line-height: 1.35;
     }
   </style>
 </head>
 <body>
+  <div class="ambient-glow"></div>
+
+  <!-- Header -->
   <div class="header">
-    <h1>PHISHSHIELD-EDL</h1>
-    <span class="badge-mv3">SHADOW MV3</span>
+    <div class="brand-wrap">
+      <img src="icons/icon48.png" alt="ShadowLens Mascot" class="brand-logo" />
+      <span class="brand-title">SHADOWLENS</span>
+    </div>
+    <div class="status-badge">
+      <span class="pulse-dot"></span>
+      <span>ACTIVE DEFENSE</span>
+    </div>
   </div>
 
-  <div class="url-chip" id="url-text">Checking active tab...</div>
+  <!-- Active Target URL Chip -->
+  <div class="url-chip">
+    <span class="url-dot"></span>
+    <span id="url-text">Checking active tab...</span>
+  </div>
 
+  <!-- Main Verdict Card -->
   <div class="verdict-box safe" id="verdict-box">
     <div class="title" id="verdict-title">ANALYZING...</div>
-    <div class="subtitle" id="verdict-subtitle">Querying neural consensus</div>
+    <div class="subtitle" id="verdict-subtitle">Querying neural consensus &amp; certificate transparency</div>
   </div>
 
+  <!-- Embedded QR Code Alert (Hidden by default) -->
   <div class="qr-alert" id="qr-alert" style="display:none;">
-    <div style="font-weight:800; font-size:11px; letter-spacing:0.5px;">⚠ QR FOUND ON PAGE</div>
-    <div id="qr-alert-text" style="font-size:10px; margin-top:3px; line-height:1.4; opacity:0.9;"></div>
+    <div class="qr-alert-badge">⚠ Embedded QR Vector Detected</div>
+    <div id="qr-alert-text"></div>
   </div>
 
+  <!-- Metrics Grid -->
   <div class="metrics-grid">
     <div class="metric-card">
       <div class="val" id="val-conf">--%</div>
-      <div class="lbl">Legacy Conf</div>
+      <div class="lbl">Model Confidence</div>
     </div>
     <div class="metric-card">
       <div class="val" id="val-lat">-- ms</div>
@@ -196,22 +348,29 @@
     </div>
   </div>
 
+  <!-- Epistemic Uncertainty Gauge -->
   <div class="uncertainty-section">
-    <div class="uncertainty-label-bar">
-      <span>Epistemic Uncertainty (u)</span>
-      <span id="val-u" style="font-weight: 700;">--</span>
+    <div class="uncertainty-header">
+      <span class="uncertainty-title">Epistemic Uncertainty (u)</span>
+      <span class="uncertainty-score" id="val-u">--</span>
     </div>
     <div class="progress-bar">
       <div class="progress-fill" id="u-bar"></div>
     </div>
-    <div style="display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); margin-top: 4px;">
-      <span>Dirichlet Strength (S): <strong id="val-s">--</strong></span>
-      <span>Head: Cosine EDL</span>
+    <div class="uncertainty-footer">
+      <span>Evidence Strength: <strong id="val-s" style="color:#F1F5F9;">--</strong></span>
+      <span>Head: Dirichlet EDL</span>
     </div>
   </div>
 
-  <button class="btn-override" id="btn-override">Flag / Report Override</button>
-  <div class="irb-note">Field ECE Study: Anonymous SHA-256 telemetry logged for epistemic reliability validation.</div>
+  <!-- Action Button -->
+  <button class="btn-override" id="btn-override">
+    <span>⚑ Report False Positive / Security Feedback</span>
+  </button>
+
+  <div class="irb-note">
+    ShadowLens Autonomous Defense // Epistemic Uncertainty &amp; Zero-Day Isolation
+  </div>
 
   <script src="popup.js"></script>
 </body>

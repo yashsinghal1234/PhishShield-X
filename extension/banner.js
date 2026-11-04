@@ -55,8 +55,8 @@
     const title = document.createElement("div");
     title.style.cssText = "font-weight:700; letter-spacing:0.3px;";
     title.innerText = isDanger
-      ? "PhishShield-EDL: CONFIRMED PHISHING THREAT"
-      : "PhishShield-EDL: Suspicious / Evidentially Uncertain Site";
+      ? "ShadowLens: CONFIRMED PHISHING THREAT"
+      : "ShadowLens: Suspicious / Evidentially Uncertain Site";
     const meta = document.createElement("div");
     meta.style.cssText = "opacity:0.85; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;";
     const u = typeof rec.edl_uncertainty === "number" ? rec.edl_uncertainty.toFixed(2) : "--";

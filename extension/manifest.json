@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "PhishShield-EDL Shield",
-  "version": "1.2.0",
-  "description": "Evidential deep learning browser security with real-time epistemic uncertainty, tier-1 block interstitial, and field ECE telemetry.",
+  "name": "ShadowLens // AI Threat Shield",
+  "version": "1.3.0",
+  "description": "Real-time evidential neural browser protection against phishing URLs, quishing QR barcodes, and zero-day threats with Dirichlet uncertainty bounds.",
   "permissions": [
     "storage",
     "tabs",
@@ -32,7 +32,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "PhishShield-EDL",
+    "default_title": "ShadowLens Security",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

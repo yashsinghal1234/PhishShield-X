@@ -90,15 +90,20 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#080A0F]/95 backdrop-blur-md border-b border-[#1E2533]/80 transition-colors">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-[#080A0F]/90 backdrop-blur-md border-b border-[#1E2533]/80 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
         {/* Left: Brand Icon + Name + Dot Matrix Nav Links */}
-        <div className="flex items-center gap-10">
+        <div className="flex items-center gap-8 sm:gap-10">
           {/* Brand Link */}
-          <Link to="/" className="flex items-center group">
+          <Link to="/" className="flex items-center gap-3 group">
+            <img
+              src="/shadowlens-logo.png"
+              alt="ShadowLens Mascot"
+              className="w-9 h-9 shrink-0 object-contain drop-shadow-[0_2px_8px_rgba(56,189,248,0.25)] transition-transform duration-200 group-hover:scale-105"
+            />
             <span className="font-['Plus_Jakarta_Sans'] text-xl sm:text-2xl font-bold tracking-tight text-white hover:text-white/90 transition-colors">
-              PhishShield
+              ShadowLens
             </span>
           </Link>
 

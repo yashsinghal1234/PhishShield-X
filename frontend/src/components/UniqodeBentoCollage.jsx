@@ -50,7 +50,7 @@ export default function UniqodeBentoCollage({ onLaunchScan }) {
             </button>
 
             <span className="font-['Silkscreen'] text-[10px] sm:text-[11px] tracking-[0.16em] uppercase text-white/80">
-              PHISHSHIELD.COM
+              SHADOWLENS.AI
             </span>
           </div>
         </div>
@@ -69,13 +69,16 @@ export default function UniqodeBentoCollage({ onLaunchScan }) {
           <PixelWorldMap />
         </div>
 
-        {/* CARD 4: Blue Card with White Flower Loop Logo + PHISHSHIELD (Cols 5-8) */}
+        {/* CARD 4: Blue Card with Mascot Logo + SHADOWLENS (Cols 5-8) */}
         <div className="md:col-span-4 rounded-[24px] bg-[#0047FF] text-white p-5 flex items-center justify-center min-h-[165px] sm:min-h-[185px] shadow-md shadow-[#0047FF]/15">
-          <div className="flex items-center gap-3">
-            {/* Preserved exact Uniqode geometric flower/knot loop logo */}
-            <UniqodeLogo size={42} showText={false} light={true} />
-            <span className="font-['Plus_Jakarta_Sans'] text-xl sm:text-2xl font-extrabold tracking-[0.24em] uppercase text-white">
-              PHISHSHIELD
+          <div className="flex items-center gap-3.5">
+            <img
+              src="/shadowlens-logo.png"
+              alt="ShadowLens Mascot"
+              className="w-12 h-12 object-contain drop-shadow-md"
+            />
+            <span className="font-['Plus_Jakarta_Sans'] text-xl sm:text-2xl font-extrabold tracking-[0.2em] uppercase text-white">
+              SHADOWLENS
             </span>
           </div>
         </div>

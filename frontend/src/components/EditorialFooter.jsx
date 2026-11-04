@@ -224,10 +224,11 @@ export default function EditorialFooter({ onLaunchScan }) {
           
           {/* Hatched Ticket Notch Tab (Left) */}
           <div className="col-span-2 md:col-span-2 border-b md:border-b-0 md:border-r border-[#0A0D14]/15 p-4 sm:p-6 flex items-center justify-center relative bg-[repeating-linear-gradient(45deg,_rgba(10,13,20,0.08)_0px,_rgba(10,13,20,0.08)_2px,_transparent_2px,_transparent_6px)]">
-            {/* Center diamond/flower logo mark */}
-            <div className="w-9 h-9 rotate-45 border-2 border-[#0A0D14] flex items-center justify-center bg-[#0047FF] shadow-sm">
-              <div className="w-3.5 h-3.5 bg-[#0A0D14]" />
-            </div>
+            <img
+              src="/shadowlens-logo.png"
+              alt="ShadowLens Mascot"
+              className="w-11 h-11 object-contain drop-shadow-md"
+            />
           </div>
 
           {/* Metric 1: Active Status */}
@@ -253,7 +254,7 @@ export default function EditorialFooter({ onLaunchScan }) {
           {/* Description Paragraph (Right) */}
           <div className="col-span-2 md:col-span-5 p-4 sm:p-6 flex items-center">
             <p className="font-mono text-[10.5px] sm:text-[11.5px] text-[#0A0D14]/85 leading-relaxed tracking-tight">
-              PhishShield is an autonomous evidential threat intelligence operator. It cross-examines URL lexical patterns, ViT QR barcodes, and email consensus automatically, with mathematical uncertainty bounds.
+              ShadowLens is an autonomous evidential threat intelligence operator. It cross-examines URL lexical patterns, ViT QR barcodes, and email consensus automatically, with mathematical uncertainty bounds.
             </p>
           </div>
 
@@ -268,7 +269,7 @@ export default function EditorialFooter({ onLaunchScan }) {
               textShadow: '0 2px 40px rgba(0,0,0,0.1)'
             }}
           >
-            PhishShield
+            ShadowLens
           </h1>
         </div>
 
@@ -280,7 +281,7 @@ export default function EditorialFooter({ onLaunchScan }) {
       <div className="border-b border-l border-r border-[#1E2533] bg-[#07090E] px-5 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10.5px] font-['Silkscreen'] tracking-[0.14em] uppercase text-white/40">
         
         <div className="flex items-center gap-3">
-          <span>© PHISHSHIELD AI, 2026</span>
+          <span>© SHADOWLENS AI, 2026</span>
           <span className="text-white/15 hidden md:inline">::::::::::::::::::::::::::</span>
         </div>
 

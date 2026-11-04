@@ -22,7 +22,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
-        <div className="min-h-screen bg-[#080A0F] text-[#F1F5F9] font-['Plus_Jakarta_Sans'] overflow-x-hidden flex flex-col justify-between">
+        <div className="min-h-screen bg-[#080A0F] text-[#F1F5F9] font-['Plus_Jakarta_Sans'] overflow-x-hidden flex flex-col justify-between pt-20">
           <Navbar />
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 flex flex-col justify-between">
             <Routes>
