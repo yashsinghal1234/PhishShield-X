@@ -67,8 +67,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       sensorCore.className = isPhish ? "sensor-core phishing" : isUncertain ? "sensor-core suspicious" : "sensor-core";
     }
     if (liveDot) {
-      liveDot.style.background = isPhish ? "#EF4444" : isUncertain ? "#F59E0B" : "#00E5FF";
-      liveDot.style.boxShadow = isPhish ? "0 0 10px #EF4444" : isUncertain ? "0 0 10px #F59E0B" : "0 0 10px #00E5FF";
+      liveDot.style.background = isPhish ? "#EF4444" : isUncertain ? "#F59E0B" : "#D4F838";
+      liveDot.style.boxShadow = isPhish ? "0 0 10px #EF4444" : isUncertain ? "0 0 10px #F59E0B" : "0 0 10px #D4F838";
     }
     if (cardStatusLabel) {
       cardStatusLabel.innerText = isPhish ? "Danger Blocked" : isUncertain ? "Uncertain Drift" : "Protected";
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         btnOverride.innerText = "⚑ Report False Positive / Feedback";
         btnOverride.disabled = false;
-        btnOverride.style.borderColor = "rgba(0, 229, 255, 0.35)";
+        btnOverride.style.borderColor = "rgba(255, 255, 255, 0.25)";
         btnOverride.style.color = "#FFFFFF";
       }
     }
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const isPhish = data.prediction === "Phishing";
       const isUnc = !isPhish && (data.edl_uncertainty >= 0.35);
       const badgeText = isPhish ? "PHISH" : isUnc ? "UNC" : "OK";
-      const badgeColor = isPhish ? "#EF4444" : isUnc ? "#F59E0B" : "#00E5FF";
+      const badgeColor = isPhish ? "#EF4444" : isUnc ? "#F59E0B" : "#D4F838";
 
       chrome.action.setBadgeText({ tabId: activeTab.id, text: badgeText });
       chrome.action.setBadgeBackgroundColor({ tabId: activeTab.id, color: badgeColor });
@@ -335,16 +335,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       }, (resp) => {
         if (resp && resp.status === "snoozed_24h") {
           btnOverride.innerText = "Snoozed for 24h (Active)";
-          btnOverride.style.borderColor = "#00E5FF";
-          btnOverride.style.color = "#00E5FF";
+          btnOverride.style.borderColor = "#D4F838";
+          btnOverride.style.color = "#D4F838";
         } else if (resp && resp.status === "rejected") {
           btnOverride.innerText = "Rejected: " + resp.reason;
           btnOverride.style.borderColor = "#EF4444";
           btnOverride.style.color = "#EF4444";
         } else {
           btnOverride.innerText = "Feedback Logged";
-          btnOverride.style.borderColor = "#00E5FF";
-          btnOverride.style.color = "#00E5FF";
+          btnOverride.style.borderColor = "#D4F838";
+          btnOverride.style.color = "#D4F838";
         }
       });
     });

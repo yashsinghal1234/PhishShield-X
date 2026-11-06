@@ -84,6 +84,8 @@ export default function EmailDetection() {
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
+  const [isCursorInside, setIsCursorInside] = useState(false);
   const fileInputRef = useRef(null);
   const resultsRef = useRef(null);
 
@@ -246,33 +248,43 @@ export default function EmailDetection() {
           onClick={() => {
             if (!file && !loading) fileInputRef.current?.click();
           }}
-          className={`relative group rounded-t-[32px] bg-[#DDD9C8] p-4 sm:p-7 border-t-2 border-l-2 border-[#FFFFFF] border-r-4 border-b-4 border-[#8B8676] shadow-2xl transition-all duration-300 ${
-            !file && !loading ? 'cursor-pointer hover:shadow-blue-900/30' : ''
+          style={{ cursor: 'none' }}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setCursorPos({
+              x: e.clientX - rect.left,
+              y: e.clientY - rect.top,
+            });
+          }}
+          onMouseEnter={() => setIsCursorInside(true)}
+          onMouseLeave={() => setIsCursorInside(false)}
+          className={`relative group rounded-t-[32px] bg-[#DDD9C8] p-4 sm:p-6 border-t-2 border-l-2 border-[#FFFFFF] border-r-4 border-b-4 border-[#8B8676] shadow-2xl transition-all duration-300 overflow-hidden cursor-none [&_*]:!cursor-none ${
+            !file && !loading ? 'hover:shadow-blue-900/30' : ''
           } ${isDragOver ? 'ring-4 ring-cyan-400 scale-[1.01]' : ''}`}
         >
           {/* Top Cooling Ventilation Louvers */}
-          <div className="flex justify-center gap-2 mb-3.5 opacity-60">
+          <div className="flex justify-center gap-2 mb-3 opacity-60">
             <div className="w-10 h-1 bg-[#8B8676] rounded-full"></div>
             <div className="w-16 h-1 bg-[#8B8676] rounded-full"></div>
             <div className="w-16 h-1 bg-[#8B8676] rounded-full"></div>
             <div className="w-10 h-1 bg-[#8B8676] rounded-full"></div>
           </div>
 
-          {/* Recessed Dark CRT Monitor Bezel */}
-          <div className="rounded-[22px] bg-[#161B26] p-3 sm:p-5 border-4 border-[#9E9988] shadow-[inset_0_4px_16px_rgba(0,0,0,0.85)] relative overflow-hidden">
+          {/* Recessed CRT Monitor Bezel (Trimmed Black Margin, Maximized Screen Area) */}
+          <div className="rounded-[20px] bg-[#0A1020] p-1.5 sm:p-2 border-2 border-[#8B8676] shadow-[inset_0_2px_10px_rgba(0,0,0,0.7)] relative overflow-hidden">
             
-            {/* The CRT Glass Screen Display */}
+            {/* The CRT Glass Screen Display (Rich Luminous Blue Screen) */}
             <div
-              className={`relative rounded-xl overflow-hidden min-h-[290px] sm:min-h-[330px] flex flex-col items-center justify-center p-4 sm:p-6 text-center transition-all duration-300 ${
+              className={`relative rounded-xl overflow-hidden min-h-[300px] sm:min-h-[340px] flex flex-col items-center justify-center p-4 sm:p-6 text-center transition-all duration-300 ${
                 isDragOver
-                  ? 'bg-gradient-to-b from-[#003BCC] via-[#0047FF] to-[#002FA8] ring-4 ring-cyan-300'
-                  : 'bg-gradient-to-b from-[#002FA8] via-[#00227D] to-[#00144D]'
+                  ? 'bg-gradient-to-b from-[#0055FF] via-[#0040E0] to-[#0028A8] ring-4 ring-cyan-300'
+                  : 'bg-gradient-to-b from-[#0040E0] via-[#002D9C] to-[#001D78] shadow-[inset_0_0_45px_rgba(0,71,255,0.35)]'
               }`}
             >
               {/* CRT Scanline & Curved Vignette Effects */}
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.3)_50%)] bg-[size:100%_4px] pointer-events-none opacity-60 z-10" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(0,10,35,0.75)_100%)] pointer-events-none z-10" />
-              <div className="absolute inset-0 bg-blue-500/10 blur-xl pointer-events-none" />
+              <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[size:100%_4px] pointer-events-none opacity-50 z-10" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,71,255,0.15),rgba(0,20,70,0.45)_100%)] pointer-events-none z-10" />
+              <div className="absolute inset-0 bg-blue-500/15 blur-xl pointer-events-none" />
 
               {/* Glass Diagonal Sheen Reflection */}
               <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/5 rounded-full blur-2xl pointer-events-none" />
@@ -306,44 +318,66 @@ export default function EmailDetection() {
                   </div>
                 </div>
               ) : !file ? (
-                /* CASE 2: IDLE STATE -> AUTHENTIC 3D OPENING RETRO ENVELOPE */
+                /* CASE 2: IDLE STATE -> AUTHENTIC 3D OPENING RETRO ENVELOPE (FIGMA VECTOR GRADE) */
                 <div className="relative z-20 flex flex-col items-center justify-center w-full py-2">
                   
                   {/* Interactive Envelope Housing */}
                   <div
-                    className="relative w-48 sm:w-56 h-32 sm:h-36 flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
-                    style={{ perspective: '800px' }}
+                    className="relative w-52 sm:w-60 h-34 sm:h-38 flex items-center justify-center transition-transform duration-300 group-hover:scale-[1.03]"
+                    style={{ perspective: '1000px' }}
                   >
-                    {/* 1. Envelope Back Base */}
-                    <div className="absolute inset-0 bg-[#001E6C] rounded-[20px] border-[4.5px] border-white box-border z-0 shadow-2xl" />
+                    {/* 1. Envelope Interior / Back Base */}
+                    <div className="absolute inset-0 bg-[#00227D] rounded-[22px] border-[4px] border-white box-border z-0 shadow-2xl overflow-hidden" />
 
-                    {/* 2. Top Flap that rotates up 180° on hover */}
+                    {/* 2. Top Flap that rotates up 180° into the blue screen */}
                     <div
-                      className={`absolute top-0 left-0 w-full h-[72px] origin-top transition-all duration-500 ease-out z-30 ${
+                      className={`absolute inset-0 w-full h-full origin-top transition-all duration-500 ease-in-out z-30 ${
                         isDragOver
-                          ? 'scale-y-[-1] !z-0'
-                          : 'group-hover:scale-y-[-1] group-hover:!z-0'
+                          ? '[transform:rotateX(180deg)] !z-0'
+                          : 'group-hover:[transform:rotateX(180deg)] group-hover:!z-0'
                       }`}
-                      style={{ transformOrigin: 'top center' }}
+                      style={{
+                        transformOrigin: 'top center',
+                        transformStyle: 'preserve-3d',
+                      }}
                     >
-                      <svg viewBox="0 0 210 72" className="w-full h-full block overflow-visible">
+                      {/* Flap Front (facing user when envelope is closed) */}
+                      <svg
+                        viewBox="0 0 210 135"
+                        className="w-full h-full block overflow-visible [backface-visibility:hidden]"
+                      >
                         <polygon
-                          points="4.5,4.5 105,68 205.5,4.5"
+                          points="4,2 105,74 206,2"
                           fill="#002D9C"
                           stroke="#FFFFFF"
-                          strokeWidth="4.5"
+                          strokeWidth="4"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+
+                      {/* Flap Back (faces user when folded up - vibrant blue interior lining) */}
+                      <svg
+                        viewBox="0 0 210 135"
+                        className="w-full h-full block overflow-visible absolute inset-0 [transform:rotateX(180deg)] [backface-visibility:hidden]"
+                      >
+                        <polygon
+                          points="4,133 105,61 206,133"
+                          fill="#00227D"
+                          stroke="#FFFFFF"
+                          strokeWidth="4"
                           strokeLinejoin="round"
                           strokeLinecap="round"
                         />
                       </svg>
                     </div>
 
-                    {/* 3. Emerging Document/Payload (Slides up from inside envelope on hover) */}
+                    {/* 3. Emerging Document/Payload (Figma-type card nested inside envelope) */}
                     <div
-                      className={`absolute left-4 right-4 bottom-2 h-[122px] bg-white rounded-xl shadow-2xl p-2.5 transition-all duration-500 ease-out z-20 flex flex-col justify-between text-left pointer-events-none border border-blue-200 ${
+                      className={`absolute left-0 right-0 mx-auto w-[82%] h-[116px] bottom-1.5 bg-white rounded-xl shadow-2xl p-2.5 transition-all duration-500 ease-out z-10 flex flex-col justify-between text-left pointer-events-none border border-blue-200/90 ${
                         isDragOver
-                          ? '-translate-y-[86px] scale-105 opacity-100 shadow-cyan-500/30'
-                          : 'translate-y-8 opacity-0 group-hover:-translate-y-[84px] group-hover:opacity-100'
+                          ? '-translate-y-[56px] opacity-100 shadow-cyan-500/30'
+                          : 'translate-y-4 opacity-0 group-hover:-translate-y-[54px] group-hover:opacity-100'
                       }`}
                     >
                       <div className="flex items-center justify-between border-b border-blue-100 pb-1">
@@ -361,47 +395,46 @@ export default function EmailDetection() {
                         <div className="h-1 bg-slate-100 rounded w-2/3"></div>
                       </div>
 
-                      <div className="bg-[#0047FF] rounded-md py-1.5 px-2 text-center shadow-xs">
-                        <span className="font-['Silkscreen'] text-[8px] text-white font-bold uppercase tracking-wider block">
+                      <div className="bg-[#0047FF] rounded-md py-1 px-2 text-center shadow-xs">
+                        <span className="font-['Silkscreen'] text-[7.5px] text-white font-bold uppercase tracking-wider block">
                           CLICK TO CHOOSE FILE
                         </span>
                       </div>
                     </div>
 
-                    {/* 4. Front Pocket SVG (Covers lower half of the letter) */}
-                    <svg className="absolute inset-0 w-full h-full z-30 pointer-events-none" viewBox="0 0 210 135">
+                    {/* 4. Front Pocket SVG (Covers lower half of the emerging letter) */}
+                    <svg
+                      className="absolute inset-0 w-full h-full z-20 pointer-events-none overflow-visible"
+                      viewBox="0 0 210 135"
+                    >
                       <path
-                        d="M 4.5 4.5 L 4.5 116 A 15 15 0 0 0 19.5 130.5 L 190.5 130.5 A 15 15 0 0 0 205.5 116 L 205.5 4.5 L 105 70 Z"
-                        fill="#00227D"
+                        d="M 4 2 L 4 116 A 16 16 0 0 0 20 132 L 190 132 A 16 16 0 0 0 206 116 L 206 2 L 105 74 Z"
+                        fill="#0035A8"
                         stroke="#FFFFFF"
-                        strokeWidth="4.5"
+                        strokeWidth="4"
                         strokeLinejoin="round"
                       />
-                      <line x1="4.5" y1="126" x2="80" y2="76" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" opacity="0.35" />
-                      <line x1="205.5" y1="126" x2="130" y2="76" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" opacity="0.35" />
+                      <line
+                        x1="4"
+                        y1="126"
+                        x2="80"
+                        y2="76"
+                        stroke="#FFFFFF"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        opacity="0.35"
+                      />
+                      <line
+                        x1="206"
+                        y1="126"
+                        x2="130"
+                        y2="76"
+                        stroke="#FFFFFF"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        opacity="0.35"
+                      />
                     </svg>
-
-                    {/* 5. Pixel Pointer Hand from Reference Image */}
-                    <div className="absolute -right-3 -bottom-2 z-40 pointer-events-none transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
-                      <div className="relative">
-                        <svg
-                          width="36"
-                          height="36"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          className="filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
-                        >
-                          <path
-                            d="M9 2v9l-2-2-1.5 1.5 4.5 4.5h5l2.5-5v-5h-2v3h-1.5v-5h-2v5h-1.5v-7h-2z"
-                            fill="#FFFFFF"
-                            stroke="#000000"
-                            strokeWidth="1.2"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <span className="absolute -top-1 -right-1 text-yellow-300 text-[10px] animate-ping font-bold">✦</span>
-                      </div>
-                    </div>
 
                   </div>
 
@@ -495,6 +528,39 @@ export default function EmailDetection() {
               PHISHSHIELD // CRT-84
             </span>
           </div>
+
+          {/* Figma Live Multiplayer Cursor Overlay */}
+          {isCursorInside && (
+            <div
+              className="absolute pointer-events-none z-50 select-none transition-transform duration-75 ease-out"
+              style={{
+                left: cursorPos.x,
+                top: cursorPos.y,
+              }}
+            >
+              {/* Figma Vector Selection Arrow */}
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="filter drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"
+              >
+                <path
+                  d="M4 2L18.5 11L12 13L9 19.5L4 2Z"
+                  fill="#0047FF"
+                  stroke="#FFFFFF"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                />
+              </svg>
+
+              {/* Figma User Tag Badge */}
+              <div className="absolute left-3.5 top-3.5 px-2 py-0.5 rounded-md bg-[#0047FF] text-white text-[10.5px] font-['Plus_Jakarta_Sans'] font-bold tracking-tight shadow-xl shadow-[#0047FF]/50 border border-white/30 whitespace-nowrap">
+                <span>Yash Singhal</span>
+              </div>
+            </div>
+          )}
 
         </div>
 

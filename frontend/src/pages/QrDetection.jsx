@@ -187,7 +187,7 @@ export default function QrDetection() {
       </div>
 
       {/* 3D Gradient Ribbons + Centerpiece macOS Folder - Full Screen Edge-to-Edge */}
-      <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden mt-4 sm:mt-6 mb-2">
+      <div className="w-screen relative left-1/2 -translate-x-1/2 overflow-hidden mt-8 sm:mt-12 mb-2">
         <GradientRibbonFolder
           file={file}
           preview={preview}

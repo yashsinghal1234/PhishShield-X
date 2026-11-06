@@ -12,3 +12,14 @@ class DetectionHistory(Base):
     confidence = Column(Float)
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
     details = Column(Text, nullable=True) # for XAI explanations later
+
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=True)
+    email = Column(String, index=True)
+    message = Column(Text)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    status = Column(String, default="received")
+

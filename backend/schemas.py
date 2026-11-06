@@ -86,3 +86,14 @@ class DashboardStatsResponse(BaseModel):
     safe_detected: int
     safe_trend: float
     recent_threats: List[DetectionHistoryResponse]
+
+class ContactRequest(BaseModel):
+    name: Optional[str] = None
+    email: str
+    message: str
+
+class ContactResponse(BaseModel):
+    success: bool
+    message: str
+    inquiry_id: Optional[int] = None
+

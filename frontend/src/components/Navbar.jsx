@@ -3,8 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   Menu,
   X,
-  Puzzle
+  Puzzle,
+  Mail
 } from 'lucide-react';
+import ContactModal from './ContactModal';
 
 /**
  * DotMatrixGlyph:
@@ -80,6 +82,7 @@ function DotMatrixGlyph({ type = 'aperture', className = '', isActive = false })
 export default function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
 
   // Navbar options curated specifically for the PhishShield multi-modal project:
   const navLinks = [
@@ -144,12 +147,21 @@ export default function Navbar() {
           </nav>
         </div>
 
-        {/* Right Actions: Extension Pill (Kept exactly as requested) */}
-        <div className="flex items-center gap-3.5">
+        {/* Right Actions: Contact Us + Get Extension Pill */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setContactModalOpen(true)}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-white/15 hover:border-[#38BDF8]/50 bg-white/[0.04] hover:bg-[#0047FF]/10 text-white/90 hover:text-[#38BDF8] text-xs font-['Plus_Jakarta_Sans'] font-semibold tracking-tight transition-all duration-200 cursor-pointer shadow-sm"
+          >
+            <Mail size={13} className="text-[#38BDF8]" />
+            <span>Contact Us</span>
+          </button>
+
           <a
             href="/phishshield-extension.zip"
             download="PhishShield-EDL-Extension.zip"
-            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0047FF] hover:bg-[#0039CC] text-white text-xs font-['Silkscreen'] font-bold tracking-wider transition-all shadow-sm shadow-[#0047FF]/20"
+            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#0047FF] hover:bg-[#0039CC] text-white text-xs font-['Silkscreen'] font-bold tracking-wider transition-all shadow-sm shadow-[#0047FF]/20 cursor-pointer"
           >
             <Puzzle size={13} />
             <span>GET EXTENSION</span>
@@ -222,18 +234,35 @@ export default function Navbar() {
               <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]"></span>
             )}
           </Link>
-          <div className="pt-2">
+          <div className="pt-2 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setContactModalOpen(true);
+              }}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full border border-white/15 bg-white/[0.05] text-white text-xs font-semibold"
+            >
+              <Mail size={13} className="text-[#38BDF8]" />
+              <span>Contact Us</span>
+            </button>
             <a
               href="/phishshield-extension.zip"
               download="PhishShield-EDL-Extension.zip"
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[#0047FF] text-white text-xs font-['Silkscreen'] font-bold tracking-wider"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-full bg-[#0047FF] text-white text-xs font-['Silkscreen'] font-bold tracking-wider"
             >
-              <Puzzle size={14} />
-              <span>GET EXTENSION</span>
+              <Puzzle size={13} />
+              <span>GET EXT</span>
             </a>
           </div>
         </div>
       )}
+
+      {/* Interactive Contact Modal */}
+      <ContactModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+      />
     </header>
   );
 }

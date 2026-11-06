@@ -491,4 +491,117 @@ def log_extension_telemetry(req: schemas.ExtensionLogRequest):
         f.write(json.dumps(payload) + "\n")
     return {"status": "logged", "hash": req.url_hash}
 
+@app.post("/api/contact", response_model=schemas.ContactResponse)
+async def submit_contact(inquiry: schemas.ContactRequest, db: Session = Depends(get_db)):
+    """Receives contact message from user and stores it in database & JSON log."""
+    import json
+    if not inquiry.email or not inquiry.email.strip():
+        raise HTTPException(status_code=400, detail="Valid email address is required.")
+    if not inquiry.message or not inquiry.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty.")
+    
+    inquiry_id = None
+    # 1. Save to SQLite database
+    try:
+        new_msg = models.ContactMessage(
+            name=inquiry.name.strip() if inquiry.name else "Anonymous",
+            email=inquiry.email.strip(),
+            message=inquiry.message.strip(),
+            timestamp=datetime.utcnow(),
+            status="received"
+        )
+        db.add(new_msg)
+        db.commit()
+        db.refresh(new_msg)
+        inquiry_id = new_msg.id
+    except Exception as e:
+        print(f"Database write error for contact inquiry: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+
+    # 2. Persist to JSON file backup (backend/inquiries.json)
+    try:
+        inquiry_path = os.path.join(os.path.dirname(__file__), "inquiries.json")
+        entries = []
+        if os.path.exists(inquiry_path):
+            try:
+                with open(inquiry_path, "r", encoding="utf-8") as f:
+                    entries = json.load(f)
+            except Exception:
+                entries = []
+        
+        entry = {
+            "id": inquiry_id or (len(entries) + 1),
+            "name": inquiry.name.strip() if inquiry.name else "Anonymous",
+            "email": inquiry.email.strip(),
+            "message": inquiry.message.strip(),
+            "timestamp": datetime.utcnow().isoformat(),
+            "recipient": "singhalyash307@gmail.com",
+            "recipient_github": "https://github.com/yashsinghal1234"
+        }
+        entries.append(entry)
+        with open(inquiry_path, "w", encoding="utf-8") as f:
+            json.dump(entries, f, indent=2)
+    except Exception as file_err:
+        print(f"Error persisting contact inquiry to JSON: {file_err}")
+
+    # 3. Optional webhook notification if configured
+    webhook_url = os.environ.get("CONTACT_WEBHOOK_URL")
+    if webhook_url:
+        try:
+            requests.post(webhook_url, json={
+                "content": f"📬 **New Message for Yash Singhal**\n**From:** {inquiry.name or 'Anonymous'} ({inquiry.email})\n**Message:**\n{inquiry.message}"
+            }, timeout=3)
+        except Exception as wh_err:
+            print(f"Webhook dispatch notice: {wh_err}")
+
+    # 4. Direct email dispatch to singhalyash307@gmail.com if SMTP is configured
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_pass = os.environ.get("SMTP_PASSWORD")
+    if smtp_user and smtp_pass:
+        try:
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+            smtp_port = int(os.environ.get("SMTP_PORT", 465))
+            target_email = os.environ.get("CONTACT_TARGET_EMAIL", "singhalyash307@gmail.com")
+            
+            email_msg = MIMEMultipart()
+            email_msg["From"] = smtp_user
+            email_msg["To"] = target_email
+            email_msg["Subject"] = f"📬 [ShadowLens] New Message from {inquiry.name or inquiry.email}"
+            
+            body = (
+                f"You received a new inquiry on PhishShield-X / ShadowLens platform:\n\n"
+                f"Sender Name: {inquiry.name or 'N/A'}\n"
+                f"Sender Email: {inquiry.email}\n"
+                f"Timestamp: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n"
+                f"Message:\n{inquiry.message}\n"
+            )
+            email_msg.attach(MIMEText(body, "plain"))
+            
+            if smtp_port == 465:
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=5) as server:
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, target_email, email_msg.as_string())
+            else:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=5) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, target_email, email_msg.as_string())
+            print(f"Email successfully delivered to {target_email} via SMTP")
+        except Exception as smtp_err:
+            print(f"SMTP email dispatch note: {smtp_err}")
+
+    return {
+        "success": True,
+        "message": "Inquiry recorded successfully and queued for dispatch.",
+        "inquiry_id": inquiry_id
+    }
+
+
 

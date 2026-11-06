@@ -35,12 +35,12 @@ const MODULE_LINKS = [
 ];
 
 const COMMUNITY_LINKS = [
-  { label: 'GitHub Repository', href: 'https://github.com' },
+  { label: 'GitHub Repository', href: 'https://github.com/yashsinghal1234/PhishShield-X' },
+  { label: 'Yash Singhal (Profile)', href: 'https://github.com/yashsinghal1234' },
   { label: 'Research Paper', path: '/email' },
   { label: 'Benchmark Dataset', path: '/history' },
   { label: 'Chrome Extension', path: '/url' },
-  { label: 'Documentation', path: '/email' },
-  { label: 'Discord Community', href: 'https://discord.com' }
+  { label: 'Documentation', path: '/email' }
 ];
 
 export default function EditorialFooter({ onLaunchScan }) {

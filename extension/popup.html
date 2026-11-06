@@ -6,15 +6,15 @@
   <title>ShadowLens Evidential Shield</title>
   <style>
     :root {
-      --bg: #070A11;
-      --card-bg: rgba(14, 19, 29, 0.88);
-      --glass-surface: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(56, 189, 248, 0.18);
-      --glass-active: rgba(0, 229, 255, 0.18);
-      --glass-active-border: rgba(0, 229, 255, 0.55);
-      --cyber-cyan: #00E5FF;
-      --cyber-blue: #0066FF;
-      --neon-sky: #38BDF8;
+      --bg: #07090E;
+      --card-bg: rgba(18, 20, 27, 0.88);
+      --glass-surface: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-active: rgba(255, 255, 255, 0.16);
+      --glass-active-border: rgba(255, 255, 255, 0.35);
+      --core-lime: #D4F838;
+      --core-glow: rgba(212, 248, 56, 0.85);
+      --amber-glow: rgba(245, 158, 11, 0.22);
       --accent-emerald: #10B981;
       --accent-amber: #F59E0B;
       --accent-crimson: #EF4444;
@@ -45,14 +45,14 @@
       height: 0 !important;
     }
 
-    /* Ambient Cyber-Blue Lighting */
+    /* Ambient Warm Gold & Lime Lighting (Original SOMA Theme) */
     .ambient-bg {
       position: absolute;
       inset: 0;
       pointer-events: none;
       background: 
-        radial-gradient(circle at 65% 50%, rgba(0, 102, 255, 0.22) 0%, rgba(0, 229, 255, 0.08) 35%, transparent 65%),
-        radial-gradient(circle at 20% 15%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 65% 45%, rgba(245, 158, 11, 0.18) 0%, rgba(212, 248, 56, 0.05) 35%, transparent 65%),
+        radial-gradient(circle at 35% 25%, rgba(212, 248, 56, 0.12) 0%, transparent 45%),
         radial-gradient(circle at 50% 100%, #000000 0%, transparent 100%);
       z-index: 0;
     }
@@ -80,7 +80,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+      box-shadow: 0 0 12px rgba(212, 248, 56, 0.35);
       flex-shrink: 0;
     }
     .brand-icon-box img {
@@ -102,21 +102,21 @@
     .clock-text {
       font-size: 10.5px;
       font-weight: 600;
-      color: var(--neon-sky);
+      color: var(--text-muted);
       letter-spacing: 0.04em;
     }
     .radar-icon-wrap {
       width: 26px;
       height: 26px;
       border-radius: 50%;
-      background: rgba(0, 229, 255, 0.08);
-      border: 1px solid rgba(0, 229, 255, 0.25);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--cyber-cyan);
+      color: #FFFFFF;
       backdrop-filter: blur(8px);
-      box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     }
     .radar-pulse {
       animation: radar-sweep 2.8s infinite linear;
@@ -155,14 +155,14 @@
       margin-top: -4px;
     }
 
-    /* Luminous Cyber-Blue Spotlight Beam beneath Active Petal */
+    /* Luminous Warm Spotlight Beam beneath Active Petal */
     .spotlight-beam {
       position: absolute;
       top: 105px;
       left: 36%;
       width: 130px;
       height: 120px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(0, 229, 255, 0.35) 0%, rgba(0, 102, 255, 0.12) 55%, transparent 75%);
+      background: radial-gradient(ellipse at 50% 0%, rgba(245, 190, 60, 0.35) 0%, rgba(215, 140, 20, 0.12) 55%, transparent 75%);
       filter: blur(12px);
       pointer-events: none;
       z-index: 4;
@@ -170,7 +170,7 @@
       transition: opacity 0.4s ease;
     }
 
-    /* Central Glowing Sensor Core (Electric Cyber Blue) */
+    /* Central Glowing Sensor Core (Lime Yellow) */
     .sensor-core {
       position: absolute;
       top: 95px;
@@ -179,8 +179,8 @@
       width: 42px;
       height: 42px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #00F0FF 0%, #0066FF 100%);
-      box-shadow: 0 0 24px rgba(0, 229, 255, 0.75), 0 0 55px rgba(0, 102, 255, 0.4);
+      background: #D4F838;
+      box-shadow: 0 0 25px rgba(212, 248, 56, 0.85), 0 0 60px rgba(212, 248, 56, 0.4);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -190,19 +190,19 @@
     }
     .sensor-core:hover {
       transform: translate(-50%, -50%) scale(1.08);
-      box-shadow: 0 0 32px rgba(0, 229, 255, 0.9), 0 0 70px rgba(0, 102, 255, 0.5);
+      box-shadow: 0 0 35px rgba(212, 248, 56, 0.95), 0 0 75px rgba(212, 248, 56, 0.55);
     }
     .sensor-pupil {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #070A11;
+      background: #07090E;
     }
     .sensor-pulse-ring {
       position: absolute;
       inset: -6px;
       border-radius: 50%;
-      border: 1.5px solid rgba(0, 229, 255, 0.6);
+      border: 1.5px solid rgba(212, 248, 56, 0.6);
       animation: pulse-ring 2.4s infinite cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes pulse-ring {
@@ -251,16 +251,16 @@
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
     }
     .petal:hover {
-      background: rgba(0, 229, 255, 0.1);
-      border-color: rgba(0, 229, 255, 0.35);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
       color: #FFFFFF;
       transform: translateY(-2px);
     }
     .petal.active {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.24), rgba(0, 229, 255, 0.12));
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08));
       border: 1px solid var(--glass-active-border);
       color: #FFFFFF;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 20px rgba(245, 190, 60, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.5);
     }
     .petal-icon {
       margin-bottom: 3px;
@@ -317,8 +317,8 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(0, 229, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       display: flex;
@@ -330,17 +330,16 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     }
     .dock-btn:hover {
-      background: rgba(0, 229, 255, 0.2);
-      border-color: var(--cyber-cyan);
+      background: rgba(255, 255, 255, 0.18);
+      border-color: #FFFFFF;
       color: #FFFFFF;
       transform: scale(1.08);
-      box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
     }
     .dock-btn.active {
       background: #FFFFFF;
-      color: #070A11;
+      color: #07090E;
       border-color: #FFFFFF;
-      box-shadow: 0 0 18px rgba(0, 229, 255, 0.6);
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
     }
 
     /* Bottom Frosted Glassmorphic Card */
@@ -350,13 +349,13 @@
       left: 12px;
       right: 54px; /* Leaves clear breathing space for the floating dock */
       background: var(--card-bg);
-      border: 1px solid rgba(0, 229, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
       border-radius: 22px;
       padding: 12px 14px 10px 14px;
       z-index: 15;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255, 255, 255, 0.15);
     }
     .bottom-card-header {
       display: flex;
@@ -380,14 +379,14 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--cyber-cyan);
-      box-shadow: 0 0 8px var(--cyber-cyan);
+      background: var(--core-lime);
+      box-shadow: 0 0 8px var(--core-lime);
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
     .status-label {
       font-size: 10.5px;
       font-weight: 600;
-      color: var(--neon-sky);
+      color: #FFFFFF;
     }
 
     /* Verdict Pill (verdict-box) */
@@ -398,9 +397,9 @@
       text-transform: uppercase;
       padding: 3px 8px;
       border-radius: 9999px;
-      background: rgba(0, 229, 255, 0.14);
-      border: 1px solid rgba(0, 229, 255, 0.4);
-      color: var(--cyber-cyan);
+      background: rgba(212, 248, 56, 0.15);
+      border: 1px solid rgba(212, 248, 56, 0.45);
+      color: var(--core-lime);
       display: inline-flex;
       align-items: center;
       transition: all 0.25s ease;
@@ -459,20 +458,20 @@
     .metric-unit {
       font-size: 11px;
       font-weight: 500;
-      color: var(--neon-sky);
+      color: var(--text-muted);
     }
     .metric-delta {
       display: flex;
       align-items: center;
       gap: 4px;
       font-size: 10px;
-      color: var(--neon-sky);
+      color: var(--text-muted);
       font-weight: 600;
       margin-bottom: 6px;
     }
     .delta-arrow {
       font-size: 9px;
-      color: var(--cyber-cyan);
+      color: var(--core-lime);
     }
 
     /* Telemetry Sinusoidal Graph */
@@ -497,7 +496,7 @@
       margin-bottom: 6px;
       padding: 4px 7px;
       background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(0, 229, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 7px;
       font-size: 9px;
     }
@@ -511,7 +510,7 @@
     .progress-fill {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #00E5FF 0%, #38BDF8 60%, #EF4444 100%);
+      background: linear-gradient(90deg, #D4F838 0%, #F59E0B 60%, #EF4444 100%);
       border-radius: 9999px;
       transition: width 0.4s ease;
     }
@@ -528,7 +527,7 @@
       background: rgba(255, 255, 255, 0.03);
       padding: 4px 6px;
       border-radius: 6px;
-      border: 1px solid rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       gap: 5px;
@@ -537,16 +536,16 @@
       width: 4px;
       height: 4px;
       border-radius: 50%;
-      background: var(--cyber-cyan);
-      box-shadow: 0 0 6px var(--cyber-cyan);
+      background: var(--core-lime);
+      box-shadow: 0 0 6px var(--core-lime);
       flex-shrink: 0;
     }
 
     /* Action Button */
     .btn-action {
       width: 100%;
-      background: rgba(0, 229, 255, 0.08);
-      border: 1px solid rgba(0, 229, 255, 0.25);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.16);
       color: #FFFFFF;
       padding: 6px 8px;
       border-radius: 10px;
@@ -558,6 +557,11 @@
       align-items: center;
       justify-content: center;
       gap: 4px;
+    }
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
     }
     .btn-action:hover {
       background: rgba(0, 229, 255, 0.18);
@@ -742,19 +746,19 @@
       <span><span id="val-lat">12 ms</span> latency &middot; u: <span id="val-u">0.021</span></span>
     </div>
 
-    <!-- Telemetry Sinusoidal Graph (Cyber Blue Waves) -->
+    <!-- Telemetry Sinusoidal Graph (SOMA Style Waveform) -->
     <div class="waveform-wrap">
       <svg class="waveform-svg" viewBox="0 0 260 32" fill="none">
-        <line x1="0" y1="24" x2="260" y2="24" stroke="rgba(0,229,255,0.12)" stroke-dasharray="3 3"/>
-        <!-- Secondary subtle cyan wave -->
-        <path d="M 0 22 C 35 10, 70 28, 105 18 C 140 8, 175 26, 210 20 C 235 14, 250 22, 260 16" stroke="rgba(56,189,248,0.25)" stroke-width="1.2" fill="none"/>
-        <!-- Primary luminous electric cyan wave -->
-        <path id="primary-wave" d="M 0 26 C 35 16, 70 4, 105 20 C 140 32, 175 8, 210 12 C 235 16, 250 6, 260 18" stroke="#00E5FF" stroke-width="1.8" fill="none"/>
+        <line x1="0" y1="24" x2="260" y2="24" stroke="rgba(255,255,255,0.12)" stroke-dasharray="3 3"/>
+        <!-- Secondary subtle wave -->
+        <path d="M 0 22 C 35 10, 70 28, 105 18 C 140 8, 175 26, 210 20 C 235 14, 250 22, 260 16" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" fill="none"/>
+        <!-- Primary luminous white wave -->
+        <path id="primary-wave" d="M 0 26 C 35 16, 70 4, 105 20 C 140 32, 175 8, 210 12 C 235 16, 250 6, 260 18" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
         <!-- Node dots -->
-        <circle cx="105" cy="20" r="3" fill="#FFFFFF" stroke="rgba(0,229,255,0.5)" stroke-width="3"/>
-        <circle id="wave-highlight-dot" cx="210" cy="12" r="2.8" fill="#00E5FF" stroke="rgba(0,229,255,0.4)" stroke-width="3"/>
-        <text x="65" y="30" fill="rgba(0,229,255,0.45)" font-size="7.5" font-family="monospace">&gt;20</text>
-        <text x="235" y="30" fill="rgba(0,229,255,0.45)" font-size="7.5" font-family="monospace">140</text>
+        <circle cx="105" cy="20" r="3" fill="#FFFFFF" stroke="rgba(255,255,255,0.4)" stroke-width="3"/>
+        <circle id="wave-highlight-dot" cx="210" cy="12" r="2.8" fill="#D4F838" stroke="rgba(212,248,56,0.5)" stroke-width="3"/>
+        <text x="65" y="30" fill="rgba(255,255,255,0.4)" font-size="7.5" font-family="monospace">&gt;20</text>
+        <text x="235" y="30" fill="rgba(255,255,255,0.4)" font-size="7.5" font-family="monospace">140</text>
       </svg>
     </div>
 
@@ -764,7 +768,7 @@
       <div class="u-progress-box">
         <div class="progress-fill" id="u-bar"></div>
       </div>
-      <span style="color:var(--neon-sky); font-family:monospace;">S: <strong id="val-s" style="color:#FFF;">2.0</strong></span>
+      <span style="color:var(--core-lime); font-family:monospace;">S: <strong id="val-s" style="color:#FFF;">2.0</strong></span>
     </div>
 
     <!-- Active Target URL Bar -->
