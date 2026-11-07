@@ -94,49 +94,53 @@ const getRandomTagPalette = (currentBg) => {
   return choices[Math.floor(Math.random() * choices.length)];
 };
 
-// Curated authentic collaborator names
-const CURATED_COLLABORATOR_NAMES = [
-  'Yash Singhal',
-  'Alex Rivera',
-  'Sarah Chen',
-  'Elena Rostova',
-  'Devon Lane',
-  'Marcus Vance',
-];
+// Resolves platform-specific default when no custom name has been entered
+const getPlatformDefaultName = () => {
+  if (typeof window === 'undefined') return 'Windows User';
+  try {
+    const nav = window.navigator;
+    const userAgent = (nav.userAgent || '').toLowerCase();
+    const platform = (nav.userAgentData?.platform || nav.platform || '').toLowerCase();
 
-const isGenericName = (name) => {
-  if (!name || typeof name !== 'string') return true;
-  const lower = name.toLowerCase().trim();
-  return (
-    lower.includes('windows') ||
-    lower.includes('macos') ||
-    lower.includes('linux') ||
-    lower.includes('android') ||
-    lower.includes('user') ||
-    lower.includes('guest') ||
-    lower === 'unknown' ||
-    lower === 'browser'
-  );
+    if (platform.includes('win') || userAgent.includes('windows')) {
+      return 'Windows User';
+    }
+    if (platform.includes('mac') || userAgent.includes('macintosh') || userAgent.includes('mac os')) {
+      return 'Mac User';
+    }
+    if (platform.includes('android') || userAgent.includes('android')) {
+      return 'Android User';
+    }
+    if (
+      platform.includes('iphone') ||
+      platform.includes('ipad') ||
+      platform.includes('ipod') ||
+      userAgent.includes('iphone') ||
+      userAgent.includes('ipad')
+    ) {
+      return 'iOS User';
+    }
+    if (platform.includes('linux') || userAgent.includes('linux')) {
+      return 'Linux User';
+    }
+  } catch {}
+  return 'Windows User';
 };
 
-// Dynamically resolves the user's name from browser storage or defaults to Yash Singhal
+// Dynamically resolves the user's name from browser storage or defaults to OS platform
 const getBrowserUserName = () => {
-  if (typeof window === 'undefined') return 'Yash Singhal';
+  if (typeof window === 'undefined') return 'Windows User';
   try {
     const stored =
       localStorage.getItem('phishshield_user_name') ||
       localStorage.getItem('user_name') ||
       localStorage.getItem('userName') ||
       localStorage.getItem('name');
-    if (stored && stored.trim() && !isGenericName(stored)) {
+    if (stored && stored.trim()) {
       return stored.trim();
     }
-    // Clean up generic OS strings like "Windows User" if previously stored
-    if (stored && isGenericName(stored)) {
-      localStorage.removeItem('phishshield_user_name');
-    }
   } catch {}
-  return 'Yash Singhal';
+  return getPlatformDefaultName();
 };
 
 export default function EmailDetection() {
@@ -159,21 +163,6 @@ export default function EmailDetection() {
 
   // Sync user name dynamically from browser storage or custom dispatched events
   useEffect(() => {
-    // Automatically detect host system/Git identity without requiring user to type anything
-    const fetchSystemIdentity = async () => {
-      try {
-        const stored = localStorage.getItem('phishshield_user_name');
-        if (!stored || isGenericName(stored)) {
-          const res = await axios.get(`${getApiBaseUrl()}/api/system/identity`, { timeout: 2500 });
-          if (res.data?.name) {
-            setUserName(res.data.name);
-            localStorage.setItem('phishshield_user_name', res.data.name);
-          }
-        }
-      } catch {}
-    };
-    fetchSystemIdentity();
-
     const syncUserName = (e) => {
       if (e?.detail) {
         setUserName(e.detail);
