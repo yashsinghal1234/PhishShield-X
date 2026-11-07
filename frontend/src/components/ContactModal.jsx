@@ -25,7 +25,11 @@ function GithubIcon({ size = 16, className = '' }) {
 export default function ContactModal({ isOpen, onClose }) {
   const [name, setName] = useState(() => {
     try {
-      return localStorage.getItem('phishshield_user_name') || '';
+      const stored = localStorage.getItem('phishshield_user_name');
+      if (stored && !stored.toLowerCase().includes('user') && !stored.toLowerCase().includes('guest')) {
+        return stored;
+      }
+      return '';
     } catch {
       return '';
     }
@@ -47,7 +51,9 @@ export default function ContactModal({ isOpen, onClose }) {
       setErrorMessage('');
       try {
         const stored = localStorage.getItem('phishshield_user_name');
-        if (stored && !name) setName(stored);
+        if (stored && !stored.toLowerCase().includes('user') && !stored.toLowerCase().includes('guest') && !name) {
+          setName(stored);
+        }
       } catch {}
     }
     return () => {

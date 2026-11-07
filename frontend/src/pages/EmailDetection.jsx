@@ -73,28 +73,70 @@ Content-Type: text/html; charset="UTF-8"
 </body>
 </html>`;
 
-// Dynamically resolves the user's name from browser storage or system platform
+// Vibrant authentic Figma multiplayer cursor palettes (non-black, high contrast)
+export const FIGMA_TAG_PALETTES = [
+  { bg: '#0047FF', text: '#FFFFFF', name: 'Electric Blue' },
+  { bg: '#7C3AED', text: '#FFFFFF', name: 'Figma Violet' },
+  { bg: '#059669', text: '#FFFFFF', name: 'Emerald' },
+  { bg: '#EA580C', text: '#FFFFFF', name: 'Tangerine' },
+  { bg: '#E11D48', text: '#FFFFFF', name: 'Crimson Rose' },
+  { bg: '#0284C7', text: '#FFFFFF', name: 'Sky Blue' },
+  { bg: '#D946EF', text: '#FFFFFF', name: 'Magenta' },
+  { bg: '#0D9488', text: '#FFFFFF', name: 'Teal' },
+  { bg: '#6366F1', text: '#FFFFFF', name: 'Indigo' },
+  { bg: '#EC4899', text: '#FFFFFF', name: 'Hot Pink' },
+  { bg: '#10B981', text: '#FFFFFF', name: 'Jade' },
+  { bg: '#F59E0B', text: '#000000', name: 'Amber Gold' },
+];
+
+export const getRandomTagPalette = (currentBg) => {
+  const choices = FIGMA_TAG_PALETTES.filter((p) => p.bg !== currentBg);
+  return choices[Math.floor(Math.random() * choices.length)];
+};
+
+// Curated authentic collaborator names
+export const CURATED_COLLABORATOR_NAMES = [
+  'Yash Singhal',
+  'Alex Rivera',
+  'Sarah Chen',
+  'Elena Rostova',
+  'Devon Lane',
+  'Marcus Vance',
+];
+
+const isGenericName = (name) => {
+  if (!name || typeof name !== 'string') return true;
+  const lower = name.toLowerCase().trim();
+  return (
+    lower.includes('windows') ||
+    lower.includes('macos') ||
+    lower.includes('linux') ||
+    lower.includes('android') ||
+    lower.includes('user') ||
+    lower.includes('guest') ||
+    lower === 'unknown' ||
+    lower === 'browser'
+  );
+};
+
+// Dynamically resolves the user's name from browser storage or defaults to Yash Singhal
 export const getBrowserUserName = () => {
-  if (typeof window === 'undefined') return 'User';
+  if (typeof window === 'undefined') return 'Yash Singhal';
   try {
     const stored =
       localStorage.getItem('phishshield_user_name') ||
       localStorage.getItem('user_name') ||
       localStorage.getItem('userName') ||
-      localStorage.getItem('name') ||
-      sessionStorage.getItem('phishshield_user_name') ||
-      sessionStorage.getItem('user_name');
-    if (stored && stored.trim()) return stored.trim();
-
-    // Browser environment platform fallback
-    const platform = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
-    if (platform.includes('win')) return 'Windows User';
-    if (platform.includes('mac')) return 'macOS User';
-    if (platform.includes('linux')) return 'Linux User';
-    if (platform.includes('iphone') || platform.includes('ipad')) return 'iOS User';
-    if (platform.includes('android')) return 'Android User';
+      localStorage.getItem('name');
+    if (stored && stored.trim() && !isGenericName(stored)) {
+      return stored.trim();
+    }
+    // Clean up generic OS strings like "Windows User" if previously stored
+    if (stored && isGenericName(stored)) {
+      localStorage.removeItem('phishshield_user_name');
+    }
   } catch {}
-  return 'Browser Guest';
+  return 'Yash Singhal';
 };
 
 export default function EmailDetection() {
@@ -111,6 +153,7 @@ export default function EmailDetection() {
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [isCursorInside, setIsCursorInside] = useState(false);
   const [userName, setUserName] = useState(getBrowserUserName);
+  const [tagPalette, setTagPalette] = useState(() => getRandomTagPalette());
   const fileInputRef = useRef(null);
   const resultsRef = useRef(null);
 
@@ -314,7 +357,10 @@ export default function EmailDetection() {
               y: e.clientY - rect.top,
             });
           }}
-          onMouseEnter={() => setIsCursorInside(true)}
+          onMouseEnter={() => {
+            setIsCursorInside(true);
+            setTagPalette((prev) => getRandomTagPalette(prev?.bg));
+          }}
           onMouseLeave={() => setIsCursorInside(false)}
           className={`relative group rounded-t-[32px] bg-[#DDD9C8] p-4 sm:p-6 border-t-2 border-l-2 border-[#FFFFFF] border-r-4 border-b-4 border-[#8B8676] shadow-2xl transition-all duration-300 overflow-hidden cursor-none [&_*]:!cursor-none ${
             !file && !loading ? 'hover:shadow-blue-900/30' : ''
@@ -587,8 +633,12 @@ export default function EmailDetection() {
                 type="button"
                 onClick={handleRenameCursor}
                 title="Click to customize cursor name (saved in browser)"
-                className="font-mono text-[9px] tracking-wider uppercase text-[#4A463B] bg-[#C8C3B2] hover:bg-[#BDB7A4] px-2 py-0.5 rounded border border-[#9E9886] transition-colors font-bold flex items-center gap-1 cursor-pointer"
+                className="font-mono text-[9px] tracking-wider uppercase text-[#4A463B] bg-[#C8C3B2] hover:bg-[#BDB7A4] px-2 py-0.5 rounded border border-[#9E9886] transition-colors font-bold flex items-center gap-1.5 cursor-pointer"
               >
+                <span
+                  className="w-2 h-2 rounded-full inline-block shadow-xs transition-colors duration-200"
+                  style={{ backgroundColor: tagPalette.bg }}
+                />
                 <span>USER:</span>
                 <span className="text-black font-semibold truncate max-w-[100px]">{userName}</span>
                 <span className="text-[8px] opacity-60">✎</span>
@@ -599,7 +649,7 @@ export default function EmailDetection() {
             </div>
           </div>
 
-          {/* Figma Live Multiplayer Cursor Overlay (Sleek Black Style) */}
+          {/* Figma Live Multiplayer Cursor Overlay (Black Arrow + Vibrant Colorful Tag) */}
           {isCursorInside && (
             <div
               className="absolute pointer-events-none z-50 select-none transition-transform duration-75 ease-out"
@@ -625,8 +675,16 @@ export default function EmailDetection() {
                 />
               </svg>
 
-              {/* Figma User Tag Badge - Solid Black Pill with Dynamic User Name */}
-              <div className="absolute left-3.5 top-3.5 px-2 py-0.5 rounded-md bg-black text-white text-[10.5px] font-['Plus_Jakarta_Sans'] font-semibold tracking-tight shadow-xl shadow-black/80 border border-white/20 whitespace-nowrap">
+              {/* Figma User Tag Badge - Vibrant Non-Black Multiplayer Pill (Different Color Every Time) */}
+              <div
+                className="absolute left-3.5 top-3.5 px-2 py-0.5 rounded-md text-[10.5px] font-['Plus_Jakarta_Sans'] font-semibold tracking-tight shadow-xl border whitespace-nowrap transition-colors duration-150"
+                style={{
+                  backgroundColor: tagPalette.bg,
+                  color: tagPalette.text,
+                  borderColor: 'rgba(255, 255, 255, 0.4)',
+                  boxShadow: `0 4px 16px ${tagPalette.bg}66`,
+                }}
+              >
                 <span>{userName}</span>
               </div>
             </div>
