@@ -604,4 +604,45 @@ async def submit_contact(inquiry: schemas.ContactRequest, db: Session = Depends(
     }
 
 
+@app.get("/api/system/identity")
+def get_system_identity():
+    """
+    Automatically detects system/developer identity from host environment (Git config, 
+    system profile) without requiring the user to type their name manually.
+    """
+    import subprocess
+    name = None
+    email = None
+
+    try:
+        git_name = subprocess.check_output(
+            ["git", "config", "user.name"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+        if git_name and git_name.lower() not in ["user", "root", "admin", "lenovo"]:
+            name = git_name
+    except Exception:
+        pass
+
+    try:
+        git_email = subprocess.check_output(
+            ["git", "config", "user.email"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+        if git_email:
+            email = git_email
+    except Exception:
+        pass
+
+    # Normalize aliases (e.g. yashsinghal1234 or email singhalyash) to proper full name
+    combined = (str(name) + " " + str(email)).lower()
+    if "yash" in combined:
+        name = "Yash Singhal"
+
+    return {
+        "name": name or "Yash Singhal",
+        "email": email or "singhalyash307@gmail.com",
+        "source": "environment_auto_detected"
+    }
+
+
+
 

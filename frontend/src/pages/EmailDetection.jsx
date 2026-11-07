@@ -74,7 +74,7 @@ Content-Type: text/html; charset="UTF-8"
 </html>`;
 
 // Vibrant authentic Figma multiplayer cursor palettes (non-black, high contrast)
-export const FIGMA_TAG_PALETTES = [
+const FIGMA_TAG_PALETTES = [
   { bg: '#0047FF', text: '#FFFFFF', name: 'Electric Blue' },
   { bg: '#7C3AED', text: '#FFFFFF', name: 'Figma Violet' },
   { bg: '#059669', text: '#FFFFFF', name: 'Emerald' },
@@ -89,13 +89,13 @@ export const FIGMA_TAG_PALETTES = [
   { bg: '#F59E0B', text: '#000000', name: 'Amber Gold' },
 ];
 
-export const getRandomTagPalette = (currentBg) => {
+const getRandomTagPalette = (currentBg) => {
   const choices = FIGMA_TAG_PALETTES.filter((p) => p.bg !== currentBg);
   return choices[Math.floor(Math.random() * choices.length)];
 };
 
 // Curated authentic collaborator names
-export const CURATED_COLLABORATOR_NAMES = [
+const CURATED_COLLABORATOR_NAMES = [
   'Yash Singhal',
   'Alex Rivera',
   'Sarah Chen',
@@ -120,7 +120,7 @@ const isGenericName = (name) => {
 };
 
 // Dynamically resolves the user's name from browser storage or defaults to Yash Singhal
-export const getBrowserUserName = () => {
+const getBrowserUserName = () => {
   if (typeof window === 'undefined') return 'Yash Singhal';
   try {
     const stored =
@@ -159,6 +159,21 @@ export default function EmailDetection() {
 
   // Sync user name dynamically from browser storage or custom dispatched events
   useEffect(() => {
+    // Automatically detect host system/Git identity without requiring user to type anything
+    const fetchSystemIdentity = async () => {
+      try {
+        const stored = localStorage.getItem('phishshield_user_name');
+        if (!stored || isGenericName(stored)) {
+          const res = await axios.get(`${getApiBaseUrl()}/api/system/identity`, { timeout: 2500 });
+          if (res.data?.name) {
+            setUserName(res.data.name);
+            localStorage.setItem('phishshield_user_name', res.data.name);
+          }
+        }
+      } catch {}
+    };
+    fetchSystemIdentity();
+
     const syncUserName = (e) => {
       if (e?.detail) {
         setUserName(e.detail);
