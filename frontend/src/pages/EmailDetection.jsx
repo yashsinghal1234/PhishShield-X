@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { getApiBaseUrl } from '../config/api';
@@ -73,6 +73,30 @@ Content-Type: text/html; charset="UTF-8"
 </body>
 </html>`;
 
+// Dynamically resolves the user's name from browser storage or system platform
+export const getBrowserUserName = () => {
+  if (typeof window === 'undefined') return 'User';
+  try {
+    const stored =
+      localStorage.getItem('phishshield_user_name') ||
+      localStorage.getItem('user_name') ||
+      localStorage.getItem('userName') ||
+      localStorage.getItem('name') ||
+      sessionStorage.getItem('phishshield_user_name') ||
+      sessionStorage.getItem('user_name');
+    if (stored && stored.trim()) return stored.trim();
+
+    // Browser environment platform fallback
+    const platform = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
+    if (platform.includes('win')) return 'Windows User';
+    if (platform.includes('mac')) return 'macOS User';
+    if (platform.includes('linux')) return 'Linux User';
+    if (platform.includes('iphone') || platform.includes('ipad')) return 'iOS User';
+    if (platform.includes('android')) return 'Android User';
+  } catch {}
+  return 'Browser Guest';
+};
+
 export default function EmailDetection() {
   const navigate = useNavigate();
   const [inputMode, setInputMode] = useState('upload'); // 'upload' | 'paste'
@@ -86,8 +110,40 @@ export default function EmailDetection() {
   const [showGuide, setShowGuide] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [isCursorInside, setIsCursorInside] = useState(false);
+  const [userName, setUserName] = useState(getBrowserUserName);
   const fileInputRef = useRef(null);
   const resultsRef = useRef(null);
+
+  // Sync user name dynamically from browser storage or custom dispatched events
+  useEffect(() => {
+    const syncUserName = (e) => {
+      if (e?.detail) {
+        setUserName(e.detail);
+      } else {
+        setUserName(getBrowserUserName());
+      }
+    };
+
+    window.addEventListener('phishshield_user_updated', syncUserName);
+    window.addEventListener('storage', syncUserName);
+    return () => {
+      window.removeEventListener('phishshield_user_updated', syncUserName);
+      window.removeEventListener('storage', syncUserName);
+    };
+  }, []);
+
+  const handleRenameCursor = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const promptName = window.prompt('Enter your name for the Figma cursor:', userName);
+    if (promptName && promptName.trim()) {
+      const trimmed = promptName.trim();
+      setUserName(trimmed);
+      try {
+        localStorage.setItem('phishshield_user_name', trimmed);
+        window.dispatchEvent(new CustomEvent('phishshield_user_updated', { detail: trimmed }));
+      } catch {}
+    }
+  };
 
   const handleScan = async (e, customFile = null, customContent = null) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -248,6 +304,8 @@ export default function EmailDetection() {
           onClick={() => {
             if (!file && !loading) fileInputRef.current?.click();
           }}
+          onDoubleClick={handleRenameCursor}
+          title="Click to select file • Double-click to customize cursor name"
           style={{ cursor: 'none' }}
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
@@ -507,7 +565,7 @@ export default function EmailDetection() {
             </div>
           </div>
 
-          {/* CRT Monitor Bottom Controls (Power LED, Floppy Slot, Model Badge) */}
+          {/* CRT Monitor Bottom Controls (Power LED, Floppy Slot, Model Badge & Dynamic User Tag) */}
           <div className="mt-3.5 flex items-center justify-between px-2 text-[#686354]">
             
             {/* Power LED Indicator */}
@@ -523,13 +581,25 @@ export default function EmailDetection() {
               <span className="text-[8px] font-mono uppercase text-[#4A463B] font-bold">3.5" DISK</span>
             </div>
 
-            {/* Model Badge */}
-            <span className="font-mono text-[9px] tracking-widest uppercase opacity-75 font-semibold">
-              PHISHSHIELD // CRT-84
-            </span>
+            {/* Dynamic User Badge & Model Badge */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRenameCursor}
+                title="Click to customize cursor name (saved in browser)"
+                className="font-mono text-[9px] tracking-wider uppercase text-[#4A463B] bg-[#C8C3B2] hover:bg-[#BDB7A4] px-2 py-0.5 rounded border border-[#9E9886] transition-colors font-bold flex items-center gap-1 cursor-pointer"
+              >
+                <span>USER:</span>
+                <span className="text-black font-semibold truncate max-w-[100px]">{userName}</span>
+                <span className="text-[8px] opacity-60">✎</span>
+              </button>
+              <span className="font-mono text-[9px] tracking-widest uppercase opacity-75 font-semibold hidden sm:inline">
+                CRT-84
+              </span>
+            </div>
           </div>
 
-          {/* Figma Live Multiplayer Cursor Overlay */}
+          {/* Figma Live Multiplayer Cursor Overlay (Sleek Black Style) */}
           {isCursorInside && (
             <div
               className="absolute pointer-events-none z-50 select-none transition-transform duration-75 ease-out"
@@ -538,26 +608,26 @@ export default function EmailDetection() {
                 top: cursorPos.y,
               }}
             >
-              {/* Figma Vector Selection Arrow */}
+              {/* Figma Vector Selection Arrow - Solid Black with Crisp White Outline */}
               <svg
                 width="22"
                 height="22"
                 viewBox="0 0 24 24"
                 fill="none"
-                className="filter drop-shadow-[0_2px_5px_rgba(0,0,0,0.6)]"
+                className="filter drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]"
               >
                 <path
                   d="M4 2L18.5 11L12 13L9 19.5L4 2Z"
-                  fill="#0047FF"
+                  fill="#000000"
                   stroke="#FFFFFF"
                   strokeWidth="1.8"
                   strokeLinejoin="round"
                 />
               </svg>
 
-              {/* Figma User Tag Badge */}
-              <div className="absolute left-3.5 top-3.5 px-2 py-0.5 rounded-md bg-[#0047FF] text-white text-[10.5px] font-['Plus_Jakarta_Sans'] font-bold tracking-tight shadow-xl shadow-[#0047FF]/50 border border-white/30 whitespace-nowrap">
-                <span>Yash Singhal</span>
+              {/* Figma User Tag Badge - Solid Black Pill with Dynamic User Name */}
+              <div className="absolute left-3.5 top-3.5 px-2 py-0.5 rounded-md bg-black text-white text-[10.5px] font-['Plus_Jakarta_Sans'] font-semibold tracking-tight shadow-xl shadow-black/80 border border-white/20 whitespace-nowrap">
+                <span>{userName}</span>
               </div>
             </div>
           )}

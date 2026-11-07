@@ -23,14 +23,20 @@ function GithubIcon({ size = 16, className = '' }) {
 }
 
 export default function ContactModal({ isOpen, onClose }) {
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => {
+    try {
+      return localStorage.getItem('phishshield_user_name') || '';
+    } catch {
+      return '';
+    }
+  });
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Close on Escape key
+  // Close on Escape key & sync stored name if modal opens
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
@@ -39,6 +45,10 @@ export default function ContactModal({ isOpen, onClose }) {
       document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
       setErrorMessage('');
+      try {
+        const stored = localStorage.getItem('phishshield_user_name');
+        if (stored && !name) setName(stored);
+      } catch {}
     }
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
@@ -62,6 +72,14 @@ export default function ContactModal({ isOpen, onClose }) {
 
     setIsSubmitting(true);
     setErrorMessage('');
+
+    // Persist dynamic user name to browser storage & broadcast update
+    if (name.trim()) {
+      try {
+        localStorage.setItem('phishshield_user_name', name.trim());
+        window.dispatchEvent(new CustomEvent('phishshield_user_updated', { detail: name.trim() }));
+      } catch {}
+    }
 
     // 1. Submit to backend API to log in SQLite & inquiries.json
     try {
@@ -218,7 +236,16 @@ export default function ContactModal({ isOpen, onClose }) {
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setName(val);
+                  try {
+                    if (val.trim()) {
+                      localStorage.setItem('phishshield_user_name', val.trim());
+                      window.dispatchEvent(new CustomEvent('phishshield_user_updated', { detail: val.trim() }));
+                    }
+                  } catch {}
+                }}
                 placeholder="Dr. Alex Rivera"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0A0A] border border-white/10 text-white text-sm placeholder:text-neutral-600 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
               />
