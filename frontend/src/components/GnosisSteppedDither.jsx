@@ -111,9 +111,9 @@ export default function GnosisSteppedDither({ className = '', height = 420 }) {
       const cols = Math.max(1, Math.ceil(width / scale));
       const rows = Math.max(1, Math.ceil(h / scale));
 
-      // Spotlight radii in grid units (3px per unit -> 34*3=102px solid core, 58*3=174px dither edge)
-      const innerR = 34 * hoverAlpha;
-      const outerR = 58 * hoverAlpha;
+      // Spotlight radii in grid units (3px per unit -> 42*3=126px solid core, 70*3=210px dither edge)
+      const innerR = 42 * hoverAlpha;
+      const outerR = 70 * hoverAlpha;
       const outerRSq = outerR * outerR;
 
       const imgData = ctx.getImageData(0, 0, width, h);
@@ -133,6 +133,16 @@ export default function GnosisSteppedDither({ className = '', height = 420 }) {
           const dy = rowIdx - my;
           const distSq = dx * dx + dy * dy;
 
+          // Multi-frequency wave synthesis mimicking reaction-diffusion / moiré waves
+          const wave1 = Math.sin(colIdx * 0.035 + t * 0.8 + Math.cos(rowIdx * 0.02 + t * 0.4) * 2.2);
+          const wave2 = Math.cos(rowIdx * 0.04 - t * 0.6 + Math.sin(colIdx * 0.03 + t * 0.5) * 1.8);
+          const wave3 = Math.sin((colIdx + rowIdx) * 0.025 + t * 0.5);
+
+          const mouseDistort = distSq < 3600 ? Math.sin(Math.sqrt(distSq) * 0.15 - t * 4) * 0.8 : 0;
+
+          let val = (wave1 + wave2 + wave3 + mouseDistort + 3) / 6;
+          val = Math.pow(val, 2.4);
+
           // Check if this pixel block falls inside the hover reveal spotlight
           let useCollage = false;
           let r = 255;
@@ -151,6 +161,22 @@ export default function GnosisSteppedDither({ className = '', height = 420 }) {
               r = collageData[cIdx];
               g = collageData[cIdx + 1];
               b = collageData[cIdx + 2];
+
+              // Apply the same living Bayer dither pixel effect inside revealed blue & black areas
+              const isBlueArea = b > 200 && r < 50 && g < 120;
+              const isBlackArea = r < 20 && g < 20 && b < 20;
+
+              if (isBlueArea && val * 0.72 > threshold) {
+                // Stipple crisp white/cyan-tinted dither dots inside blue dialog backgrounds
+                r = 215;
+                g = 232;
+                b = 255;
+              } else if (isBlackArea && val * 0.55 > threshold) {
+                // Stipple deep cobalt dither dots inside black dialog/desktop areas
+                r = 0;
+                g = 71;
+                b = 255;
+              }
             }
           }
 
@@ -170,16 +196,6 @@ export default function GnosisSteppedDither({ className = '', height = 420 }) {
             }
             continue;
           }
-
-          // Multi-frequency wave synthesis mimicking reaction-diffusion / moiré waves
-          const wave1 = Math.sin(colIdx * 0.035 + t * 0.8 + Math.cos(rowIdx * 0.02 + t * 0.4) * 2.2);
-          const wave2 = Math.cos(rowIdx * 0.04 - t * 0.6 + Math.sin(colIdx * 0.03 + t * 0.5) * 1.8);
-          const wave3 = Math.sin((colIdx + rowIdx) * 0.025 + t * 0.5);
-
-          const mouseDistort = distSq < 3600 ? Math.sin(Math.sqrt(distSq) * 0.15 - t * 4) * 0.8 : 0;
-
-          let val = (wave1 + wave2 + wave3 + mouseDistort + 3) / 6;
-          val = Math.pow(val, 2.4);
 
           if (val > threshold) {
             for (let sy = 0; sy < scale; sy++) {
