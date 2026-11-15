@@ -3,7 +3,7 @@ FROM python:3.12-slim-bookworm
 WORKDIR /app
 
 # Install system dependencies for OpenCV and PyZbar
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     libzbar0 \
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN playwright install --with-deps chromium
+RUN playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/* /root/.cache
 
 COPY . .
 

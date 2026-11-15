@@ -1,0 +1,29 @@
+# Ignore heavy training datasets and caches
+backend/data/*.csv
+backend/data/*.npz
+data/
+*.npz
+*.parquet
+*.csv
+
+# Ignore node_modules and frontend build
+frontend/node_modules/
+frontend/dist/
+node_modules/
+
+# Ignore virtual environments
+backend/venv/
+venv/
+__pycache__/
+*.pyc
+
+# Ignore local database and logs
+*.db
+backend/phishshield.db
+logs/
+*.log
+backend/logs/
+
+# Ignore git and temp
+.git/
+scratch/

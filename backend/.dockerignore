@@ -1,0 +1,26 @@
+# Ignore heavy training datasets and caches
+data/*.csv
+data/*.npz
+*.npz
+*.parquet
+*.csv
+
+# Ignore virtual environment and Python bytecode
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore local database and logs
+*.db
+phishshield.db
+logs/
+*.log
+
+# Ignore git and tests
+.git/
+.gitignore
+scratch/
+tests/
