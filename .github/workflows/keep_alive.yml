@@ -1,0 +1,15 @@
+name: 24/7 Render Keep-Alive
+
+on:
+  schedule:
+    # Run every 10 minutes to prevent Render from going to sleep
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping PhishShield-X Render Backend
+        run: |
+          curl -s -f --max-time 15 "https://phishshield-x.onrender.com/health" || echo "Ping dispatched"

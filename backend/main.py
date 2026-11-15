@@ -67,6 +67,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+@app.get("/health")
+def health_check():
+    """Lightweight 24/7 keep-alive ping endpoint (zero latency, zero cold starts)"""
+    return {
+        "status": "healthy",
+        "service": "PhishShield-X API",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
 # Dependency
 def get_db():
     db = database.SessionLocal()

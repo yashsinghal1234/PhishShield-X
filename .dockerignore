@@ -27,3 +27,4 @@ backend/logs/
 # Ignore git and temp
 .git/
 scratch/
+
