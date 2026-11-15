@@ -211,29 +211,6 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <Link
-            to="/history"
-            onClick={() => setMobileMenuOpen(false)}
-            className={`flex items-center justify-between py-2.5 px-3 rounded-xl transition-all ${
-              location.pathname === '/history'
-                ? 'text-[#38BDF8] bg-[#0047FF]/15 border border-[#38BDF8]/30 font-semibold'
-                : 'text-white/90 hover:text-[#38BDF8] hover:bg-white/5'
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <DotMatrixGlyph
-                type="aperture"
-                isActive={location.pathname === '/history'}
-                className={`shrink-0 ${location.pathname === '/history' ? 'text-[#38BDF8]' : 'text-white/70'}`}
-              />
-              <span className="leading-none">
-                Audit History
-              </span>
-            </div>
-            {location.pathname === '/history' && (
-              <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8] shadow-[0_0_6px_#38BDF8]"></span>
-            )}
-          </Link>
           <div className="pt-2 grid grid-cols-2 gap-2">
             <button
               type="button"

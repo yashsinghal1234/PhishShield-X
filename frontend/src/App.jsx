@@ -7,7 +7,6 @@ import HomePage from './pages/HomePage';
 import UrlDetection from './pages/UrlDetection';
 import EmailDetection from './pages/EmailDetection';
 import QrDetection from './pages/QrDetection';
-import HistoryPage from './pages/HistoryPage';
 import Documentation from './pages/Documentation';
 import EditorialFooter from './components/EditorialFooter';
 import { ThemeProvider } from './context/ThemeContext';
@@ -34,7 +33,6 @@ function App() {
               <Route path="/email" element={<EmailDetection />} />
               <Route path="/docs" element={<Documentation />} />
               <Route path="/documentation" element={<Documentation />} />
-              <Route path="/history" element={<HistoryPage />} />
             </Routes>
             <div className="-mx-4 sm:-mx-7 md:-mx-9 lg:-mx-12 xl:-mx-14 -mb-3 sm:-mb-4">
               <EditorialFooter />

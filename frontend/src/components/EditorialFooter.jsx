@@ -19,17 +19,17 @@ const INDEX_ITEMS = [
   { num: '02', label: 'Quishing ViT', path: '/qr' },
   { num: '03', label: 'Dirichlet EDL', path: '/url' },
   { num: '04', label: 'SPF / DKIM Consensus', path: '/email' },
-  { num: '05', label: 'Threat Taxonomy', path: '/history' },
+  { num: '05', label: 'Threat Taxonomy', path: '/docs' },
   { num: '06', label: 'Evidential Benchmarks', path: '/url' },
   { num: '07', label: 'Browser Extension', path: '/url' },
-  { num: '08', label: 'Documentation', path: '/email' }
+  { num: '08', label: 'Documentation', path: '/docs' }
 ];
 
 const MODULE_LINKS = [
   { label: 'URL Lexical Scanner', path: '/url' },
   { label: 'Vision-ViT Quishing', path: '/qr' },
   { label: 'Email Consensus', path: '/email' },
-  { label: 'Threat Radar History', path: '/history' },
+  { label: 'Threat Radar Telemetry', path: '/url' },
   { label: 'Dirichlet Density α_k', path: '/url' },
   { label: '404 Sandbox', path: '/url' }
 ];
@@ -38,9 +38,9 @@ const COMMUNITY_LINKS = [
   { label: 'GitHub Repository', href: 'https://github.com/yashsinghal1234/PhishShield-X' },
   { label: 'Yash Singhal (Profile)', href: 'https://github.com/yashsinghal1234' },
   { label: 'Research Paper', path: '/email' },
-  { label: 'Benchmark Dataset', path: '/history' },
+  { label: 'Benchmark Dataset', path: '/docs' },
   { label: 'Chrome Extension', path: '/url' },
-  { label: 'Documentation', path: '/email' }
+  { label: 'Documentation', path: '/docs' }
 ];
 
 export default function EditorialFooter({ onLaunchScan }) {
