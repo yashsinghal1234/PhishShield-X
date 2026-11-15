@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Ping PhishShield-X Render Backend
         run: |
-          curl -s -f --max-time 15 "https://phishshield-x.onrender.com/health" || echo "Ping dispatched"
+          curl -s -f --max-time 15 "https://phishshield-x-1.onrender.com/health" || echo "Ping dispatched"

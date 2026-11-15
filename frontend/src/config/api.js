@@ -18,7 +18,7 @@ export const getApiBaseUrl = () => {
   }
 
   // In production (Vercel, Netlify, or any online domain), route to the live Render cloud backend
-  return 'https://phishshield-x.onrender.com';
+  return 'https://phishshield-x-1.onrender.com';
 };
 
 export const API_BASE_URL = getApiBaseUrl();
