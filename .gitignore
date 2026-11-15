@@ -39,6 +39,8 @@ __pycache__/
 *.pyc
 *.txt
 !backend/data/top_domains.txt
+!requirements.txt
+!backend/requirements.txt
 *.weights.h5
 backend/_aug_tmp.jpg
 
