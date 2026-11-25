@@ -1,7 +1,6 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import GnosisSteppedDither from '../components/GnosisSteppedDither';
-import HeroStaircaseShooter from '../components/HeroStaircaseShooter';
 import ThreatToCertaintyWire from '../components/ThreatToCertaintyWire';
 import LinguisticLimitsSection from '../components/LinguisticLimitsSection';
 import UniqodeBentoCollage from '../components/UniqodeBentoCollage';
@@ -9,8 +8,6 @@ import KeyValuesAndPerformanceSection from '../components/KeyValuesAndPerformanc
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const heroContainerRef = useRef(null);
-  const staircaseRef = useRef(null);
 
   const handleLaunchScan = () => {
     navigate('/url');
@@ -22,15 +19,11 @@ export default function HomePage() {
       
       {/* =========================================================================
           HERO SECTION: PHISHSHIELD FULL STACK THREAT INTELLIGENCE
-          Includes dynamic Hero Cyber Defender vs Virus Spider Shooter on Staircase
           ========================================================================= */}
-      <section ref={heroContainerRef} className="relative pt-2 sm:pt-4 overflow-hidden bg-[#080A0F] text-white">
+      <section className="pt-2 sm:pt-4 overflow-hidden bg-[#080A0F] text-white">
         
-        {/* Dynamic Interactive Cyber Shooter Canvas & Spiders */}
-        <HeroStaircaseShooter containerRef={heroContainerRef} staircaseRef={staircaseRef} />
-
         {/* Hero Title & Subtitle - Aligned flush with the left side of the box and navbar */}
-        <div className="relative z-10 w-full mb-3.5 sm:mb-4.5 pointer-events-none select-none">
+        <div className="w-full mb-3.5 sm:mb-4.5">
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[62px] font-bold tracking-tight text-white leading-[1.08] mb-2.5">
             Multi-Modal Threat Intelligence
           </h1>
@@ -40,7 +33,7 @@ export default function HomePage() {
         </div>
 
         {/* The Geometric Stepped Staircase Container - Aligned flush with the text and navbar */}
-        <div ref={staircaseRef} className="relative w-full overflow-hidden bg-[#080A0F]">
+        <div className="relative w-full overflow-hidden bg-[#080A0F]">
           <GnosisSteppedDither height={420} />
         </div>
 
