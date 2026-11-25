@@ -1,35 +1,98 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * SpideyFriendlySpider:
- * A friendly, iconic retro pixel-art spider styled after Spider-Man!
- *
- * Features:
- * - Iconic Spidey Palette: Vibrant Spidey Red (#EF4444) & Electric Cobalt Blue (#0047FF)
- * - Large, expressive white comic-book mask eyes with crisp black borders
- * - Friendly hanging pose: Hanging upside-down on a silvery web line
- * - Alternating Red & Blue limbs with classic suit patterning
- * - Interactive: Hovering or clicking triggers a playful web-bounce and a cute "THWIP!" web pulse!
+ * SpideyOnBox:
+ * A friendly retro pixel-art Spider-Man that:
+ * 1. Descends from "Evidential neural detection for URLs" on a silvery web line.
+ * 2. Lands right onto the top surface of the blue stepped box (GnosisSteppedDither).
+ * 3. Crawls, patrols, and jumps across the steps of the blue box!
+ * 4. Interactive: Hover or click makes Spidey wave, jump, and say "THWIP!".
  */
-export default function RealisticSpider() {
-  const [threadLength, setThreadLength] = useState(88);
-  const [swayX, setSwayX] = useState(0);
-  const [animTime, setAnimTime] = useState(0);
-  const [isWaving, setIsWaving] = useState(false);
+export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
+  const [spiderPos, setSpiderPos] = useState({ x: 200, y: 50 });
+  const [webOrigin, setWebOrigin] = useState({ x: 200, y: 40 });
+  const [facing, setFacing] = useState(1);
+  const [crawlFrame, setCrawlFrame] = useState(0);
+  const [isJumping, setIsJumping] = useState(false);
+  const [isHanging, setIsHanging] = useState(true);
   const [showThwip, setShowThwip] = useState(false);
+  const [webSlack, setWebSlack] = useState(0);
 
   const stateRef = useRef({
-    currentY: 20,
-    targetY: 90,
+    phase: 'RAPPEL', // 'RAPPEL', 'ON_BOX', 'LEAPING'
+    x: 200,
+    y: 40,
+    vx: 0,
     vy: 0,
+    facing: 1, // 1: right, -1: left
+    crawlFrame: 0,
+    frameTimer: 0,
+    patrolDir: 1,
     time: 0,
-    bounceTimer: 0,
-    waveTimer: 0,
+    webX: 200,
+    webY: 40,
+    pauseTimer: 0,
+    thwipTimer: 0,
   });
 
   useEffect(() => {
     let animId;
     let lastTime = performance.now();
+
+    const getGeometry = () => {
+      if (!sectionRef?.current) return null;
+      const sRect = sectionRef.current.getBoundingClientRect();
+      const tRect = textAnchorRef?.current ? textAnchorRef.current.getBoundingClientRect() : null;
+      const bRect = boxRef?.current ? boxRef.current.getBoundingClientRect() : null;
+
+      const webOriginX = tRect ? tRect.left - sRect.left + tRect.width * 0.45 : sRect.width * 0.25;
+      const webOriginY = tRect ? tRect.bottom - sRect.top : 40;
+
+      const boxTop = bRect ? bRect.top - sRect.left : 90;
+      const boxActualTop = bRect ? bRect.top - sRect.top : 90;
+      const boxHeight = bRect ? bRect.height : 420;
+      const boxWidth = bRect ? bRect.width : sRect.width;
+
+      return {
+        sectionWidth: sRect.width,
+        sectionHeight: sRect.height,
+        webOriginX,
+        webOriginY,
+        boxTop: boxActualTop,
+        boxHeight,
+        boxWidth,
+      };
+    };
+
+    // Calculate surface height of the blue stepped box at any horizontal coordinate X
+    // Matches GnosisSteppedDither polygon:
+    // 0% -> 42%: 38% height
+    // 42% -> 63%: 22% height
+    // 63% -> 94%: 6% height
+    // 94% -> 100%: 13% height
+    const getGroundY = (x, geom) => {
+      const u = Math.max(0, Math.min(1, x / geom.boxWidth));
+      let stepRatio = 0.38;
+      if (u < 0.42) {
+        stepRatio = 0.38;
+      } else if (u < 0.63) {
+        stepRatio = 0.22;
+      } else if (u < 0.94) {
+        stepRatio = 0.06;
+      } else {
+        stepRatio = 0.13;
+      }
+      return geom.boxTop + geom.boxHeight * stepRatio;
+    };
+
+    // Initialize position directly under the text
+    const initGeom = getGeometry();
+    if (initGeom) {
+      stateRef.current.x = initGeom.webOriginX;
+      stateRef.current.webX = initGeom.webOriginX;
+      stateRef.current.webY = initGeom.webOriginY;
+      stateRef.current.y = initGeom.webOriginY + 10;
+    }
 
     const loop = (now) => {
       const dt = Math.min(32, now - lastTime) / 1000;
@@ -37,38 +100,131 @@ export default function RealisticSpider() {
       const s = stateRef.current;
       s.time += dt;
 
-      // Playful bounce on the elastic web line
-      if (s.bounceTimer > 0) {
-        s.bounceTimer -= dt;
-        s.targetY = 45; // pull up playfully
-        if (s.bounceTimer <= 0) {
-          setIsWaving(false);
-          setShowThwip(false);
-          s.targetY = 82 + Math.random() * 20; // descend back down
-        }
-      } else {
-        // Gentle periodic ambient floating
-        if (Math.sin(s.time * 0.22) > 0.985 && Math.random() < 0.02) {
-          s.targetY = 75 + Math.random() * 30;
+      const geom = getGeometry();
+      if (!geom) {
+        animId = requestAnimationFrame(loop);
+        return;
+      }
+
+      s.webX = geom.webOriginX;
+      s.webY = geom.webOriginY;
+
+      // Handle THWIP speech bubble timer
+      if (s.thwipTimer > 0) {
+        s.thwipTimer -= dt;
+        if (s.thwipTimer <= 0) setShowThwip(false);
+      }
+
+      // -------------------------------------------------------------
+      // PHASE 1: RAPPEL DOWN FROM TEXT TO THE BLUE BOX
+      // -------------------------------------------------------------
+      if (s.phase === 'RAPPEL') {
+        const floorY = getGroundY(s.x, geom);
+        const targetRappelY = floorY - 12; // reach the surface of the blue box
+        const dy = targetRappelY - s.y;
+
+        s.vy += dy * 6.5 * dt;
+        s.vy *= Math.pow(0.85, dt * 60);
+        s.y += s.vy * dt;
+
+        // Subtle pendulum sway during descent
+        s.x = s.webX + Math.sin(s.time * 2.2) * 6;
+
+        // Touch the blue box!
+        if (s.y >= targetRappelY - 4) {
+          s.y = floorY - 6;
+          s.vy = 0;
+          s.phase = 'ON_BOX';
+          s.patrolDir = 1;
+          s.facing = 1;
         }
       }
 
-      // Spring physics for web elasticity
-      const dy = s.targetY - s.currentY;
-      const springK = s.bounceTimer > 0 ? 14 : 5.5;
-      const damping = 0.86;
+      // -------------------------------------------------------------
+      // PHASE 2: CRAWLING & JUMPING ACROSS THE BLUE STEPPED BOX
+      // -------------------------------------------------------------
+      else if (s.phase === 'ON_BOX' || s.phase === 'LEAPING') {
+        const currentFloor = getGroundY(s.x, geom);
 
-      s.vy += dy * springK * dt;
-      s.vy *= Math.pow(damping, dt * 60);
-      s.currentY += s.vy * dt;
+        // Pause occasionally to look around
+        if (s.pauseTimer > 0) {
+          s.pauseTimer -= dt;
+        } else {
+          // Crawl along the surface
+          if (s.phase === 'ON_BOX') {
+            const speed = 48; // px per second
+            s.vx = s.patrolDir * speed;
+            s.facing = s.patrolDir;
 
-      // Friendly rhythmic pendulum sway
-      const rawSway = Math.sin(s.time * 1.6) * 7;
-      const pixelSway = Math.round(rawSway / 2) * 2;
-      setSwayX(pixelSway);
+            // Animate 8-bit crawling legs
+            s.frameTimer += dt;
+            if (s.frameTimer > 0.12) {
+              s.frameTimer = 0;
+              s.crawlFrame = (s.crawlFrame + 1) % 4;
+            }
 
-      setThreadLength(Math.round(s.currentY));
-      setAnimTime(s.time * (s.bounceTimer > 0 ? 10 : 2.5));
+            // Check upcoming floor ahead (detect step ledges)
+            const lookAheadX = s.x + s.patrolDir * 28;
+            const floorAhead = getGroundY(lookAheadX, geom);
+
+            // If approaching an upward step (floorAhead is HIGHER up, so smaller Y):
+            if (floorAhead < currentFloor - 20) {
+              // Execute a Spidey leap up to the next step!
+              s.phase = 'LEAPING';
+              s.vy = -180; // upward jump impulse
+              s.vx = s.patrolDir * 75;
+            }
+            // If approaching a downward ledge drop:
+            else if (floorAhead > currentFloor + 20) {
+              // Hop down to the lower platform
+              s.phase = 'LEAPING';
+              s.vy = -40;
+              s.vx = s.patrolDir * 55;
+            }
+
+            // Check patrol boundaries (turn around near edges of the box)
+            if (s.x > geom.boxWidth * 0.90 && s.patrolDir === 1) {
+              s.patrolDir = -1;
+              s.pauseTimer = 1.2;
+            } else if (s.x < geom.boxWidth * 0.05 && s.patrolDir === -1) {
+              s.patrolDir = 1;
+              s.pauseTimer = 1.2;
+            }
+
+            // Random chance to pause and look around
+            if (Math.random() < 0.003) {
+              s.pauseTimer = 1.6;
+            }
+          }
+        }
+
+        // Apply velocities
+        s.x += s.vx * dt;
+
+        // Leaping / airborne physics
+        if (s.phase === 'LEAPING') {
+          s.vy += 480 * dt; // gravity
+          s.y += s.vy * dt;
+
+          const landFloor = getGroundY(s.x, geom);
+          if (s.y >= landFloor - 6 && s.vy > 0) {
+            s.y = landFloor - 6;
+            s.vy = 0;
+            s.phase = 'ON_BOX';
+          }
+        } else {
+          // Stay snapped smoothly to the top edge of the blue box
+          s.y = currentFloor - 6;
+        }
+      }
+
+      setSpiderPos({ x: Math.round(s.x), y: Math.round(s.y) });
+      setWebOrigin({ x: Math.round(s.webX), y: Math.round(s.webY) });
+      setFacing(s.facing);
+      setCrawlFrame(s.crawlFrame);
+      setIsJumping(s.phase === 'LEAPING');
+      setIsHanging(s.phase === 'RAPPEL');
+      setWebSlack(Math.sin(s.time * 2) * 4);
 
       animId = requestAnimationFrame(loop);
     };
@@ -78,18 +234,19 @@ export default function RealisticSpider() {
     return () => {
       if (animId) cancelAnimationFrame(animId);
     };
-  }, []);
+  }, [sectionRef, textAnchorRef, boxRef]);
 
   const handleInteract = () => {
-    stateRef.current.bounceTimer = 2.8;
-    setIsWaving(true);
+    const s = stateRef.current;
+    s.vy = -120; // playful hop
+    s.phase = 'LEAPING';
+    s.thwipTimer = 2.2;
     setShowThwip(true);
   };
 
   // Pixel unit scale: 2.2px for crisp retro arcade proportions
   const P = 2.2;
 
-  // Single pixel rectangle helper
   const Pixel = ({ x, y, w = 1, h = 1, color = '#EF4444' }) => (
     <rect
       x={x * P}
@@ -100,218 +257,169 @@ export default function RealisticSpider() {
     />
   );
 
-  // Friendly Spidey legs in classic Red & Blue suit colors
-  const renderSpideyLegs = () => {
-    const legs = [];
-    const t = animTime;
+  // -----------------------------------------------------------------
+  // SPIDEY ON THE BLUE BOX (Horizontal Crawling & Leaping Stance)
+  // -----------------------------------------------------------------
+  const renderBoxCrawler = () => {
+    const frame = crawlFrame;
+    const f = facing; // 1: facing right, -1: facing left
 
-    for (let side = -1; side <= 1; side += 2) {
-      const s = side;
+    // Leg stepping cycle when crawling along the blue surface
+    const stepA = frame === 0 || frame === 2 ? 1 : -1;
+    const stepB = frame === 1 || frame === 3 ? 1 : -1;
 
-      // Leg motion waves
-      const m1 = Math.sin(t + s * 0.4) * 1.5;
-      const m2 = Math.cos(t * 0.9 + s * 0.3) * 1.2;
-      const m3 = Math.sin(t * 1.1 + s * 0.5) * 1.2;
-      const m4 = Math.cos(t * 0.8 + s * 0.2) * 1.4;
+    return (
+      <g transform={`scale(${f}, 1)`}>
+        {/* Legs behind body */}
+        <Pixel x={-6} y={-4 + stepA} color="#0047FF" />
+        <Pixel x={-8} y={-6 + stepA} color="#EF4444" />
+        <Pixel x={-9} y={-2 + stepA} color="#EF4444" />
 
-      // Wave arm when disturbed (friendly Spidey wave on front right leg)
-      const waveArm = (s === 1 && isWaving) ? Math.sin(t * 2.5) * 5 : 0;
+        <Pixel x={-3} y={-5 - stepB} color="#0047FF" />
+        <Pixel x={-4} y={-8 - stepB} color="#EF4444" />
+        <Pixel x={-5} y={-3 - stepB} color="#EF4444" />
 
-      // -------------------------------------------------------------
-      // LEG 4 (REAR - Blue & Red holding the web thread at top)
-      // -------------------------------------------------------------
-      legs.push(
-        <React.Fragment key={`leg4-${s}`}>
-          {/* Base Red */}
-          <Pixel x={s * 2} y={-4} color="#EF4444" />
-          <Pixel x={s * 3} y={-5} color="#DC2626" />
-          {/* Blue Upper Thigh */}
-          <Pixel x={s * 4} y={-6} color="#0047FF" />
-          <Pixel x={s * 5} y={-7 + Math.round(m4 * 0.5)} color="#2563EB" />
-          <Pixel x={s * 6} y={-8 + Math.round(m4 * 0.5)} color="#0047FF" />
-          <Pixel x={s * 7} y={-9 + Math.round(m4)} color="#EF4444" /> {/* Red Knee */}
-          {/* Red Boot curling around the web */}
-          <Pixel x={s * 6} y={-10 + Math.round(m4)} color="#EF4444" />
-          <Pixel x={s * 4} y={-11 + Math.round(m4 * 0.8)} color="#DC2626" />
-          <Pixel x={s * 2} y={-11 + Math.round(m4 * 0.6)} color="#EF4444" />
-          <Pixel x={s * 1} y={-10 + Math.round(m4 * 0.4)} color="#FFFFFF" /> {/* Web Grip */}
-        </React.Fragment>
-      );
+        <Pixel x={2} y={-5 + stepA} color="#0047FF" />
+        <Pixel x={3} y={-8 + stepA} color="#EF4444" />
+        <Pixel x={4} y={-3 + stepA} color="#EF4444" />
 
-      // -------------------------------------------------------------
-      // LEG 3 (UPPER-MID - Spidey Blue with Red knee)
-      // -------------------------------------------------------------
-      legs.push(
-        <React.Fragment key={`leg3-${s}`}>
-          <Pixel x={s * 3} y={-2} color="#EF4444" />
-          <Pixel x={s * 5} y={-3} color="#0047FF" />
-          <Pixel x={s * 7} y={-4 + Math.round(m3 * 0.5)} color="#2563EB" />
-          <Pixel x={s * 9} y={-4 + Math.round(m3 * 0.8)} color="#0047FF" />
-          <Pixel x={s * 11} y={-3 + Math.round(m3)} color="#EF4444" /> {/* Red Knee */}
-          {/* Red Boot tip */}
-          <Pixel x={s * 11} y={-1 + Math.round(m3)} color="#EF4444" />
-          <Pixel x={s * 11} y={1 + Math.round(m3 * 0.8)} color="#DC2626" />
-          <Pixel x={s * 10} y={3 + Math.round(m3 * 0.6)} color="#EF4444" />
-        </React.Fragment>
-      );
+        <Pixel x={6} y={-4 - stepB} color="#0047FF" />
+        <Pixel x={8} y={-6 - stepB} color="#EF4444" />
+        <Pixel x={9} y={-2 - stepB} color="#EF4444" />
 
-      // -------------------------------------------------------------
-      // LEG 2 (LOWER-MID - Blue with Red Boots)
-      // -------------------------------------------------------------
-      legs.push(
-        <React.Fragment key={`leg2-${s}`}>
-          <Pixel x={s * 3} y={0} color="#EF4444" />
-          <Pixel x={s * 5} y={1} color="#0047FF" />
-          <Pixel x={s * 7} y={2 + Math.round(m2 * 0.5)} color="#2563EB" />
-          <Pixel x={s * 9} y={3 + Math.round(m2 * 0.8)} color="#0047FF" />
-          <Pixel x={s * 10} y={5 + Math.round(m2)} color="#EF4444" /> {/* Red Knee */}
-          {/* Lower boot */}
-          <Pixel x={s * 10} y={7 + Math.round(m2)} color="#EF4444" />
-          <Pixel x={s * 9} y={9 + Math.round(m2 * 0.8)} color="#DC2626" />
-          <Pixel x={s * 8} y={11 + Math.round(m2 * 0.6)} color="#EF4444" />
-        </React.Fragment>
-      );
+        {/* Spidey Body / Torso (Cobalt Blue sides with Red Center & Emblem) */}
+        <Pixel x={-6} y={-3} w={3} h={4} color="#0047FF" />
+        <Pixel x={-3} y={-4} w={5} h={5} color="#EF4444" />
+        <Pixel x={-1} y={-3} w={2} h={3} color="#0F172A" /> {/* Black Spider Emblem */}
+        <Pixel x={2} y={-3} w={2} h={4} color="#0047FF" />
 
-      // -------------------------------------------------------------
-      // LEG 1 (FRONT - Friendly Reaching / Waving Limb)
-      // -------------------------------------------------------------
-      legs.push(
-        <React.Fragment key={`leg1-${s}`}>
-          <Pixel x={s * 2} y={1} color="#EF4444" />
-          <Pixel x={s * 4} y={3} color="#0047FF" />
-          <Pixel x={s * 6} y={4 + Math.round(m1 * 0.5) - waveArm} color="#2563EB" />
-          <Pixel x={s * 7} y={6 + Math.round(m1 * 0.8) - waveArm} color="#0047FF" />
-          <Pixel x={s * 8} y={8 + Math.round(m1) - waveArm} color="#EF4444" /> {/* Red Glove */}
-          {/* Hand / Foot */}
-          <Pixel x={s * 8} y={10 + Math.round(m1) - waveArm} color="#EF4444" />
-          <Pixel x={s * 7} y={12 + Math.round(m1 * 0.9) - waveArm} color="#DC2626" />
-          <Pixel x={s * 6} y={14 + Math.round(m1 * 0.8) - waveArm} color="#EF4444" />
-        </React.Fragment>
-      );
-    }
+        {/* Head / Mask (Facing forward) */}
+        <Pixel x={4} y={-4} w={4} h={5} color="#EF4444" />
+        <Pixel x={5} y={-3} w={3} h={3} color="#DC2626" />
 
-    return legs;
+        {/* Iconic White Spider-Man Mask Eye */}
+        <Pixel x={5} y={-3} color="#000000" />
+        <Pixel x={6} y={-3} w={2} h={2} color="#FFFFFF" />
+        <Pixel x={8} y={-2} color="#000000" />
+
+        {/* Front Legs (in front of body) */}
+        <Pixel x={-5} y={-1 - stepA} color="#0047FF" />
+        <Pixel x={-7} y={2 - stepA} color="#EF4444" />
+        <Pixel x={-8} y={4} color="#DC2626" />
+
+        <Pixel x={-1} y={-1 + stepB} color="#0047FF" />
+        <Pixel x={-2} y={3 + stepB} color="#EF4444" />
+        <Pixel x={-2} y={5} color="#DC2626" />
+
+        <Pixel x={3} y={-1 - stepA} color="#0047FF" />
+        <Pixel x={4} y={3 - stepA} color="#EF4444" />
+        <Pixel x={5} y={5} color="#DC2626" />
+
+        <Pixel x={6} y={-1 + stepB} color="#0047FF" />
+        <Pixel x={8} y={2 + stepB} color="#EF4444" />
+        <Pixel x={9} y={4} color="#DC2626" />
+      </g>
+    );
   };
 
-  // Silvery white spider web line with dashed pixel dots
-  const webDots = [];
-  const spacing = 4;
-  for (let y = 0; y < threadLength - 8; y += spacing) {
-    const progress = y / threadLength;
-    const curX = swayX * progress;
-    webDots.push(
-      <rect
-        key={`web-${y}`}
-        x={curX - 0.6}
-        y={y}
-        width={1.2}
-        height={2.6}
-        fill="#FFFFFF"
-        opacity={0.8}
-      />
-    );
-  }
+  // -----------------------------------------------------------------
+  // SPIDEY HANGING UPSIDE-DOWN (Rappelling down from the text)
+  // -----------------------------------------------------------------
+  const renderHangingSpider = () => (
+    <g>
+      {/* Rear legs holding the web line */}
+      <Pixel x={-4} y={-8} color="#0047FF" />
+      <Pixel x={-6} y={-10} color="#EF4444" />
+      <Pixel x={-2} y={-11} color="#EF4444" />
+
+      <Pixel x={4} y={-8} color="#0047FF" />
+      <Pixel x={6} y={-10} color="#EF4444" />
+      <Pixel x={2} y={-11} color="#EF4444" />
+
+      {/* Mid legs arched outward */}
+      <Pixel x={-6} y={-4} color="#0047FF" />
+      <Pixel x={-9} y={-4} color="#EF4444" />
+      <Pixel x={-10} y={-1} color="#EF4444" />
+
+      <Pixel x={6} y={-4} color="#0047FF" />
+      <Pixel x={9} y={-4} color="#EF4444" />
+      <Pixel x={10} y={-1} color="#EF4444" />
+
+      {/* Front legs reaching downward */}
+      <Pixel x={-5} y={1} color="#0047FF" />
+      <Pixel x={-8} y={3} color="#EF4444" />
+      <Pixel x={-7} y={7} color="#DC2626" />
+
+      <Pixel x={5} y={1} color="#0047FF" />
+      <Pixel x={8} y={3} color="#EF4444" />
+      <Pixel x={7} y={7} color="#DC2626" />
+
+      {/* Abdomen (At top, blue flanks & red center) */}
+      <Pixel x={-3} y={-6} w={6} h={5} color="#EF4444" />
+      <Pixel x={-4} y={-5} w={2} h={4} color="#0047FF" />
+      <Pixel x={2} y={-5} w={2} h={4} color="#0047FF" />
+      <Pixel x={0} y={-4} color="#0F172A" /> {/* Spider Emblem */}
+
+      {/* Head / Mask (Pointing down, big white comic eyes) */}
+      <Pixel x={-3} y={0} w={6} h={5} color="#EF4444" />
+      {/* Left Eye */}
+      <Pixel x={-2} y={1} color="#000000" />
+      <Pixel x={-1} y={1} w={2} h={2} color="#FFFFFF" />
+      {/* Right Eye */}
+      <Pixel x={1} y={1} w={2} h={2} color="#FFFFFF" />
+      <Pixel x={3} y={1} color="#000000" />
+    </g>
+  );
 
   return (
-    <span
-      className="absolute left-1/2 top-full -translate-x-1/2 pointer-events-auto select-none z-30 block"
-      style={{
-        width: '64px',
-        height: `${Math.max(120, threadLength + 50)}px`,
-      }}
-      onMouseEnter={handleInteract}
-      onClick={handleInteract}
-      title="Friendly Spidey spider! Click or hover to say hi!"
+    <div
+      className="absolute inset-0 pointer-events-none z-30"
+      style={{ width: '100%', height: '100%' }}
     >
       <svg
-        className="w-full h-full overflow-visible cursor-pointer"
+        className="w-full h-full overflow-visible"
         shapeRendering="crispEdges"
-        viewBox={`-32 0 64 ${Math.max(120, threadLength + 50)}`}
       >
-        {/* 1. Silvery Web Thread */}
-        {webDots}
+        <defs>
+          <linearGradient id="spideyWebGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.85" />
+            <stop offset="70%" stopColor="#94A3B8" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#00F0FF" stopOpacity="0.8" />
+          </linearGradient>
+        </defs>
 
-        {/* 2. Spidey Spider Body Group */}
-        <g transform={`translate(${swayX}, ${threadLength})`}>
-          {/* Animated Friendly Spidey Limbs */}
-          {renderSpideyLegs()}
+        {/* 1. Silvery Web Line connected from text down to Spidey */}
+        <path
+          d={`M ${webOrigin.x} ${webOrigin.y} Q ${
+            (webOrigin.x + spiderPos.x) / 2 + (isHanging ? webSlack : 0)
+          } ${(webOrigin.y + spiderPos.y) / 2} ${spiderPos.x} ${
+            isHanging ? spiderPos.y - 12 : spiderPos.y - 4
+          }`}
+          stroke="url(#spideyWebGrad)"
+          strokeWidth="1.2"
+          strokeDasharray="4 2"
+          fill="none"
+        />
 
-          {/* -------------------------------------------------------
-              ABDOMEN (At top, anchored to web line - Blue & Red suit)
-              ------------------------------------------------------- */}
-          {/* Web Anchor Point */}
-          <Pixel x={0} y={-8} color="#FFFFFF" />
+        {/* Web origin anchor node at the text */}
+        <circle cx={webOrigin.x} cy={webOrigin.y} r="1.5" fill="#FFFFFF" />
 
-          {/* Abdomen upper curve */}
-          <Pixel x={-1} y={-7} w={3} h={1} color="#EF4444" />
-          
-          {/* Abdomen body - Cobalt Blue flanks with Crimson Red center */}
-          <Pixel x={-2} y={-6} w={1} h={1} color="#0047FF" />
-          <Pixel x={-1} y={-6} w={3} h={1} color="#EF4444" />
-          <Pixel x={2} y={-6} w={1} h={1} color="#0047FF" />
+        {/* 2. Spidey Actor (Either Rappelling or Crawling on the Blue Box) */}
+        <g
+          transform={`translate(${spiderPos.x}, ${spiderPos.y})`}
+          className="pointer-events-auto cursor-pointer"
+          onClick={handleInteract}
+          onMouseEnter={handleInteract}
+          title="Spidey crawling on the blue box! Click to make him jump & THWIP!"
+        >
+          {isHanging ? renderHangingSpider() : renderBoxCrawler()}
 
-          <Pixel x={-3} y={-5} w={2} h={1} color="#0047FF" />
-          <Pixel x={-1} y={-5} w={3} h={1} color="#EF4444" />
-          <Pixel x={2} y={-5} w={2} h={1} color="#0047FF" />
-
-          {/* Center Black Spider Emblem on Red Core */}
-          <Pixel x={-3} y={-4} w={2} h={1} color="#0047FF" />
-          <Pixel x={-1} y={-4} color="#EF4444" />
-          <Pixel x={0} y={-4} color="#0F172A" /> {/* Spider Icon */}
-          <Pixel x={1} y={-4} color="#EF4444" />
-          <Pixel x={2} y={-4} w={2} h={1} color="#0047FF" />
-
-          <Pixel x={-3} y={-3} w={2} h={1} color="#0047FF" />
-          <Pixel x={-1} y={-3} w={3} h={1} color="#EF4444" />
-          <Pixel x={2} y={-3} w={2} h={1} color="#0047FF" />
-
-          <Pixel x={-2} y={-2} w={1} h={1} color="#0047FF" />
-          <Pixel x={-1} y={-2} w={3} h={1} color="#EF4444" />
-          <Pixel x={2} y={-2} w={1} h={1} color="#0047FF" />
-
-          {/* Waist (Belt detail) */}
-          <Pixel x={-1} y={-1} w={3} h={1} color="#0F172A" />
-
-          {/* -------------------------------------------------------
-              HEAD / MASK (Pointing down - Iconic Spidey Mask & Big White Eyes)
-              ------------------------------------------------------- */}
-          {/* Mask Crown */}
-          <Pixel x={-2} y={0} w={5} h={1} color="#EF4444" />
-          <Pixel x={0} y={0} color="#0F172A" /> {/* Webbing line */}
-
-          {/* Eye Rows with crisp black rims and friendly large white lenses */}
-          <Pixel x={-3} y={1} w={7} h={1} color="#EF4444" />
-          {/* Black eye border */}
-          <Pixel x={-2} y={1} color="#000000" />
-          <Pixel x={2} y={1} color="#000000" />
-
-          <Pixel x={-3} y={2} w={7} h={1} color="#EF4444" />
-          {/* Left Eye: Big White Comic Lens */}
-          <Pixel x={-2} y={2} color="#000000" />
-          <Pixel x={-1} y={2} color="#FFFFFF" />
-          {/* Mask Center Webbing */}
-          <Pixel x={0} y={2} color="#0F172A" />
-          {/* Right Eye: Big White Comic Lens */}
-          <Pixel x={1} y={2} color="#FFFFFF" />
-          <Pixel x={2} y={2} color="#000000" />
-
-          {/* Eye Bottom & Chin */}
-          <Pixel x={-2} y={3} w={5} h={1} color="#EF4444" />
-          <Pixel x={-1} y={3} color="#000000" />
-          <Pixel x={1} y={3} color="#000000" />
-
-          {/* Friendly Rounded Mask Chin */}
-          <Pixel x={-1} y={4} w={3} h={1} color="#DC2626" />
-          <Pixel x={0} y={5} w={1} h={1} color="#EF4444" />
-
-          {/* -------------------------------------------------------
-              INTERACTIVE "THWIP!" SPEECH BUBBLE ON CLICK/HOVER
-              ------------------------------------------------------- */}
+          {/* Interactive "THWIP!" Speech Bubble */}
           {showThwip && (
-            <g transform="translate(18, -4)" className="animate-bounce">
+            <g transform="translate(14, -24)" className="animate-bounce">
               <rect
                 x="-2"
-                y="-14"
+                y="-13"
                 width="42"
                 height="15"
                 rx="3"
@@ -321,7 +429,7 @@ export default function RealisticSpider() {
               />
               <text
                 x="19"
-                y="-4"
+                y="-3"
                 fill="#FFFFFF"
                 fontSize="8.5"
                 fontWeight="bold"
@@ -334,6 +442,6 @@ export default function RealisticSpider() {
           )}
         </g>
       </svg>
-    </span>
+    </div>
   );
 }
