@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import GnosisSteppedDither from '../components/GnosisSteppedDither';
+import PixelSpiderDescent from '../components/PixelSpiderDescent';
 import ThreatToCertaintyWire from '../components/ThreatToCertaintyWire';
 import LinguisticLimitsSection from '../components/LinguisticLimitsSection';
 import UniqodeBentoCollage from '../components/UniqodeBentoCollage';
@@ -20,8 +21,11 @@ export default function HomePage() {
       {/* =========================================================================
           HERO SECTION: PHISHSHIELD FULL STACK THREAT INTELLIGENCE
           ========================================================================= */}
-      <section className="pt-2 sm:pt-4 overflow-hidden bg-[#080A0F] text-white">
+      <section className="relative pt-2 sm:pt-4 overflow-hidden bg-[#080A0F] text-white">
         
+        {/* Pixel Spider Virus Rappelling from Text */}
+        <PixelSpiderDescent />
+
         {/* Hero Title & Subtitle - Aligned flush with the left side of the box and navbar */}
         <div className="w-full mb-3.5 sm:mb-4.5">
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[62px] font-bold tracking-tight text-white leading-[1.08] mb-2.5">
