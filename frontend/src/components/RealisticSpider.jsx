@@ -177,8 +177,8 @@ export default function RealisticSpider() {
   };
 
   return (
-    <div
-      className="absolute left-1/2 top-full -translate-x-1/2 pointer-events-auto select-none z-30"
+    <span
+      className="absolute left-1/2 top-full -translate-x-1/2 pointer-events-auto select-none z-30 block"
       style={{
         width: '60px',
         height: `${Math.max(120, threadLength + 40)}px`,
@@ -277,6 +277,6 @@ export default function RealisticSpider() {
           <circle cx="0.6" cy="-5.2" r="0.35" fill="#FFFFFF" opacity="0.5" />
         </g>
       </svg>
-    </div>
+    </span>
   );
 }
