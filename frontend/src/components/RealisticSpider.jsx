@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * CyberHeroVsSpider:
+ * SorceressVsSpider:
  * 1. Friendly pixel-art Spidey descends from the text and crawls on the blue box.
- * 2. Cyber Hero Avatar built from scratch:
- *    - Humanoid cyber-guardian with glowing cyan visor, nano-armor plates, fluttering energy scarf, and booster boots.
- *    - Dual-hand futuristic laser railgun/blaster that dynamically aims at the spider.
- *    - Fires rapid glowing cyan & hot-white plasma laser pulses with muzzle flashes and weapon recoil.
- *    - Spidey dodges and reacts ("WHOA!", "THWIP!", jump flips) on laser impact.
- *    - Hero patrols, runs, and leaps across the stepped blue box platforms.
+ * 2. Anime Pixel-Art Pyromancer Sorceress Avatar (from user design):
+ *    - Red coat with fur collar, auburn hair with bangs & ponytail.
+ *    - Open palm conjuring live, swirling blue and dark blue magical flames!
+ *    - Fires fireballs of vibrant cobalt blue (#0047FF), dark blue (#1D4ED8), and cyan (#00F0FF)!
+ *    - Smoothly follows the blue stepped staircase path without unnecessary jumping.
+ *    - Spidey dodges and reacts on fireball impact with blue flame sparks.
  */
 export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   // Spider State
@@ -22,22 +22,18 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   const [webOrigin, setWebOrigin] = useState({ x: 200, y: 40 });
   const [webSlack, setWebSlack] = useState(0);
 
-  // Hero Avatar State
-  const [heroPos, setHeroPos] = useState({ x: 450, y: 150 });
-  const [heroFacing, setHeroFacing] = useState(-1);
-  const [heroAimAngle, setHeroAimAngle] = useState(Math.PI);
-  const [heroMuzzleFlash, setHeroMuzzleFlash] = useState(0);
-  const [heroRecoil, setHeroRecoil] = useState(0);
-  const [heroWalkFrame, setHeroWalkFrame] = useState(0);
-  const [heroIsJumping, setHeroIsJumping] = useState(false);
+  // Sorceress Avatar State
+  const [magePos, setMagePos] = useState({ x: 450, y: 150 });
+  const [mageFacing, setMageFacing] = useState(-1);
+  const [handFlamePhase, setHandFlamePhase] = useState(0);
 
-  // Lasers & Hit Particles
-  const [lasers, setLasers] = useState([]);
-  const [hitParticles, setHitParticles] = useState([]);
+  // Blue Fireballs & Flame Particles
+  const [fireballs, setFireballs] = useState([]);
+  const [flameSparks, setFlameSparks] = useState([]);
 
   const stateRef = useRef({
     // Spider state
-    spiderPhase: 'RAPPEL', // 'RAPPEL', 'ON_BOX', 'LEAPING', 'DODGE'
+    spiderPhase: 'RAPPEL', // 'RAPPEL', 'ON_BOX', 'DODGE'
     sx: 200,
     sy: 40,
     svx: 0,
@@ -48,20 +44,16 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
     sPatrolDir: 1,
     sReactTimer: 0,
 
-    // Hero state
-    hx: 460,
-    hy: 150,
-    hvx: 0,
-    hvy: 0,
-    hFacing: -1,
-    hAim: Math.PI,
-    hWalkCycle: 0,
-    hShootCooldown: 0,
-    hRecoil: 0,
-    hMuzzle: 0,
-    hIsJumping: false,
+    // Sorceress state
+    mx: 460,
+    my: 150,
+    mvx: 0,
+    mFacing: -1,
+    mShootCooldown: 0,
+    patrolDir: -1,
+    walkCycle: 0,
 
-    // Projectiles & FX
+    // Blue Fire Projectiles & Sparks
     projectiles: [],
     sparks: [],
 
@@ -121,8 +113,8 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       stateRef.current.webX = initGeom.webOriginX;
       stateRef.current.webY = initGeom.webOriginY;
       stateRef.current.sy = initGeom.webOriginY + 10;
-      stateRef.current.hx = initGeom.boxWidth * 0.60;
-      stateRef.current.hy = getGroundY(initGeom.boxWidth * 0.60, initGeom);
+      stateRef.current.mx = initGeom.boxWidth * 0.62;
+      stateRef.current.my = getGroundY(initGeom.boxWidth * 0.62, initGeom);
     }
 
     const loop = (now) => {
@@ -179,7 +171,7 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
             s.sFrame = (s.sFrame + 1) % 4;
           }
 
-          // Boundary turn around
+          // Boundary bounce
           if (s.sx > geom.boxWidth * 0.88 && s.sPatrolDir === 1) {
             s.sPatrolDir = -1;
           } else if (s.sx < geom.boxWidth * 0.06 && s.sPatrolDir === -1) {
@@ -193,7 +185,7 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
 
         s.sx += s.svx * dt;
 
-        // Only airborne during laser DODGE reaction
+        // Airborne only during DODGE jump
         if (s.spiderPhase === 'DODGE') {
           s.svy += 500 * dt;
           s.sy += s.svy * dt;
@@ -208,89 +200,101 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       }
 
       // =============================================================
-      // 2. HERO AVATAR: STEADY PATH PATROL (NO UNNECESSARY JUMPING)
-      // Follows the blue stepped staircase path smoothly and steadily
+      // 2. SORCERESS AVATAR: DISCIPLINED PATH PATROL (NO UNNECESSARY JUMPING)
+      // Follows the blue stepped staircase path smoothly
       // =============================================================
-      s.hRecoil = Math.max(0, s.hRecoil - dt * 25);
-      s.hMuzzle = Math.max(0, s.hMuzzle - dt * 10);
-      s.hShootCooldown = Math.max(0, s.hShootCooldown - dt);
+      s.mShootCooldown = Math.max(0, s.mShootCooldown - dt);
 
-      // Hero aims futuristic railgun directly at the spider
-      const gunMouthX = s.hx + s.hFacing * 18;
-      const gunMouthY = s.hy - 18;
-      const aimAngle = Math.atan2(s.sy - gunMouthY, s.sx - gunMouthX);
-      s.hAim = aimAngle;
-      s.hFacing = s.sx > s.hx ? 1 : -1;
+      // Sorceress turns to face the spider when in range
+      s.mFacing = s.sx > s.mx ? 1 : -1;
 
-      // Steady, disciplined path patrol along the blue stepped staircase
-      // Patrols smoothly from Platform 1 (0.08) -> Platform 2 (0.50) -> Platform 3 (0.86)
-      const walkSpeed = 44; // smooth, steady walking speed (px/sec)
-      s.hvx = s.patrolDir * walkSpeed;
-      s.hx += s.hvx * dt;
-      s.hWalkCycle += dt * 7;
+      // Steady, smooth walking speed along the staircase surface
+      const walkSpeed = 38;
+      s.mvx = s.patrolDir * walkSpeed;
+      s.mx += s.mvx * dt;
+      s.walkCycle += dt * 6;
 
       // Turn around smoothly at the patrol ends of the blue box
-      if (s.hx >= geom.boxWidth * 0.88 && s.patrolDir === 1) {
+      if (s.mx >= geom.boxWidth * 0.88 && s.patrolDir === 1) {
         s.patrolDir = -1;
-      } else if (s.hx <= geom.boxWidth * 0.08 && s.patrolDir === -1) {
+      } else if (s.mx <= geom.boxWidth * 0.08 && s.patrolDir === -1) {
         s.patrolDir = 1;
       }
 
-      // Smooth grounded surface tracking (no bouncy jumping)
-      // Character's feet smoothly climb/glide along the exact step profile
-      const targetFloor = getGroundY(s.hx, geom);
-      s.hy += (targetFloor - s.hy) * Math.min(1, 16 * dt);
-      s.hIsJumping = false; // Strictly grounded on path
+      // Smooth surface tracking along the exact stepped profile (no jumping!)
+      const targetFloor = getGroundY(s.mx, geom);
+      s.my += (targetFloor - s.my) * Math.min(1, 16 * dt);
 
-      // -------------------------------------------------------------
-      // 3. SHOOTING FUTURISTIC LASER BULLETS
-      // -------------------------------------------------------------
-      // Fire every ~0.8s when spider is in range
-      if (s.hShootCooldown <= 0 && distToSpider < 480) {
-        s.hShootCooldown = 0.75 + Math.random() * 0.35;
-        s.hRecoil = 5.5;
-        s.hMuzzle = 1.0;
+      // =============================================================
+      // 3. CASTING BLUE & DARK BLUE FIREBALLS
+      // =============================================================
+      // Hand flame position: x is +13px when facing right, -13px when facing left, y is -52px
+      const handFlameX = s.mx + s.mFacing * 13;
+      const handFlameY = s.my - 52;
+      const distToSpider = Math.hypot(s.sx - s.mx, s.sy - s.my);
 
-        const laserSpeed = 440;
+      // Fire blue fireball every ~0.9s
+      if (s.mShootCooldown <= 0 && distToSpider < 500) {
+        s.mShootCooldown = 0.85 + Math.random() * 0.35;
+
+        const aimAngle = Math.atan2(s.sy - handFlameY, s.sx - handFlameX);
+        const fireballSpeed = 380;
+
         s.projectiles.push({
           id: Math.random(),
-          x: gunMouthX,
-          y: gunMouthY,
-          vx: Math.cos(aimAngle) * laserSpeed,
-          vy: Math.sin(aimAngle) * laserSpeed,
+          x: handFlameX,
+          y: handFlameY,
+          vx: Math.cos(aimAngle) * fireballSpeed,
+          vy: Math.sin(aimAngle) * fireballSpeed,
           angle: aimAngle,
           life: 0,
+          tail: [],
         });
       }
 
-      // Update Laser Projectiles
+      // Update Blue Fireballs
       for (let pIdx = s.projectiles.length - 1; pIdx >= 0; pIdx--) {
         const p = s.projectiles[pIdx];
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         p.life += dt;
 
+        // Add flame tail trail
+        if (Math.random() < 0.7) {
+          p.tail.unshift({
+            x: p.x - (p.vx * dt * 0.5) + (Math.random() - 0.5) * 4,
+            y: p.y - (p.vy * dt * 0.5) + (Math.random() - 0.5) * 4,
+            size: 4 + Math.random() * 5,
+            color: Math.random() > 0.45 ? '#0047FF' : '#1D4ED8',
+            opacity: 0.85,
+          });
+        }
+        if (p.tail.length > 8) p.tail.pop();
+        p.tail.forEach((t) => (t.opacity -= dt * 2.2));
+
         // Collision check with Spider
         const distToSpiderHit = Math.hypot(p.x - s.sx, p.y - s.sy);
-        if (distToSpiderHit < 22) {
-          // SPIDER GETS HIT! Spidey dodges and flips backwards!
+        if (distToSpiderHit < 24) {
+          // SPIDER GETS HIT BY BLUE FIREBALL!
           s.spiderPhase = 'DODGE';
           s.svy = -190;
-          s.svx = -s.hFacing * 110;
-          s.sPatrolDir = -s.hFacing;
+          s.svx = -s.mFacing * 110;
+          s.sPatrolDir = -s.mFacing;
           setSpiderReaction(Math.random() > 0.5 ? 'WHOA!' : 'THWIP!');
           s.sReactTimer = 1.8;
 
-          // Spawn laser hit spark particles
-          for (let k = 0; k < 8; k++) {
+          // Spawn blue & dark blue flame explosion sparks
+          for (let k = 0; k < 12; k++) {
             const sparkAngle = Math.random() * Math.PI * 2;
-            const sparkSpeed = 60 + Math.random() * 120;
+            const sparkSpeed = 50 + Math.random() * 110;
             s.sparks.push({
               id: Math.random(),
               x: p.x,
               y: p.y,
               vx: Math.cos(sparkAngle) * sparkSpeed,
-              vy: Math.sin(sparkAngle) * sparkSpeed,
+              vy: Math.sin(sparkAngle) * sparkSpeed - 20,
+              size: 2 + Math.random() * 4,
+              color: Math.random() > 0.5 ? '#0047FF' : Math.random() > 0.3 ? '#1D4ED8' : '#00F0FF',
               life: 1.0,
             });
           }
@@ -300,17 +304,17 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
         }
 
         // Out of bounds
-        if (p.life > 1.8 || p.x < 0 || p.x > geom.sectionWidth || p.y < 0 || p.y > geom.sectionHeight) {
+        if (p.life > 2.0 || p.x < 0 || p.x > geom.sectionWidth || p.y < 0 || p.y > geom.sectionHeight) {
           s.projectiles.splice(pIdx, 1);
         }
       }
 
-      // Update Spark Particles
+      // Update Blue Fire Sparks
       for (let spIdx = s.sparks.length - 1; spIdx >= 0; spIdx--) {
         const sp = s.sparks[spIdx];
         sp.x += sp.vx * dt;
         sp.y += sp.vy * dt;
-        sp.life -= dt * 2.8;
+        sp.life -= dt * 2.5;
         if (sp.life <= 0) {
           s.sparks.splice(spIdx, 1);
         }
@@ -324,16 +328,12 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       setWebOrigin({ x: Math.round(s.webX), y: Math.round(s.webY) });
       setWebSlack(Math.sin(s.time * 2) * 4);
 
-      setHeroPos({ x: Math.round(s.hx), y: Math.round(s.hy) });
-      setHeroFacing(s.hFacing);
-      setHeroAimAngle(s.hAim);
-      setHeroMuzzleFlash(s.hMuzzle);
-      setHeroRecoil(s.hRecoil);
-      setHeroWalkFrame(Math.floor(s.hWalkCycle) % 4);
-      setHeroIsJumping(s.hIsJumping);
+      setMagePos({ x: Math.round(s.mx), y: Math.round(s.my) });
+      setMageFacing(s.mFacing);
+      setHandFlamePhase(s.time * 8);
 
-      setLasers([...s.projectiles]);
-      setHitParticles([...s.sparks]);
+      setFireballs([...s.projectiles]);
+      setFlameSparks([...s.sparks]);
 
       animId = requestAnimationFrame(loop);
     };
@@ -345,10 +345,10 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
     };
   }, [sectionRef, textAnchorRef, boxRef]);
 
-  // Click interaction: commands hero to immediately rapid-fire!
-  const handleHeroShoot = () => {
+  // Click interaction: commands sorceress to instantly cast a blue fireball!
+  const handleCastFireball = () => {
     const s = stateRef.current;
-    s.hShootCooldown = 0;
+    s.mShootCooldown = 0;
   };
 
   const P = 2.2;
@@ -455,97 +455,70 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   );
 
   // -----------------------------------------------------------------
-  // CYBER HERO AVATAR BUILT FROM SCRATCH
-  // Humanoid Cyber Defender with Glowing Cyan Visor, Scarf, and Plasma Cannon
+  // ANIME PYROMANCER SORCERESS AVATAR WITH BLUE & DARK BLUE FLAME
+  // Rendered with pixelated clarity directly from user's design!
   // -----------------------------------------------------------------
-  const renderHeroAvatar = () => {
-    const f = heroFacing;
-    const legCycle = Math.sin(heroWalkFrame * 1.5) * 4;
-    const gunRot = f === 1 ? heroAimAngle : heroAimAngle - Math.PI;
+  const renderSorceress = () => {
+    const f = mageFacing;
+    const spriteW = 42;
+    const spriteH = 70;
+
+    // Dancing flame flicker offsets on her raised hand
+    const flicker1 = Math.sin(handFlamePhase) * 2;
+    const flicker2 = Math.cos(handFlamePhase * 1.3) * 2.5;
 
     return (
       <g transform={`scale(${f}, 1)`} className="cursor-pointer">
-        {/* 1. Fluttering Energy Scarf / Cape behind Hero */}
-        <path
-          d={`M -4 -22 Q -14 -18 -22 -12 Q -16 -8 -2 -18`}
-          fill="rgba(0, 71, 255, 0.85)"
-          stroke="#00F0FF"
-          strokeWidth="1.0"
+        {/* Pixel-Art Character Sprite */}
+        <image
+          href="/sorceress-blueflame.png"
+          x={-spriteW / 2}
+          y={-spriteH}
+          width={spriteW}
+          height={spriteH}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ imageRendering: 'pixelated' }}
         />
 
-        {/* 2. Legs / Robotic Thruster Boots */}
-        {heroIsJumping ? (
-          // In-air tucked legs with rocket thruster sparks
-          <>
-            <rect x="-6" y="-12" width="4.5" height="10" rx="1.5" fill="#0F172A" />
-            <rect x="1" y="-14" width="4.5" height="12" rx="1.5" fill="#1E293B" />
-            {/* Cyan Thruster Boots */}
-            <rect x="-7" y="-3" width="6.5" height="4" rx="1" fill="#00F0FF" />
-            <rect x="0" y="-3" width="6.5" height="4" rx="1" fill="#00F0FF" />
-            {/* Thruster Flames */}
-            <polygon points="-4,1 -6,6 -2,6" fill="#38BDF8" />
-            <polygon points="3,1 1,6 5,6" fill="#38BDF8" />
-          </>
-        ) : (
-          // Running / Stride Legs
-          <>
-            {/* Back Leg */}
-            <rect x={-4 - legCycle * 0.4} y="-13" width="4.5" height="11" rx="1.5" fill="#0F172A" />
-            <rect x={-5 - legCycle * 0.4} y="-3" width="6" height="4" rx="1" fill="#0047FF" />
-            {/* Front Leg */}
-            <rect x={2 + legCycle * 0.4} y="-13" width="4.5" height="11" rx="1.5" fill="#1E293B" />
-            <rect x={1 + legCycle * 0.4} y="-3" width="6" height="4" rx="1" fill="#00F0FF" />
-          </>
-        )}
+        {/* -----------------------------------------------------------
+            LIVE DYNAMIC BLUE & DARK BLUE HAND FLAME AURA
+            Right above her raised palm at (13px, -52px)
+            ----------------------------------------------------------- */}
+        <g transform="translate(13, -52)">
+          {/* Outer Deep Dark Blue Corona */}
+          <ellipse
+            cx={0}
+            cy={-2 + flicker1 * 0.4}
+            rx={9 + flicker1 * 0.5}
+            ry={12 + flicker2 * 0.5}
+            fill="#1D4ED8"
+            opacity="0.55"
+          />
+          {/* Mid Cobalt Blue Flame */}
+          <ellipse
+            cx={flicker2 * 0.3}
+            cy={-1 + flicker1 * 0.5}
+            rx={6.5 + flicker2 * 0.3}
+            ry={9 + flicker1 * 0.4}
+            fill="#0047FF"
+            opacity="0.85"
+          />
+          {/* Inner Cyan Hot Flame */}
+          <ellipse
+            cx={flicker1 * 0.2}
+            cy={0 + flicker2 * 0.3}
+            rx={4 + flicker1 * 0.2}
+            ry={6 + flicker2 * 0.2}
+            fill="#00F0FF"
+            opacity="0.9"
+          />
+          {/* Core White Spark */}
+          <circle cx={0} cy={1} r={2} fill="#FFFFFF" />
 
-        {/* 3. Hero Torso & Cyber Nano-Armor */}
-        <rect x="-6" y="-24" width="12" height="13" rx="2" fill="#0F172A" />
-        <rect x="-5" y="-23" width="10" height="9" rx="1" fill="#1E293B" />
-        {/* Glowing Arc Reactor Chest Core */}
-        <circle cx="0" cy="-19" r="2.2" fill="#00F0FF" />
-
-        {/* 4. Helmet & Glowing Visor */}
-        <ellipse cx="0" cy="-29" rx="7" ry="7.5" fill="#0F172A" stroke="#334155" strokeWidth="0.8" />
-        <rect x="-2" y="-37" width="4" height="3" fill="#0047FF" rx="0.5" /> {/* Helmet crest */}
-        
-        {/* Futuristic Glowing Cyan Visor */}
-        <rect x="-1" y="-31" width="7.5" height="3.2" rx="1" fill="#00F0FF" />
-        <rect x="1" y="-30" width="4.5" height="1.2" fill="#FFFFFF" />
-
-        {/* -------------------------------------------------------------
-            5. DUAL-HAND FUTURISTIC RAILGUN / LASER BLASTER
-            Pivots smoothly to aim directly at the spider!
-            ------------------------------------------------------------- */}
-        <g
-          transform={`translate(4, -18) rotate(${(gunRot * 180) / Math.PI}) translate(${-heroRecoil}, 0)`}
-        >
-          {/* Back Glove holding rifle grip */}
-          <circle cx="-3" cy="2" r="2.5" fill="#334155" />
-
-          {/* Gun Stock & Battery Chassis */}
-          <rect x="-8" y="-3.5" width="10" height="7" rx="1.5" fill="#0F172A" stroke="#0047FF" strokeWidth="0.8" />
-          <circle cx="-3" cy="0" r="1.6" fill="#00F0FF" />
-
-          {/* Heavy Railgun Barrel */}
-          <rect x="2" y="-2.5" width="16" height="5" rx="1" fill="#1E293B" />
-          {/* Glowing Energy Power Conduits along barrel */}
-          <line x1="3" y1="-1" x2="16" y2="-1" stroke="#00F0FF" strokeWidth="1.2" />
-          <line x1="3" y1="1" x2="16" y2="1" stroke="#00F0FF" strokeWidth="1.2" />
-          <rect x="16" y="-3" width="2.5" height="6" rx="0.5" fill="#E2E8F0" />
-
-          {/* Front Glove supporting barrel */}
-          <circle cx="6" cy="3" r="2.2" fill="#00F0FF" />
-
-          {/* Muzzle Flash FX when shooting */}
-          {heroMuzzleFlash > 0.1 && (
-            <g transform="translate(21, 0)">
-              <polygon
-                points="0,-7 3,-2 9,0 3,2 0,7 -3,2 -9,0 -3,-2"
-                fill="#FFFFFF"
-              />
-              <circle cx="0" cy="0" r="5.5" fill="#00F0FF" opacity="0.85" />
-            </g>
-          )}
+          {/* Floating rising blue flame ember dots */}
+          <rect x={-2 + flicker1} y={-14 + flicker2} width="2" height="2" fill="#00F0FF" />
+          <rect x={3 - flicker2} y={-16 - flicker1} width="2" height="2" fill="#0047FF" />
+          <rect x={-4 + flicker2} y={-10 + flicker1} width="2" height="2" fill="#1D4ED8" />
         </g>
       </g>
     );
@@ -567,12 +540,13 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
             <stop offset="100%" stopColor="#00F0FF" stopOpacity="0.8" />
           </linearGradient>
 
-          {/* Glowing Laser Bullet Beam Gradient */}
-          <linearGradient id="laserBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#0047FF" stopOpacity="0.2" />
-            <stop offset="60%" stopColor="#00F0FF" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1.0" />
-          </linearGradient>
+          {/* Blue & Dark Blue Fireball Gradient */}
+          <radialGradient id="blueFireballGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#FFFFFF" />
+            <stop offset="35%" stopColor="#00F0FF" />
+            <stop offset="70%" stopColor="#0047FF" />
+            <stop offset="100%" stopColor="#1D4ED8" />
+          </radialGradient>
         </defs>
 
         {/* 1. Silvery Web Line - only visible while descending from text */}
@@ -591,48 +565,38 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           </>
         )}
 
-        {/* 2. GLOWING LASER BULLETS */}
-        {lasers.map((p) => {
-          const tailLen = 14;
-          const tailX = p.x - Math.cos(p.angle) * tailLen;
-          const tailY = p.y - Math.sin(p.angle) * tailLen;
-
-          return (
-            <g key={p.id}>
-              {/* Outer Cyan Glow Beam */}
-              <line
-                x1={tailX}
-                y1={tailY}
-                x2={p.x}
-                y2={p.y}
-                stroke="#00F0FF"
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                opacity="0.85"
+        {/* 2. BLUE & DARK BLUE FIREBALL PROJECTILES */}
+        {fireballs.map((fb) => (
+          <g key={fb.id}>
+            {/* Trailing blue & dark blue flame ember tail */}
+            {fb.tail.map((t, idx) => (
+              <circle
+                key={idx}
+                cx={t.x}
+                cy={t.y}
+                r={t.size}
+                fill={t.color}
+                opacity={t.opacity}
               />
-              {/* Hot White Laser Core */}
-              <line
-                x1={tailX + 4}
-                y1={tailY + 4}
-                x2={p.x}
-                y2={p.y}
-                stroke="#FFFFFF"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-              <circle cx={p.x} cy={p.y} r="2.2" fill="#FFFFFF" />
-            </g>
-          );
-        })}
+            ))}
 
-        {/* 3. IMPACT SPARK PARTICLES */}
-        {hitParticles.map((sp) => (
+            {/* Outer Dark Blue Corona */}
+            <circle cx={fb.x} cy={fb.y} r="8.5" fill="#1D4ED8" opacity="0.6" />
+
+            {/* Glowing Core Fireball */}
+            <circle cx={fb.x} cy={fb.y} r="6" fill="url(#blueFireballGrad)" />
+            <circle cx={fb.x} cy={fb.y} r="2.5" fill="#FFFFFF" />
+          </g>
+        ))}
+
+        {/* 3. BLUE & DARK BLUE FLAME IMPACT SPARKS */}
+        {flameSparks.map((sp) => (
           <circle
             key={sp.id}
             cx={sp.x}
             cy={sp.y}
-            r={1.6}
-            fill="#00F0FF"
+            r={sp.size}
+            fill={sp.color}
             opacity={sp.life}
           />
         ))}
@@ -673,14 +637,14 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           )}
         </g>
 
-        {/* 5. CYBER HERO AVATAR WITH FUTURISTIC LASER CANNON */}
+        {/* 5. ANIME SORCERESS AVATAR CASTING BLUE & DARK BLUE FLAMES */}
         <g
-          transform={`translate(${heroPos.x}, ${heroPos.y})`}
+          transform={`translate(${magePos.x}, ${magePos.y})`}
           className="pointer-events-auto cursor-pointer"
-          onClick={handleHeroShoot}
-          title="Cyber Hero Defender! Click to rapid-fire laser pulses!"
+          onClick={handleCastFireball}
+          title="Blue Flame Sorceress! Click to cast a blue fireball!"
         >
-          {renderHeroAvatar()}
+          {renderSorceress()}
         </g>
       </svg>
     </div>
