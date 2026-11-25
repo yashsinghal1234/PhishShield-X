@@ -1,31 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * PixelSpider:
- * An authentic 8-bit / 16-bit retro pixel-art spider descending on a
- * stippled pixel-silk thread directly from "Evidential neural detection for URLs".
+ * RealisticPixelSpider:
+ * A refined, authentic pixel-art spider descending head-first on a fine silk thread
+ * directly from "Evidential neural detection for URLs".
  *
- * Features:
- * - Crisp square pixel grid (shape-rendering: crispEdges)
- * - 8 articulated pixel legs with classic frame-stepped crawl animations
- * - Glowing crimson pixel eyes & dithered abdomen
- * - Stippled pixel thread matching the Gnosis dither aesthetic
- * - Interactive: hover or click makes the spider scurry up in retro arcade steps
+ * Anatomical & Visual Refinements:
+ * - Proper inverted hanging posture: Bulbous abdomen at top anchored to the silk thread,
+ *   head pointing downwards with chelicerae fangs and glowing red micro-eyes.
+ * - Long, gracefully arched arachnid legs with high knee joints and slender reaching tarsi.
+ * - Rear legs curl upward to grip the silk thread; front legs reach downward to probe the air.
+ * - Natural chitin palette (deep charcoal, obsidian, and subtle slate edge highlights)
+ *   without artificial neon dots.
+ * - Multi-frame subtle leg crawling / probing micro-motions.
+ * - Interactive: Hover or click startles the spider, causing it to scurry up its silk line.
  */
 export default function RealisticSpider() {
-  const [threadLength, setThreadLength] = useState(85);
-  const [walkFrame, setWalkFrame] = useState(0);
-  const [isScared, setIsScared] = useState(false);
+  const [threadLength, setThreadLength] = useState(90);
   const [swayX, setSwayX] = useState(0);
+  const [animTime, setAnimTime] = useState(0);
+  const [isScared, setIsScared] = useState(false);
 
   const stateRef = useRef({
-    currentY: 15,
-    targetY: 90,
+    currentY: 20,
+    targetY: 92,
     vy: 0,
     time: 0,
     scaredTimer: 0,
-    frameTimer: 0,
-    walkFrame: 0,
+    twitchTimer: 0,
+    twitchOffset: 0,
   });
 
   useEffect(() => {
@@ -38,46 +41,47 @@ export default function RealisticSpider() {
       const s = stateRef.current;
       s.time += dt;
 
-      // Handle scared state (retreat to text)
+      // Handle scared state
       if (s.scaredTimer > 0) {
         s.scaredTimer -= dt;
-        s.targetY = 12; // scurry back up
+        s.targetY = 14; // scurry back up near the text
         if (s.scaredTimer <= 0) {
           setIsScared(false);
-          s.targetY = 75 + Math.random() * 40;
+          s.targetY = 78 + Math.random() * 30; // descend back down
         }
       } else {
-        // Subtle periodic depth change
-        if (Math.sin(s.time * 0.2) > 0.985 && Math.random() < 0.03) {
-          s.targetY = 65 + Math.random() * 50;
+        // Natural subtle bobbing / repositioning
+        if (Math.sin(s.time * 0.18) > 0.985 && Math.random() < 0.02) {
+          s.targetY = 70 + Math.random() * 45;
         }
       }
 
-      // Vertical descent physics (quantized to pixel-feel)
+      // Physics for silk descent
       const dy = s.targetY - s.currentY;
-      const springK = s.scaredTimer > 0 ? 14 : 6;
-      const damping = 0.86;
+      const springK = s.scaredTimer > 0 ? 12 : 5;
+      const damping = 0.88;
 
       s.vy += dy * springK * dt;
       s.vy *= Math.pow(damping, dt * 60);
       s.currentY += s.vy * dt;
 
-      // Gentle discrete pendulum sway
-      const rawSway = Math.sin(s.time * 1.5) * 8;
-      // Snap to 2px pixel grid for authentic retro feel
+      // Discrete pixel-snapped pendulum sway
+      const rawSway = Math.sin(s.time * 1.3) * 6;
       const pixelSway = Math.round(rawSway / 2) * 2;
       setSwayX(pixelSway);
 
-      // Pixel leg stepping animation frames (0, 1, 2)
-      s.frameTimer += dt;
-      const frameSpeed = s.scaredTimer > 0 ? 0.07 : 0.22;
-      if (s.frameTimer > frameSpeed) {
-        s.frameTimer = 0;
-        s.walkFrame = (s.walkFrame + 1) % 3;
-        setWalkFrame(s.walkFrame);
+      // Periodic natural leg twitch
+      s.twitchTimer += dt;
+      if (s.twitchTimer > 2.2 + Math.random() * 2.0) {
+        s.twitchTimer = 0;
+        s.twitchOffset = (Math.random() - 0.5) * 2;
+        setTimeout(() => {
+          if (stateRef.current) stateRef.current.twitchOffset = 0;
+        }, 260);
       }
 
       setThreadLength(Math.round(s.currentY));
+      setAnimTime(s.time * (s.scaredTimer > 0 ? 9 : 2.0));
 
       animId = requestAnimationFrame(loop);
     };
@@ -90,15 +94,15 @@ export default function RealisticSpider() {
   }, []);
 
   const handleDisturb = () => {
-    stateRef.current.scaredTimer = 3.2;
+    stateRef.current.scaredTimer = 3.5;
     setIsScared(true);
   };
 
-  // Pixel unit scale: 2.5px per grid pixel
-  const P = 2.5;
+  // Pixel unit scale: 2px per pixel unit for crisp definition
+  const P = 2.0;
 
-  // Helper to render a pixel rectangle on the grid
-  const Pixel = ({ x, y, w = 1, h = 1, color = '#111827' }) => (
+  // Single square pixel helper
+  const Pixel = ({ x, y, w = 1, h = 1, color = '#121721' }) => (
     <rect
       x={x * P}
       y={y * P}
@@ -108,151 +112,116 @@ export default function RealisticSpider() {
     />
   );
 
-  // Pixel-art Leg Definitions across 3 animation frames
-  const renderPixelLegs = () => {
+  // Generate 8 gracefully arched, long spider legs
+  const renderArchedLegs = () => {
     const legs = [];
+    const t = animTime;
+    const twitch = stateRef.current.twitchOffset || 0;
 
-    // Left and right side (-1, 1)
     for (let side = -1; side <= 1; side += 2) {
       const s = side;
 
-      // Leg 1 (Front Left / Right)
-      if (walkFrame === 0) {
-        legs.push(
-          <React.Fragment key={`l1-${s}`}>
-            <Pixel x={s * 2} y={-3} color="#1F2937" />
-            <Pixel x={s * 3} y={-4} color="#374151" />
-            <Pixel x={s * 4} y={-5} color="#1F2937" />
-            <Pixel x={s * 5} y={-5} color="#374151" />
-            <Pixel x={s * 6} y={-4} color="#111827" />
-            <Pixel x={s * 7} y={-3} color="#1F2937" />
-            <Pixel x={s * 7} y={-2} color="#111827" />
-            <Pixel x={s * 8} y={-1} color="#00F0FF" /> {/* Leg tip highlight */}
-          </React.Fragment>
-        );
-      } else if (walkFrame === 1) {
-        legs.push(
-          <React.Fragment key={`l1-${s}`}>
-            <Pixel x={s * 2} y={-3} color="#1F2937" />
-            <Pixel x={s * 3} y={-5} color="#374151" />
-            <Pixel x={s * 4} y={-6} color="#1F2937" />
-            <Pixel x={s * 5} y={-6} color="#374151" />
-            <Pixel x={s * 6} y={-5} color="#111827" />
-            <Pixel x={s * 7} y={-4} color="#1F2937" />
-            <Pixel x={s * 8} y={-3} color="#00F0FF" />
-          </React.Fragment>
-        );
-      } else {
-        legs.push(
-          <React.Fragment key={`l1-${s}`}>
-            <Pixel x={s * 2} y={-3} color="#1F2937" />
-            <Pixel x={s * 3} y={-4} color="#374151" />
-            <Pixel x={s * 4} y={-4} color="#1F2937" />
-            <Pixel x={s * 5} y={-3} color="#374151" />
-            <Pixel x={s * 6} y={-2} color="#111827" />
-            <Pixel x={s * 7} y={-1} color="#00F0FF" />
-          </React.Fragment>
-        );
-      }
+      // Leg motion oscillations
+      const m1 = Math.sin(t + s * 0.4) * 1.5 + twitch;
+      const m2 = Math.cos(t * 0.9 + s * 0.3) * 1.2;
+      const m3 = Math.sin(t * 1.1 + s * 0.5) * 1.2;
+      const m4 = Math.cos(t * 0.8 + s * 0.2) * 1.4;
 
-      // Leg 2 (Upper-Mid Left / Right)
-      if (walkFrame === 1) {
-        legs.push(
-          <React.Fragment key={`l2-${s}`}>
-            <Pixel x={s * 2} y={-1} color="#1F2937" />
-            <Pixel x={s * 4} y={-2} color="#374151" />
-            <Pixel x={s * 5} y={-3} color="#1F2937" />
-            <Pixel x={s * 7} y={-3} color="#374151" />
-            <Pixel x={s * 8} y={-2} color="#111827" />
-            <Pixel x={s * 9} y={-1} color="#1F2937" />
-            <Pixel x={s * 9} y={0} color="#00F0FF" />
-          </React.Fragment>
-        );
-      } else {
-        legs.push(
-          <React.Fragment key={`l2-${s}`}>
-            <Pixel x={s * 2} y={-1} color="#1F2937" />
-            <Pixel x={s * 4} y={-1} color="#374151" />
-            <Pixel x={s * 6} y={-2} color="#1F2937" />
-            <Pixel x={s * 7} y={-2} color="#374151" />
-            <Pixel x={s * 8} y={-1} color="#111827" />
-            <Pixel x={s * 8} y={0} color="#1F2937" />
-            <Pixel x={s * 9} y={1} color="#00F0FF" />
-          </React.Fragment>
-        );
-      }
+      // -------------------------------------------------------------
+      // LEG 4 (REAR - arches UP towards the silk line, holding it)
+      // -------------------------------------------------------------
+      legs.push(
+        <React.Fragment key={`leg4-${s}`}>
+          {/* Coxa & Trochanter */}
+          <Pixel x={s * 2} y={-4} color="#161C26" />
+          <Pixel x={s * 3} y={-5} color="#242E3D" />
+          {/* Femur (reaching up-out to knee) */}
+          <Pixel x={s * 4} y={-6} color="#161C26" />
+          <Pixel x={s * 5} y={-7 + Math.round(m4 * 0.5)} color="#242E3D" />
+          <Pixel x={s * 6} y={-8 + Math.round(m4 * 0.5)} color="#161C26" />
+          <Pixel x={s * 7} y={-9 + Math.round(m4)} color="#323F52" /> {/* Knee */}
+          {/* Tibia & Tarsus (curling back inward to touch the silk thread) */}
+          <Pixel x={s * 6} y={-10 + Math.round(m4)} color="#242E3D" />
+          <Pixel x={s * 4} y={-11 + Math.round(m4 * 0.8)} color="#161C26" />
+          <Pixel x={s * 2} y={-11 + Math.round(m4 * 0.6)} color="#242E3D" />
+          <Pixel x={s * 1} y={-10 + Math.round(m4 * 0.4)} color="#3D4B61" /> {/* Claws */}
+        </React.Fragment>
+      );
 
-      // Leg 3 (Lower-Mid Left / Right)
-      if (walkFrame === 2) {
-        legs.push(
-          <React.Fragment key={`l3-${s}`}>
-            <Pixel x={s * 2} y={1} color="#1F2937" />
-            <Pixel x={s * 4} y={1} color="#374151" />
-            <Pixel x={s * 6} y={2} color="#1F2937" />
-            <Pixel x={s * 7} y={3} color="#374151" />
-            <Pixel x={s * 8} y={4} color="#111827" />
-            <Pixel x={s * 8} y={6} color="#1F2937" />
-            <Pixel x={s * 7} y={7} color="#00F0FF" />
-          </React.Fragment>
-        );
-      } else {
-        legs.push(
-          <React.Fragment key={`l3-${s}`}>
-            <Pixel x={s * 2} y={1} color="#1F2937" />
-            <Pixel x={s * 4} y={2} color="#374151" />
-            <Pixel x={s * 6} y={3} color="#1F2937" />
-            <Pixel x={s * 7} y={4} color="#374151" />
-            <Pixel x={s * 8} y={5} color="#111827" />
-            <Pixel x={s * 8} y={7} color="#00F0FF" />
-          </React.Fragment>
-        );
-      }
+      // -------------------------------------------------------------
+      // LEG 3 (UPPER-MID - wide lateral arch)
+      // -------------------------------------------------------------
+      legs.push(
+        <React.Fragment key={`leg3-${s}`}>
+          <Pixel x={s * 3} y={-2} color="#161C26" />
+          <Pixel x={s * 5} y={-3} color="#242E3D" />
+          <Pixel x={s * 7} y={-4 + Math.round(m3 * 0.5)} color="#161C26" />
+          <Pixel x={s * 9} y={-4 + Math.round(m3 * 0.8)} color="#242E3D" />
+          <Pixel x={s * 11} y={-3 + Math.round(m3)} color="#323F52" /> {/* Knee */}
+          {/* Downward drop */}
+          <Pixel x={s * 12} y={-1 + Math.round(m3)} color="#161C26" />
+          <Pixel x={s * 12} y={1 + Math.round(m3 * 0.8)} color="#242E3D" />
+          <Pixel x={s * 11} y={3 + Math.round(m3 * 0.6)} color="#161C26" />
+          <Pixel x={s * 10} y={5 + Math.round(m3 * 0.4)} color="#3D4B61" />
+        </React.Fragment>
+      );
 
-      // Leg 4 (Rear Grippers Left / Right - reaches towards silk)
-      if (walkFrame === 0) {
-        legs.push(
-          <React.Fragment key={`l4-${s}`}>
-            <Pixel x={s * 2} y={3} color="#1F2937" />
-            <Pixel x={s * 3} y={5} color="#374151" />
-            <Pixel x={s * 4} y={7} color="#1F2937" />
-            <Pixel x={s * 5} y={9} color="#374151" />
-            <Pixel x={s * 4} y={11} color="#111827" />
-            <Pixel x={s * 3} y={12} color="#1F2937" />
-            <Pixel x={s * 2} y={13} color="#00F0FF" />
-          </React.Fragment>
-        );
-      } else {
-        legs.push(
-          <React.Fragment key={`l4-${s}`}>
-            <Pixel x={s * 2} y={3} color="#1F2937" />
-            <Pixel x={s * 4} y={5} color="#374151" />
-            <Pixel x={s * 5} y={7} color="#1F2937" />
-            <Pixel x={s * 5} y={9} color="#374151" />
-            <Pixel x={s * 4} y={10} color="#111827" />
-            <Pixel x={s * 3} y={11} color="#00F0FF" />
-          </React.Fragment>
-        );
-      }
+      // -------------------------------------------------------------
+      // LEG 2 (LOWER-MID - wide spread with high knee and drop)
+      // -------------------------------------------------------------
+      legs.push(
+        <React.Fragment key={`leg2-${s}`}>
+          <Pixel x={s * 3} y={0} color="#161C26" />
+          <Pixel x={s * 5} y={1} color="#242E3D" />
+          <Pixel x={s * 7} y={2 + Math.round(m2 * 0.5)} color="#161C26" />
+          <Pixel x={s * 9} y={3 + Math.round(m2 * 0.8)} color="#242E3D" />
+          <Pixel x={s * 11} y={5 + Math.round(m2)} color="#323F52" /> {/* Knee */}
+          {/* Calf / Foot */}
+          <Pixel x={s * 11} y={7 + Math.round(m2)} color="#161C26" />
+          <Pixel x={s * 10} y={9 + Math.round(m2 * 0.8)} color="#242E3D" />
+          <Pixel x={s * 9} y={11 + Math.round(m2 * 0.6)} color="#161C26" />
+          <Pixel x={s * 8} y={13 + Math.round(m2 * 0.4)} color="#3D4B61" />
+        </React.Fragment>
+      );
+
+      // -------------------------------------------------------------
+      // LEG 1 (FRONT - Longest hunting reach, extending downward)
+      // -------------------------------------------------------------
+      legs.push(
+        <React.Fragment key={`leg1-${s}`}>
+          <Pixel x={s * 2} y={1} color="#161C26" />
+          <Pixel x={s * 4} y={3} color="#242E3D" />
+          <Pixel x={s * 6} y={5 + Math.round(m1 * 0.5)} color="#161C26" />
+          <Pixel x={s * 8} y={7 + Math.round(m1 * 0.8)} color="#242E3D" />
+          <Pixel x={s * 9} y={9 + Math.round(m1)} color="#323F52" /> {/* High Knee */}
+          {/* Long reaching tibia & tarsus */}
+          <Pixel x={s * 9} y={11 + Math.round(m1)} color="#161C26" />
+          <Pixel x={s * 8} y={13 + Math.round(m1 * 0.9)} color="#242E3D" />
+          <Pixel x={s * 7} y={15 + Math.round(m1 * 0.8)} color="#161C26" />
+          <Pixel x={s * 6} y={17 + Math.round(m1 * 0.6)} color="#242E3D" />
+          <Pixel x={s * 5} y={19 + Math.round(m1 * 0.4)} color="#3D4B61" /> {/* Tip */}
+        </React.Fragment>
+      );
     }
 
     return legs;
   };
 
-  // Generate dotted pixel silk thread (1-pixel dots every 4px)
-  const threadDots = [];
-  const dotSpacing = 5;
-  for (let y = 0; y < threadLength; y += dotSpacing) {
+  // Fine stippled silk thread (single crisp pixel wide)
+  const threadElements = [];
+  const spacing = 4;
+  for (let y = 0; y < threadLength - 8; y += spacing) {
     const progress = y / threadLength;
     const curX = swayX * progress;
-    threadDots.push(
+    threadElements.push(
       <rect
-        key={`dot-${y}`}
-        x={curX - 0.75}
+        key={`silk-${y}`}
+        x={curX - 0.5}
         y={y}
-        width={1.5}
-        height={3}
+        width={1}
+        height={2.5}
         fill="#94A3B8"
-        opacity={0.8}
+        opacity={0.65}
       />
     );
   }
@@ -262,64 +231,70 @@ export default function RealisticSpider() {
       className="absolute left-1/2 top-full -translate-x-1/2 pointer-events-auto select-none z-30 block"
       style={{
         width: '64px',
-        height: `${Math.max(120, threadLength + 45)}px`,
+        height: `${Math.max(120, threadLength + 50)}px`,
       }}
       onMouseEnter={handleDisturb}
       onClick={handleDisturb}
-      title="Retro 8-bit pixel spider. Hover or click to startle!"
+      title="A realistic pixel-art spider rappelling head-down on silk. Hover or click to startle!"
     >
       <svg
         className="w-full h-full overflow-visible"
         shapeRendering="crispEdges"
-        viewBox={`-32 0 64 ${Math.max(120, threadLength + 45)}`}
+        viewBox={`-32 0 64 ${Math.max(120, threadLength + 50)}`}
       >
-        {/* 1. Dotted Retro Pixel Silk Thread */}
-        {threadDots}
+        {/* 1. Fine Stippled Silk Thread */}
+        {threadElements}
 
-        {/* 2. Pixel Spider Body Group */}
+        {/* 2. Spider Body (Inverted Hanging Posture) */}
         <g transform={`translate(${swayX}, ${threadLength})`}>
-          {/* Animated 8-Bit Pixel Legs */}
-          {renderPixelLegs()}
+          {/* Arched Multi-Joint Legs */}
+          {renderArchedLegs()}
 
-          {/* Pedipalps (Front mouth feelers) */}
-          <Pixel x={-1} y={-5} color="#374151" />
-          <Pixel x={-1} y={-6} color="#1F2937" />
-          <Pixel x={1} y={-5} color="#374151" />
-          <Pixel x={1} y={-6} color="#1F2937" />
+          {/* -------------------------------------------------------
+              ABDOMEN (At top, anchored directly to the silk thread)
+              ------------------------------------------------------- */}
+          {/* Spinneret Anchor Point */}
+          <Pixel x={0} y={-8} color="#94A3B8" />
 
-          {/* Cephalothorax (Head/Chest) */}
-          <Pixel x={-1} y={-4} w={3} h={1} color="#111827" />
-          <Pixel x={-2} y={-3} w={5} h={1} color="#1F2937" />
-          <Pixel x={-2} y={-2} w={5} h={1} color="#111827" />
-          <Pixel x={-1} y={-1} w={3} h={1} color="#1F2937" />
+          {/* Abdomen body rows (bulbous teardrop shape) */}
+          <Pixel x={-1} y={-7} w={3} h={1} color="#0D1117" />
+          <Pixel x={-2} y={-6} w={5} h={1} color="#161C26" />
+          <Pixel x={-3} y={-5} w={7} h={1} color="#0D1117" />
+          <Pixel x={-3} y={-4} w={7} h={1} color="#161C26" />
+          <Pixel x={-3} y={-3} w={7} h={1} color="#0D1117" />
+          <Pixel x={-2} y={-2} w={5} h={1} color="#161C26" />
 
-          {/* Glowing Crimson Cyber/Bio Pixel Eyes */}
-          <Pixel x={-1} y={-3} color="#FF0055" />
-          <Pixel x={1} y={-3} color="#FF0055" />
-          {/* Secondary mini eyes */}
-          <Pixel x={-2} y={-2} color="#FF3366" />
-          <Pixel x={2} y={-2} color="#FF3366" />
+          {/* Natural Dorsal Folium / Marking on Abdomen */}
+          <Pixel x={0} y={-6} color="#242E3D" />
+          <Pixel x={-1} y={-5} w={3} h={1} color="#323F52" />
+          <Pixel x={0} y={-4} color="#242E3D" />
+          <Pixel x={0} y={-3} color="#323F52" />
 
           {/* Narrow Waist (Pedicel) */}
-          <Pixel x={0} y={0} color="#0B0E14" />
+          <Pixel x={-1} y={-1} w={3} h={1} color="#080B10" />
 
-          {/* Abdomen (Teardrop pixel block) */}
-          <Pixel x={-2} y={1} w={5} h={1} color="#1F2937" />
-          <Pixel x={-3} y={2} w={7} h={1} color="#111827" />
-          <Pixel x={-3} y={3} w={7} h={1} color="#1F2937" />
-          <Pixel x={-3} y={4} w={7} h={1} color="#111827" />
-          <Pixel x={-2} y={5} w={5} h={1} color="#1F2937" />
-          <Pixel x={-1} y={6} w={3} h={1} color="#111827" />
-          <Pixel x={0} y={7} w={1} h={1} color="#1F2937" />
+          {/* -------------------------------------------------------
+              CEPHALOTHORAX / HEAD (Pointing down toward ground)
+              ------------------------------------------------------- */}
+          <Pixel x={-2} y={0} w={5} h={1} color="#161C26" />
+          <Pixel x={-2} y={1} w={5} h={1} color="#0D1117" />
+          <Pixel x={-1} y={2} w={3} h={1} color="#161C26" />
 
-          {/* Dithered Cross Pattern on Back (Retro skull/cross marking) */}
-          <Pixel x={0} y={2} color="#374151" />
-          <Pixel x={-1} y={3} w={3} h={1} color="#4B5563" />
-          <Pixel x={0} y={4} color="#374151" />
-          <Pixel x={0} y={5} color="#4B5563" />
+          {/* Natural Spider Eye Cluster (4 subtle, sinister crimson micro-eyes) */}
+          <Pixel x={-1} y={1} color="#FF1744" />
+          <Pixel x={1} y={1} color="#FF1744" />
+          <Pixel x={-2} y={2} color="#B71C1C" />
+          <Pixel x={2} y={2} color="#B71C1C" />
 
-          {/* Rear Spinneret (Silk emitter connecting to thread) */}
-          <Pixel x={0} y={8} color="#94A3B8" />
+          {/* Chelicerae & Fangs (pointing downwards) */}
+          <Pixel x={-1} y={3} color="#242E3D" />
+          <Pixel x={1} y={3} color="#242E3D" />
+          <Pixel x={-1} y={4} color="#080B10" />
+          <Pixel x={1} y={4} color="#080B10" />
+
+          {/* Pedipalps (Front feelers) */}
+          <Pixel x={-2} y={3} color="#161C26" />
+          <Pixel x={2} y={3} color="#161C26" />
         </g>
       </svg>
     </span>
