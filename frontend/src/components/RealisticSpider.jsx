@@ -167,11 +167,9 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           s.sPatrolDir = 1;
           s.sFacing = 1;
         }
-      } else if (s.spiderPhase === 'ON_BOX' || s.spiderPhase === 'LEAPING' || s.spiderPhase === 'DODGE') {
-        const currentFloor = getGroundY(s.sx, geom);
-
+      } else if (s.spiderPhase === 'ON_BOX' || s.spiderPhase === 'DODGE') {
         if (s.spiderPhase === 'ON_BOX') {
-          const speed = 46;
+          const speed = 40;
           s.svx = s.sPatrolDir * speed;
           s.sFacing = s.sPatrolDir;
 
@@ -181,31 +179,22 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
             s.sFrame = (s.sFrame + 1) % 4;
           }
 
-          // Step elevation detection
-          const lookAheadX = s.sx + s.sPatrolDir * 26;
-          const floorAhead = getGroundY(lookAheadX, geom);
-
-          if (floorAhead < currentFloor - 20) {
-            s.spiderPhase = 'LEAPING';
-            s.svy = -180;
-            s.svx = s.sPatrolDir * 75;
-          } else if (floorAhead > currentFloor + 20) {
-            s.spiderPhase = 'LEAPING';
-            s.svy = -40;
-            s.svx = s.sPatrolDir * 55;
-          }
-
-          // Boundary bounce
+          // Boundary turn around
           if (s.sx > geom.boxWidth * 0.88 && s.sPatrolDir === 1) {
             s.sPatrolDir = -1;
           } else if (s.sx < geom.boxWidth * 0.06 && s.sPatrolDir === -1) {
             s.sPatrolDir = 1;
           }
+
+          // Smoothly crawl along the stepped surface
+          const currentFloor = getGroundY(s.sx, geom);
+          s.sy += (currentFloor - 6 - s.sy) * Math.min(1, 16 * dt);
         }
 
         s.sx += s.svx * dt;
 
-        if (s.spiderPhase === 'LEAPING' || s.spiderPhase === 'DODGE') {
+        // Only airborne during laser DODGE reaction
+        if (s.spiderPhase === 'DODGE') {
           s.svy += 500 * dt;
           s.sy += s.svy * dt;
 
@@ -215,66 +204,43 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
             s.svy = 0;
             s.spiderPhase = 'ON_BOX';
           }
-        } else {
-          s.sy = currentFloor - 6;
         }
       }
 
       // =============================================================
-      // 2. HERO AVATAR WITH FUTURISTIC LASER RAILGUN
+      // 2. HERO AVATAR: STEADY PATH PATROL (NO UNNECESSARY JUMPING)
+      // Follows the blue stepped staircase path smoothly and steadily
       // =============================================================
-      const heroFloor = getGroundY(s.hx, geom);
       s.hRecoil = Math.max(0, s.hRecoil - dt * 25);
       s.hMuzzle = Math.max(0, s.hMuzzle - dt * 10);
       s.hShootCooldown = Math.max(0, s.hShootCooldown - dt);
 
-      // Hero always tracks and aims futuristic gun directly at the spider
+      // Hero aims futuristic railgun directly at the spider
       const gunMouthX = s.hx + s.hFacing * 18;
       const gunMouthY = s.hy - 18;
       const aimAngle = Math.atan2(s.sy - gunMouthY, s.sx - gunMouthX);
       s.hAim = aimAngle;
       s.hFacing = s.sx > s.hx ? 1 : -1;
 
-      // Hero maneuvers along the blue box to maintain tactical firing range
-      const distToSpider = Math.hypot(s.sx - s.hx, s.sy - s.hy);
-      if (distToSpider > 240) {
-        // Move towards spider
-        s.hvx = s.hFacing * 50;
-        s.hWalkCycle += dt * 8;
-      } else if (distToSpider < 95) {
-        // Back up slightly for optimal vantage line
-        s.hvx = -s.hFacing * 38;
-        s.hWalkCycle += dt * 6;
-      } else {
-        s.hvx *= 0.8;
-      }
-
-      // Hero step jumping across platforms with rocket boots
-      const heroLookAhead = s.hx + s.hFacing * 28;
-      const heroFloorAhead = getGroundY(heroLookAhead, geom);
-      if (heroFloorAhead < heroFloor - 20) {
-        s.hvy = -180;
-        s.hvx = s.hFacing * 70;
-        s.hIsJumping = true;
-      } else if (heroFloorAhead > heroFloor + 20) {
-        s.hvy = -45;
-        s.hvx = s.hFacing * 50;
-        s.hIsJumping = true;
-      }
-
+      // Steady, disciplined path patrol along the blue stepped staircase
+      // Patrols smoothly from Platform 1 (0.08) -> Platform 2 (0.50) -> Platform 3 (0.86)
+      const walkSpeed = 44; // smooth, steady walking speed (px/sec)
+      s.hvx = s.patrolDir * walkSpeed;
       s.hx += s.hvx * dt;
-      if (s.hvy < 0 || s.hy < heroFloor - 1) {
-        s.hvy += 480 * dt;
-        s.hy += s.hvy * dt;
-        if (s.hy >= heroFloor && s.hvy > 0) {
-          s.hy = heroFloor;
-          s.hvy = 0;
-          s.hIsJumping = false;
-        }
-      } else {
-        s.hy = heroFloor;
-        s.hIsJumping = false;
+      s.hWalkCycle += dt * 7;
+
+      // Turn around smoothly at the patrol ends of the blue box
+      if (s.hx >= geom.boxWidth * 0.88 && s.patrolDir === 1) {
+        s.patrolDir = -1;
+      } else if (s.hx <= geom.boxWidth * 0.08 && s.patrolDir === -1) {
+        s.patrolDir = 1;
       }
+
+      // Smooth grounded surface tracking (no bouncy jumping)
+      // Character's feet smoothly climb/glide along the exact step profile
+      const targetFloor = getGroundY(s.hx, geom);
+      s.hy += (targetFloor - s.hy) * Math.min(1, 16 * dt);
+      s.hIsJumping = false; // Strictly grounded on path
 
       // -------------------------------------------------------------
       // 3. SHOOTING FUTURISTIC LASER BULLETS
