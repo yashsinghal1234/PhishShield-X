@@ -1,16 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * MascotDuel:
- * Features:
- * 1. Friendly pixel-art Spidey descending from "Evidential neural detection for URLs"
- *    and crawling across the blue stepped box.
- * 2. ShadowLens Logo Cat Avatar:
- *    - Patrols and prowls along the blue stepped staircase.
- *    - Stalks the spider with a wiggling tail and crouch animation.
- *    - Pounces through the air and SWATS at Spidey with an animated paw swipe (*SWAT!*)!
- *    - Spidey reacts dynamically: jumping back, startling, and shouting "THWIP!" or "WHOA!".
- *    - Both characters jump across the stepped elevation levels of the blue box.
+ * CyberCatVsSpider:
+ * 1. Friendly pixel-art Spidey descends from the text and crawls on the blue box.
+ * 2. Cyber Cat Avatar created from scratch:
+ *    - Pointed feline ears with cyber glow, sleek feline face, cyber armor suit, and swishing tail.
+ *    - Wields a high-tech futuristic railgun/blaster in hand.
+ *    - Dynamically aims weapon towards Spidey.
+ *    - Shoots rapid glowing cyan laser bolts with muzzle flashes!
+ *    - Spidey dodges and reacts ("WHOA!", "THWIP!", jump flips) on laser impact.
+ *    - Jumps across the stepped blue box elevations.
  */
 export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   // Spider State
@@ -18,22 +17,28 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   const [spiderFacing, setSpiderFacing] = useState(1);
   const [crawlFrame, setCrawlFrame] = useState(0);
   const [isHanging, setIsHanging] = useState(true);
-  const [spiderReaction, setSpiderReaction] = useState(null); // 'WHOA!', 'THWIP!', null
+  const [spiderReaction, setSpiderReaction] = useState(null);
 
   // Web State
   const [webOrigin, setWebOrigin] = useState({ x: 200, y: 40 });
   const [webSlack, setWebSlack] = useState(0);
 
-  // Logo Cat Avatar State
+  // Cyber Cat State
   const [catPos, setCatPos] = useState({ x: 450, y: 150 });
   const [catFacing, setCatFacing] = useState(-1);
-  const [catAction, setCatAction] = useState('WALK'); // 'WALK', 'CROUCH', 'POUNCE', 'SWAT', 'PROUD'
-  const [catSwatFx, setCatSwatFx] = useState(false);
+  const [catAimAngle, setCatAimAngle] = useState(Math.PI);
+  const [catMuzzleFlash, setCatMuzzleFlash] = useState(0);
+  const [catRecoil, setCatRecoil] = useState(0);
   const [catTailAngle, setCatTailAngle] = useState(0);
+  const [catWalkFrame, setCatWalkFrame] = useState(0);
+
+  // Lasers & Hit Particles
+  const [lasers, setLasers] = useState([]);
+  const [hitParticles, setHitParticles] = useState([]);
 
   const stateRef = useRef({
-    // Spider physics & state
-    spiderPhase: 'RAPPEL', // 'RAPPEL', 'ON_BOX', 'LEAPING', 'FLEE'
+    // Spider state
+    spiderPhase: 'RAPPEL', // 'RAPPEL', 'ON_BOX', 'LEAPING', 'DODGE'
     sx: 200,
     sy: 40,
     svx: 0,
@@ -44,16 +49,23 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
     sPatrolDir: 1,
     sReactTimer: 0,
 
-    // Cat physics & state
-    catPhase: 'PATROL', // 'PATROL', 'STALK', 'POUNCE', 'SWAT', 'PAUSE'
-    cx: 480,
+    // Cyber Cat state
+    cx: 460,
     cy: 150,
     cvx: 0,
     cvy: 0,
     cFacing: -1,
-    cStateTimer: 0,
+    cAim: Math.PI,
     cWalkCycle: 0,
+    cShootCooldown: 0,
+    cRecoil: 0,
+    cMuzzle: 0,
     cTailWiggle: 0,
+    patrolTimer: 0,
+
+    // Entities
+    projectiles: [],
+    sparks: [],
 
     time: 0,
     webX: 200,
@@ -111,9 +123,8 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       stateRef.current.webX = initGeom.webOriginX;
       stateRef.current.webY = initGeom.webOriginY;
       stateRef.current.sy = initGeom.webOriginY + 10;
-      // Cat begins on step 2/3 of the blue box
-      stateRef.current.cx = initGeom.boxWidth * 0.58;
-      stateRef.current.cy = getGroundY(initGeom.boxWidth * 0.58, initGeom);
+      stateRef.current.cx = initGeom.boxWidth * 0.62;
+      stateRef.current.cy = getGroundY(initGeom.boxWidth * 0.62, initGeom);
     }
 
     const loop = (now) => {
@@ -148,7 +159,6 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
         s.svy += dy * 6.5 * dt;
         s.svy *= Math.pow(0.85, dt * 60);
         s.sy += s.svy * dt;
-
         s.sx = s.webX + Math.sin(s.time * 2.2) * 5;
 
         // Land on the blue box
@@ -159,7 +169,7 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           s.sPatrolDir = 1;
           s.sFacing = 1;
         }
-      } else if (s.spiderPhase === 'ON_BOX' || s.spiderPhase === 'LEAPING' || s.spiderPhase === 'FLEE') {
+      } else if (s.spiderPhase === 'ON_BOX' || s.spiderPhase === 'LEAPING' || s.spiderPhase === 'DODGE') {
         const currentFloor = getGroundY(s.sx, geom);
 
         if (s.spiderPhase === 'ON_BOX') {
@@ -197,8 +207,8 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
 
         s.sx += s.svx * dt;
 
-        if (s.spiderPhase === 'LEAPING' || s.spiderPhase === 'FLEE') {
-          s.svy += 500 * dt; // gravity
+        if (s.spiderPhase === 'LEAPING' || s.spiderPhase === 'DODGE') {
+          s.svy += 500 * dt;
           s.sy += s.svy * dt;
 
           const landFloor = getGroundY(s.sx, geom);
@@ -213,117 +223,49 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       }
 
       // =============================================================
-      // 2. SHADOWLENS LOGO CAT AVATAR AI & ATTACK LOGIC
+      // 2. CYBER CAT AVATAR WITH FUTURISTIC LASER GUN
       // =============================================================
-      s.cStateTimer += dt;
       const catFloor = getGroundY(s.cx, geom);
+      s.cTailWiggle = Math.sin(s.time * 6) * 14;
+      s.cRecoil = Math.max(0, s.cRecoil - dt * 25);
+      s.cMuzzle = Math.max(0, s.cMuzzle - dt * 10);
+      s.cShootCooldown = Math.max(0, s.cShootCooldown - dt);
+
+      // Cat always aims futuristic gun directly at the spider
+      const gunMouthX = s.cx + s.cFacing * 16;
+      const gunMouthY = s.cy - 14;
+      const aimAngle = Math.atan2(s.sy - gunMouthY, s.sx - gunMouthX);
+      s.cAim = aimAngle;
+      s.cFacing = s.sx > s.cx ? 1 : -1;
+
+      // Cat moves and patrols across the blue box to maintain tactical firing range
       const distToSpider = Math.hypot(s.sx - s.cx, s.sy - s.cy);
-      const spiderIsOnBox = s.spiderPhase !== 'RAPPEL';
-
-      // Tail swish / wiggle animation
-      s.cTailWiggle = Math.sin(s.time * (s.catPhase === 'STALK' ? 16 : 4)) * (s.catPhase === 'STALK' ? 18 : 8);
-
-      if (s.catPhase === 'PATROL') {
-        setCatAction('WALK');
-        setCatSwatFx(false);
-
-        // If spider is on the box, begin stalking!
-        if (spiderIsOnBox && distToSpider < 350) {
-          s.catPhase = 'STALK';
-          s.cStateTimer = 0;
-        } else {
-          // Patrol calmly along the box
-          s.cvx = s.cFacing * 42;
-          s.cWalkCycle += dt * 8;
-
-          // Leap up / down steps
-          const catLookX = s.cx + s.cFacing * 28;
-          const catFloorAhead = getGroundY(catLookX, geom);
-          if (catFloorAhead < catFloor - 20) {
-            s.cvy = -170;
-            s.cvx = s.cFacing * 70;
-          } else if (catFloorAhead > catFloor + 20) {
-            s.cvy = -40;
-            s.cvx = s.cFacing * 50;
-          }
-
-          if (s.cx > geom.boxWidth * 0.92) s.cFacing = -1;
-          if (s.cx < geom.boxWidth * 0.12) s.cFacing = 1;
-        }
-      } else if (s.catPhase === 'STALK') {
-        // Face the spider
-        s.cFacing = s.sx > s.cx ? 1 : -1;
-
-        // If close enough: crouch, wiggle tail, and prepare to pounce!
-        if (distToSpider < 100) {
-          setCatAction('CROUCH');
-          s.cvx *= 0.6;
-
-          // After crouching for ~0.8s: LAUNCH POUNCE!
-          if (s.cStateTimer > 0.8) {
-            s.catPhase = 'POUNCE';
-            s.cStateTimer = 0;
-            s.cvy = -160; // pounce leap
-            s.cvx = s.cFacing * 160;
-            setCatAction('POUNCE');
-          }
-        } else {
-          // Creep closer stealthily
-          setCatAction('WALK');
-          s.cvx = s.cFacing * 55;
-          s.cWalkCycle += dt * 6;
-        }
-      } else if (s.catPhase === 'POUNCE') {
-        setCatAction('POUNCE');
-        s.cvy += 460 * dt; // gravity
-
-        // Check if cat reached spider distance for SWAT!
-        if (distToSpider < 38) {
-          s.catPhase = 'SWAT';
-          s.cStateTimer = 0;
-          setCatAction('SWAT');
-          setCatSwatFx(true);
-
-          // SPIDER GETS ATTACKED!
-          s.spiderPhase = 'FLEE';
-          s.svy = -190; // Spidey leaps up backwards in surprise!
-          s.svx = -s.cFacing * 110;
-          s.sPatrolDir = -s.cFacing;
-          s.sFacing = s.cFacing; // Spidey looks at cat in shock
-          setSpiderReaction(Math.random() > 0.5 ? 'WHOA!' : 'THWIP!');
-          s.sReactTimer = 2.0;
-        }
-
-        // Land on ground
-        if (s.cy >= catFloor && s.cvy > 0) {
-          s.cy = catFloor;
-          s.cvy = 0;
-          s.catPhase = 'PROUD';
-          s.cStateTimer = 0;
-          setCatAction('PROUD');
-        }
-      } else if (s.catPhase === 'SWAT') {
-        if (s.cStateTimer > 0.45) {
-          s.catPhase = 'PROUD';
-          s.cStateTimer = 0;
-          setCatAction('PROUD');
-          setCatSwatFx(false);
-        }
-      } else if (s.catPhase === 'PROUD') {
-        setCatAction('PROUD');
+      if (distToSpider > 220) {
+        // Move towards spider
+        s.cvx = s.cFacing * 52;
+        s.cWalkCycle += dt * 8;
+      } else if (distToSpider < 90) {
+        // Back up slightly for firing distance
+        s.cvx = -s.cFacing * 38;
+        s.cWalkCycle += dt * 6;
+      } else {
         s.cvx *= 0.8;
-        // Pause proudly for ~1.5 seconds, then resume patrol/stalking
-        if (s.cStateTimer > 1.6) {
-          s.catPhase = 'PATROL';
-          s.cStateTimer = 0;
-          s.cFacing = -s.cFacing; // turn around
-        }
       }
 
-      // Apply cat movement
+      // Cat step jumping across platforms
+      const catLookAhead = s.cx + s.cFacing * 28;
+      const catFloorAhead = getGroundY(catLookAhead, geom);
+      if (catFloorAhead < catFloor - 20) {
+        s.cvy = -175;
+        s.cvx = s.cFacing * 70;
+      } else if (catFloorAhead > catFloor + 20) {
+        s.cvy = -40;
+        s.cvx = s.cFacing * 50;
+      }
+
       s.cx += s.cvx * dt;
-      if (s.catPhase === 'POUNCE' || s.cvy < 0) {
-        s.cvy += 460 * dt;
+      if (s.cvy < 0) {
+        s.cvy += 480 * dt;
         s.cy += s.cvy * dt;
         if (s.cy >= catFloor && s.cvy > 0) {
           s.cy = catFloor;
@@ -333,7 +275,81 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
         s.cy = catFloor;
       }
 
-      // Update state for render
+      // -------------------------------------------------------------
+      // 3. SHOOTING FUTURISTIC LASER BULLETS
+      // -------------------------------------------------------------
+      // Fire every ~0.8s when in range
+      if (s.cShootCooldown <= 0 && distToSpider < 450) {
+        s.cShootCooldown = 0.75 + Math.random() * 0.35;
+        s.cRecoil = 5.0;
+        s.cMuzzle = 1.0;
+
+        const laserSpeed = 420;
+        s.projectiles.push({
+          id: Math.random(),
+          x: gunMouthX,
+          y: gunMouthY,
+          vx: Math.cos(aimAngle) * laserSpeed,
+          vy: Math.sin(aimAngle) * laserSpeed,
+          angle: aimAngle,
+          life: 0,
+        });
+      }
+
+      // Update Laser Projectiles
+      for (let pIdx = s.projectiles.length - 1; pIdx >= 0; pIdx--) {
+        const p = s.projectiles[pIdx];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life += dt;
+
+        // Collision check with Spider
+        const distToSpiderHit = Math.hypot(p.x - s.sx, p.y - s.sy);
+        if (distToSpiderHit < 22) {
+          // SPIDER GETS HIT! Spidey dodges and flips backwards!
+          s.spiderPhase = 'DODGE';
+          s.svy = -190;
+          s.svx = -s.cFacing * 110;
+          s.sPatrolDir = -s.cFacing;
+          setSpiderReaction(Math.random() > 0.5 ? 'WHOA!' : 'THWIP!');
+          s.sReactTimer = 1.8;
+
+          // Spawn laser hit spark particles
+          for (let k = 0; k < 8; k++) {
+            const sparkAngle = Math.random() * Math.PI * 2;
+            const sparkSpeed = 60 + Math.random() * 120;
+            s.sparks.push({
+              id: Math.random(),
+              x: p.x,
+              y: p.y,
+              vx: Math.cos(sparkAngle) * sparkSpeed,
+              vy: Math.sin(sparkAngle) * sparkSpeed,
+              life: 1.0,
+            });
+          }
+
+          s.projectiles.splice(pIdx, 1);
+          continue;
+        }
+
+        // Out of bounds
+        if (p.life > 1.8 || p.x < 0 || p.x > geom.sectionWidth || p.y < 0 || p.y > geom.sectionHeight) {
+          s.projectiles.splice(pIdx, 1);
+        }
+      }
+
+      // Update Spark Particles
+      for (let spIdx = s.sparks.length - 1; spIdx >= 0; spIdx--) {
+        const sp = s.sparks[spIdx];
+        sp.x += sp.vx * dt;
+        sp.y += sp.vy * dt;
+        sp.life -= dt * 2.8;
+        if (sp.life <= 0) {
+          s.sparks.splice(spIdx, 1);
+        }
+      }
+
+      // Update React state
       setSpiderPos({ x: Math.round(s.sx), y: Math.round(s.sy) });
       setSpiderFacing(s.sFacing);
       setCrawlFrame(s.sFrame);
@@ -343,7 +359,14 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
 
       setCatPos({ x: Math.round(s.cx), y: Math.round(s.cy) });
       setCatFacing(s.cFacing);
+      setCatAimAngle(s.cAim);
+      setCatMuzzleFlash(s.cMuzzle);
+      setCatRecoil(s.cRecoil);
       setCatTailAngle(s.cTailWiggle);
+      setCatWalkFrame(Math.floor(s.cWalkCycle) % 4);
+
+      setLasers([...s.projectiles]);
+      setHitParticles([...s.sparks]);
 
       animId = requestAnimationFrame(loop);
     };
@@ -355,14 +378,10 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
     };
   }, [sectionRef, textAnchorRef, boxRef]);
 
-  // Click interaction: commands cat to pounce!
-  const handleCatInteract = () => {
+  // Click interaction: commands cat to immediately fire a rapid laser burst!
+  const handleCatShoot = () => {
     const s = stateRef.current;
-    s.catPhase = 'POUNCE';
-    s.cStateTimer = 0;
-    s.cvy = -180;
-    s.cvx = s.cFacing * 160;
-    setCatAction('POUNCE');
+    s.cShootCooldown = 0;
   };
 
   const P = 2.2;
@@ -378,7 +397,7 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   );
 
   // -----------------------------------------------------------------
-  // SPIDEY SPRITE (Horizontal Crawl or Inverted Hang)
+  // SPIDEY SPRITE
   // -----------------------------------------------------------------
   const renderBoxCrawler = () => {
     const stepA = crawlFrame === 0 || crawlFrame === 2 ? 1 : -1;
@@ -386,7 +405,6 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
 
     return (
       <g transform={`scale(${spiderFacing}, 1)`}>
-        {/* Legs behind body */}
         <Pixel x={-6} y={-4 + stepA} color="#0047FF" />
         <Pixel x={-8} y={-6 + stepA} color="#EF4444" />
         <Pixel x={-9} y={-2 + stepA} color="#EF4444" />
@@ -403,21 +421,17 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
         <Pixel x={8} y={-6 - stepB} color="#EF4444" />
         <Pixel x={9} y={-2 - stepB} color="#EF4444" />
 
-        {/* Torso */}
         <Pixel x={-6} y={-3} w={3} h={4} color="#0047FF" />
         <Pixel x={-3} y={-4} w={5} h={5} color="#EF4444" />
         <Pixel x={-1} y={-3} w={2} h={3} color="#0F172A" />
         <Pixel x={2} y={-3} w={2} h={4} color="#0047FF" />
 
-        {/* Mask */}
         <Pixel x={4} y={-4} w={4} h={5} color="#EF4444" />
         <Pixel x={5} y={-3} w={3} h={3} color="#DC2626" />
-        {/* White Eye */}
         <Pixel x={5} y={-3} color="#000000" />
         <Pixel x={6} y={-3} w={2} h={2} color="#FFFFFF" />
         <Pixel x={8} y={-2} color="#000000" />
 
-        {/* Front Legs */}
         <Pixel x={-5} y={-1 - stepA} color="#0047FF" />
         <Pixel x={-7} y={2 - stepA} color="#EF4444" />
         <Pixel x={-8} y={4} color="#DC2626" />
@@ -474,121 +488,104 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   );
 
   // -----------------------------------------------------------------
-  // SHADOWLENS LOGO CAT AVATAR
-  // Features the iconic shadowlens mascot logo head with animated body,
-  // paws, swishing tail, and combat swat claws!
+  // CYBER CAT AVATAR DRAWN FROM SCRATCH
+  // Pointed Feline Ears, Sleek Visor Eyes, Tail, and Futuristic Railgun
   // -----------------------------------------------------------------
-  const renderLogoCat = () => {
-    const isCrouching = catAction === 'CROUCH';
-    const isPouncing = catAction === 'POUNCE' || catAction === 'SWAT';
-    const isProud = catAction === 'PROUD';
+  const renderCyberCat = () => {
+    const f = catFacing;
+    const step = catWalkFrame % 2 === 0 ? 1 : -1;
+    // Calculate rotation angle for gun relative to cat facing direction
+    const gunRot = f === 1 ? catAimAngle : catAimAngle - Math.PI;
 
     return (
-      <g transform={`scale(${catFacing}, 1)`} className="cursor-pointer">
-        {/* Animated Sinuous Tail */}
+      <g transform={`scale(${f}, 1)`} className="cursor-pointer">
+        {/* Animated Cyber Tail */}
         <path
-          d={`M -14 -12 Q -22 ${-18 + catTailAngle * 0.4} ${-24 + catTailAngle * 0.3} ${-28 + catTailAngle}`}
+          d={`M -12 -12 Q -18 ${-18 + catTailAngle * 0.4} ${-22 + catTailAngle * 0.3} ${-26 + catTailAngle}`}
           stroke="#E2E8F0"
-          strokeWidth="3.2"
+          strokeWidth="2.8"
           strokeLinecap="round"
           fill="none"
         />
 
-        {/* Rear Legs / Paws */}
-        <ellipse
-          cx="-11"
-          cy={isCrouching ? "-3" : isPouncing ? "-8" : "-4"}
-          rx="5.5"
-          ry={isCrouching ? "4" : "7"}
-          fill="#1E2533"
-        />
-        <circle cx="-11" cy="-1" r="3.2" fill="#FFFFFF" />
+        {/* Back Legs (Dark sleek cyber armor) */}
+        <ellipse cx="-8" cy="-4" rx="4.5" ry="6" fill="#0F172A" />
+        <rect x="-10" y="-3" width="5" height="4" rx="1.5" fill="#E2E8F0" />
 
-        {/* Cat Sleek Body (White & Dark Slate Coat) */}
-        <ellipse
-          cx="-3"
-          cy={isCrouching ? "-8" : isPouncing ? "-12" : "-10"}
-          rx={isPouncing ? "15" : "13"}
-          ry={isCrouching ? "7" : "9"}
-          fill="#F8FAFC"
-          stroke="#1E2533"
-          strokeWidth="1.2"
-        />
+        {/* Front Legs */}
+        <ellipse cx="6" cy="-4" rx="4" ry="5.5" fill="#0F172A" />
+        <rect x="4" y="-3" width="5" height="4" rx="1.5" fill="#E2E8F0" />
 
-        {/* Front Legs / Paws */}
-        <ellipse
-          cx={isPouncing ? "8" : "4"}
-          cy={isCrouching ? "-3" : isPouncing ? "-10" : "-4"}
-          rx="4.8"
-          ry={isCrouching ? "4" : "6.5"}
-          fill="#1E2533"
-        />
-        {/* Swatting Paw Extension */}
-        <circle
-          cx={catAction === 'SWAT' ? "18" : isPouncing ? "12" : "5"}
-          cy={catAction === 'SWAT' ? "-15" : "-1"}
-          r={catAction === 'SWAT' ? "4.2" : "3.4"}
-          fill="#FFFFFF"
-          stroke="#00F0FF"
-          strokeWidth={catAction === 'SWAT' ? "1.5" : "0"}
-        />
+        {/* Cyber Cat Body / Nano-Suit */}
+        <ellipse cx="-1" cy="-12" rx="12" ry="9" fill="#1E293B" stroke="#0047FF" strokeWidth="1.2" />
+        {/* Chest Armor Plate with glowing power core */}
+        <ellipse cx="2" cy="-12" rx="7" ry="6" fill="#F8FAFC" />
+        <circle cx="2" cy="-12" r="2" fill="#00F0FF" />
 
-        {/* OFFICIAL SHADOWLENS MASCOT LOGO (Cat Face Avatar) */}
-        <g transform={`translate(${isPouncing ? "6" : "2"}, ${isCrouching ? "-16" : isPouncing ? "-22" : "-19"})`}>
-          <image
-            href="/shadowlens-logo.png"
-            x="-16"
-            y="-16"
-            width="32"
-            height="32"
-            preserveAspectRatio="xMidYMid meet"
-          />
+        {/* CAT HEAD (Drawn from scratch: Round face with pointed cat ears) */}
+        <g transform="translate(6, -21)">
+          {/* Left Cat Ear (Pointed Triangle with pink/cyan inner ear) */}
+          <polygon points="-7,-6 -4,-16 -1,-6" fill="#0F172A" stroke="#E2E8F0" strokeWidth="0.8" />
+          <polygon points="-6,-7 -4,-13 -2,-7" fill="#00F0FF" />
+
+          {/* Right Cat Ear (Pointed Triangle) */}
+          <polygon points="1,-6 4,-16 7,-6" fill="#0F172A" stroke="#E2E8F0" strokeWidth="0.8" />
+          <polygon points="2,-7 4,-13 6,-7" fill="#00F0FF" />
+
+          {/* Head Sphere (White & Slate Feline Face) */}
+          <ellipse cx="0" cy="0" rx="9" ry="8" fill="#F8FAFC" stroke="#0F172A" strokeWidth="1.0" />
+
+          {/* Feline Eyes (Cyber Visor / Glowing Cyan Eyes) */}
+          <ellipse cx="-3" cy="-1" rx="2.5" ry="3" fill="#0F172A" />
+          <ellipse cx="-3" cy="-1" rx="1.8" ry="2.2" fill="#00F0FF" />
+          <circle cx="-2.5" cy="-1.8" r="0.7" fill="#FFFFFF" />
+
+          <ellipse cx="4" cy="-1" rx="2.5" ry="3" fill="#0F172A" />
+          <ellipse cx="4" cy="-1" rx="1.8" ry="2.2" fill="#00F0FF" />
+          <circle cx="4.5" cy="-1.8" r="0.7" fill="#FFFFFF" />
+
+          {/* Cute Cat Snout & Whisker Dots */}
+          <polygon points="0.5,2 -0.5,2 0,3.2" fill="#EC4899" />
+          {/* Whiskers */}
+          <line x1="-5" y1="2" x2="-9" y2="1" stroke="#94A3B8" strokeWidth="0.6" />
+          <line x1="-5" y1="3.5" x2="-9" y2="4.5" stroke="#94A3B8" strokeWidth="0.6" />
+          <line x1="5" y1="2" x2="9" y2="1" stroke="#94A3B8" strokeWidth="0.6" />
+          <line x1="5" y1="3.5" x2="9" y2="4.5" stroke="#94A3B8" strokeWidth="0.6" />
         </g>
 
-        {/* SWAT IMPACT SLASH FX */}
-        {catSwatFx && (
-          <g transform="translate(22, -18)">
-            {/* Energy claw slash lines */}
-            <path
-              d="M -4 -8 L 12 -2 M -6 -2 L 14 4 M -4 4 L 10 10"
-              stroke="#00F0FF"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            {/* Impact star */}
-            <polygon
-              points="14,-2 18,2 22,-2 18,-6"
-              fill="#FFFFFF"
-            />
-            {/* Comic SWAT Text */}
-            <text
-              x="18"
-              y="-12"
-              fill="#00F0FF"
-              fontSize="9"
-              fontWeight="900"
-              fontFamily="monospace"
-              stroke="#080A0F"
-              strokeWidth="0.6"
-            >
-              *SWAT!*
-            </text>
-          </g>
-        )}
+        {/* -------------------------------------------------------------
+            FUTURISTIC LASER GUN HELD IN CAT PAWS
+            Pivots directly with aim angle and recoils when firing!
+            ------------------------------------------------------------- */}
+        <g
+          transform={`translate(8, -13) rotate(${(gunRot * 180) / Math.PI}) translate(${-catRecoil}, 0)`}
+        >
+          {/* Cat Arm / Paw holding weapon */}
+          <ellipse cx="-4" cy="1" rx="4" ry="2.5" fill="#E2E8F0" />
 
-        {/* Proud / Purring Mood Emoji */}
-        {isProud && (
-          <g transform="translate(0, -32)" className="animate-bounce">
-            <text
-              x="0"
-              y="0"
-              fontSize="12"
-              textAnchor="middle"
-            >
-              😼✨
-            </text>
-          </g>
-        )}
+          {/* Gun Stock & Battery Core */}
+          <rect x="-7" y="-3" width="9" height="6" rx="1.5" fill="#0F172A" stroke="#0047FF" strokeWidth="0.8" />
+          <circle cx="-3" cy="0" r="1.5" fill="#00F0FF" />
+
+          {/* Futuristic Extended Railgun Barrel */}
+          <rect x="2" y="-2" width="13" height="4" rx="1" fill="#1E293B" />
+          {/* Neon Energy Rails */}
+          <line x1="3" y1="-1" x2="14" y2="-1" stroke="#00F0FF" strokeWidth="1.2" />
+          <line x1="3" y1="1" x2="14" y2="1" stroke="#00F0FF" strokeWidth="1.2" />
+          <rect x="14" y="-2.5" width="2" height="5" rx="0.5" fill="#E2E8F0" />
+
+          {/* Muzzle Flash FX when shooting */}
+          {catMuzzleFlash > 0.1 && (
+            <g transform="translate(18, 0)">
+              {/* Starburst flash */}
+              <polygon
+                points="0,-6 2,-2 7,0 2,2 0,6 -2,2 -7,0 -2,-2"
+                fill="#FFFFFF"
+              />
+              <circle cx="0" cy="0" r="4.5" fill="#00F0FF" opacity="0.85" />
+            </g>
+          )}
+        </g>
       </g>
     );
   };
@@ -608,6 +605,13 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
             <stop offset="70%" stopColor="#94A3B8" stopOpacity="0.6" />
             <stop offset="100%" stopColor="#00F0FF" stopOpacity="0.8" />
           </linearGradient>
+
+          {/* Glowing Laser Bullet Beam Gradient */}
+          <linearGradient id="laserBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0047FF" stopOpacity="0.2" />
+            <stop offset="60%" stopColor="#00F0FF" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity="1.0" />
+          </linearGradient>
         </defs>
 
         {/* 1. Silvery Web Line - only visible while descending from text */}
@@ -626,7 +630,54 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           </>
         )}
 
-        {/* 2. SPIDEY ACTOR */}
+        {/* 2. GLOWING LASER BULLETS */}
+        {lasers.map((p) => {
+          const tailLen = 14;
+          const tailX = p.x - Math.cos(p.angle) * tailLen;
+          const tailY = p.y - Math.sin(p.angle) * tailLen;
+
+          return (
+            <g key={p.id}>
+              {/* Outer Laser Glow Trail */}
+              <line
+                x1={tailX}
+                y1={tailY}
+                x2={p.x}
+                y2={p.y}
+                stroke="#00F0FF"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                opacity="0.85"
+              />
+              {/* Hot White Inner Core */}
+              <line
+                x1={tailX + 4}
+                y1={tailY + 4}
+                x2={p.x}
+                y2={p.y}
+                stroke="#FFFFFF"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              {/* Laser Bullet Head */}
+              <circle cx={p.x} cy={p.y} r="2.2" fill="#FFFFFF" />
+            </g>
+          );
+        })}
+
+        {/* 3. IMPACT SPARK PARTICLES */}
+        {hitParticles.map((sp) => (
+          <circle
+            key={sp.id}
+            cx={sp.x}
+            cy={sp.y}
+            r={1.6}
+            fill="#00F0FF"
+            opacity={sp.life}
+          />
+        ))}
+
+        {/* 4. SPIDEY ACTOR */}
         <g
           transform={`translate(${spiderPos.x}, ${spiderPos.y})`}
           className="pointer-events-auto cursor-pointer"
@@ -634,7 +685,7 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
         >
           {isHanging ? renderHangingSpider() : renderBoxCrawler()}
 
-          {/* Spider Reaction Comic Bubble when attacked */}
+          {/* Spider Reaction Bubble when targeted/hit */}
           {spiderReaction && (
             <g transform="translate(14, -22)" className="animate-bounce">
               <rect
@@ -662,14 +713,14 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           )}
         </g>
 
-        {/* 3. SHADOWLENS LOGO CAT AVATAR */}
+        {/* 5. CYBER CAT AVATAR WITH FUTURISTIC GUN */}
         <g
           transform={`translate(${catPos.x}, ${catPos.y})`}
           className="pointer-events-auto cursor-pointer"
-          onClick={handleCatInteract}
-          title="ShadowLens Logo Cat! Click to make it pounce!"
+          onClick={handleCatShoot}
+          title="Cyber Cat Defender! Click to manual-fire laser blaster!"
         >
-          {renderLogoCat()}
+          {renderCyberCat()}
         </g>
       </svg>
     </div>
