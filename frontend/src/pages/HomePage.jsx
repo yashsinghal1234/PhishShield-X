@@ -23,13 +23,15 @@ export default function HomePage() {
           ========================================================================= */}
       <section className="relative pt-2 sm:pt-4 overflow-hidden bg-[#080A0F] text-white">
         
-        {/* Pixel Spider Virus Rappelling from Text */}
-        <PixelSpiderDescent />
-
         {/* Hero Title & Subtitle - Aligned flush with the left side of the box and navbar */}
         <div className="w-full mb-3.5 sm:mb-4.5">
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[62px] font-bold tracking-tight text-white leading-[1.08] mb-2.5">
-            Multi-Modal Threat Intelligence
+            Multi-Modal Threat{' '}
+            <span className="relative inline-block">
+              Intelligence
+              {/* Pixel Spider Virus Rappelling directly from the text */}
+              <PixelSpiderDescent />
+            </span>
           </h1>
           <p className="text-base sm:text-xl md:text-2xl lg:text-[26px] font-normal text-[#94A3B8] tracking-tight max-w-none whitespace-normal md:whitespace-nowrap">
             Evidential neural detection for URLs, physical QR codes, and email spoofing

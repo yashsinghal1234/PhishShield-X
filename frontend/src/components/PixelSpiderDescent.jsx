@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 
 /**
  * PixelSpiderDescent:
- * Features the custom pixel-art jumping spider rappelling down from the headline text.
- * - Silk web thread anchored to the headline text.
+ * Features the custom pixel-art jumping spider rappelling down directly from the headline text.
+ * - Anchored directly to the headline text "Intelligence".
+ * - Small, cute, compact pixel sprite (~32-36px).
+ * - Glowing silk web thread attached to the bottom edge of the text.
  * - Natural physics sway and bobbing rappel animation.
  * - Interactive: reacts to hover and click (spooked jump / climb).
- * - Rendered with pixelated crispness matching the retro dither aesthetic.
  */
 export default function PixelSpiderDescent() {
   const [isSpooked, setIsSpooked] = useState(false);
@@ -17,24 +18,28 @@ export default function PixelSpiderDescent() {
     // Initial descent entrance animation
     const timer = setTimeout(() => {
       setDescended(true);
-    }, 400);
+    }, 300);
     return () => clearTimeout(timer);
   }, []);
 
-  const handleClick = () => {
+  const handleClick = (e) => {
+    e.stopPropagation();
     setIsSpooked(true);
-    setRappelOffset((prev) => (prev === 0 ? -45 : 0));
-    setTimeout(() => setIsSpooked(false), 900);
+    setRappelOffset((prev) => (prev === 0 ? -35 : 0));
+    setTimeout(() => setIsSpooked(false), 800);
   };
+
+  // Base hang distance below the text
+  const baseDrop = 75;
+  const currentDrop = baseDrop + rappelOffset;
 
   return (
     <div
-      className="absolute top-0 right-[8%] sm:right-[14%] md:right-[20%] z-20 pointer-events-auto select-none"
+      className="absolute right-1 sm:right-3 top-full z-20 pointer-events-auto select-none flex flex-col items-center"
       style={{
-        transition: 'transform 1.6s cubic-bezier(0.34, 1.3, 0.64, 1)',
-        transform: descended
-          ? `translateY(${110 + rappelOffset}px)`
-          : 'translateY(-120px)',
+        transform: descended ? 'translateY(0px)' : 'translateY(-60px)',
+        opacity: descended ? 1 : 0,
+        transition: 'transform 1.2s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.4s ease-out',
       }}
     >
       {/* Spider Container with natural pendulum swing & bob */}
@@ -43,40 +48,40 @@ export default function PixelSpiderDescent() {
         className="group relative cursor-pointer flex flex-col items-center"
         title="Cyber Virus Spider (Click me!)"
       >
-        {/* Glowing Silk Web Thread extending up to the text */}
+        {/* Glowing Silk Web Thread extending directly from the text */}
         <div
-          className="w-[1.5px] bg-gradient-to-b from-[#00F0FF]/80 via-white/70 to-[#0047FF]/60 shadow-[0_0_6px_rgba(0,240,255,0.8)]"
+          className="w-[1px] bg-gradient-to-b from-[#00F0FF] via-white/90 to-[#0047FF] shadow-[0_0_4px_rgba(0,240,255,0.9)] origin-top"
           style={{
-            height: `${140 - rappelOffset}px`,
-            transition: 'height 1.6s cubic-bezier(0.34, 1.3, 0.64, 1)',
+            height: `${currentDrop}px`,
+            transition: 'height 0.8s cubic-bezier(0.34, 1.3, 0.64, 1)',
           }}
         />
 
         {/* Spider Body with continuous subtle idle sway & hover reaction */}
         <div
           className={`relative transition-transform duration-300 ease-out ${
-            isSpooked ? 'scale-110 -rotate-6' : 'group-hover:scale-105'
+            isSpooked ? 'scale-115 -translate-y-2' : 'group-hover:scale-110'
           }`}
           style={{
-            animation: 'spiderSway 3.6s ease-in-out infinite alternate',
+            animation: 'spiderSway 3.2s ease-in-out infinite alternate',
           }}
         >
           {/* Subtle neon back-glow */}
-          <div className="absolute inset-0 bg-[#0047FF]/30 blur-md rounded-full pointer-events-none transform scale-90" />
+          <div className="absolute inset-0 bg-[#0047FF]/40 blur-[6px] rounded-full pointer-events-none transform scale-90" />
 
-          {/* The Pixel Spider Sprite */}
+          {/* The Compact Pixel Spider Sprite */}
           <img
             src="/pixel-spider.png"
             alt="Cyber Virus Spider"
-            className="relative w-16 sm:w-20 md:w-22 h-auto drop-shadow-[0_4px_12px_rgba(0,71,255,0.4)] pointer-events-none"
+            className="relative w-8 sm:w-9 md:w-10 h-auto drop-shadow-[0_2px_8px_rgba(0,71,255,0.5)] pointer-events-none"
             style={{
               imageRendering: 'pixelated',
             }}
           />
 
-          {/* Interactive alert tooltip on hover */}
-          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap bg-[#080A0F]/90 border border-[#0047FF]/60 text-[10px] font-mono px-2 py-0.5 rounded text-[#00F0FF] shadow-lg">
-            [SPIDER_VIRUS.EXE]
+          {/* Tooltip on hover */}
+          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap bg-[#080A0F]/95 border border-[#0047FF]/70 text-[9px] font-mono px-1.5 py-0.2 rounded text-[#00F0FF] shadow-lg">
+            [SPIDER_VIRUS]
           </div>
         </div>
       </div>
@@ -85,13 +90,13 @@ export default function PixelSpiderDescent() {
       <style>{`
         @keyframes spiderSway {
           0% {
-            transform: rotate(-3.5deg) translateY(0px);
+            transform: rotate(-3deg) translateY(0px);
           }
           50% {
-            transform: rotate(0deg) translateY(5px);
+            transform: rotate(0deg) translateY(3px);
           }
           100% {
-            transform: rotate(3.5deg) translateY(0px);
+            transform: rotate(3deg) translateY(0px);
           }
         }
       `}</style>
