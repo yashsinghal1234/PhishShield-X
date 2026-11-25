@@ -388,21 +388,22 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           </linearGradient>
         </defs>
 
-        {/* 1. Silvery Web Line connected from text down to Spidey */}
-        <path
-          d={`M ${webOrigin.x} ${webOrigin.y} Q ${
-            (webOrigin.x + spiderPos.x) / 2 + (isHanging ? webSlack : 0)
-          } ${(webOrigin.y + spiderPos.y) / 2} ${spiderPos.x} ${
-            isHanging ? spiderPos.y - 12 : spiderPos.y - 4
-          }`}
-          stroke="url(#spideyWebGrad)"
-          strokeWidth="1.2"
-          strokeDasharray="4 2"
-          fill="none"
-        />
-
-        {/* Web origin anchor node at the text */}
-        <circle cx={webOrigin.x} cy={webOrigin.y} r="1.5" fill="#FFFFFF" />
+        {/* 1. Silvery Web Line - only visible while descending, removed once on the box */}
+        {isHanging && (
+          <>
+            <path
+              d={`M ${webOrigin.x} ${webOrigin.y} Q ${
+                (webOrigin.x + spiderPos.x) / 2 + webSlack
+              } ${(webOrigin.y + spiderPos.y) / 2} ${spiderPos.x} ${spiderPos.y - 12}`}
+              stroke="url(#spideyWebGrad)"
+              strokeWidth="1.2"
+              strokeDasharray="4 2"
+              fill="none"
+            />
+            {/* Web origin anchor node at the text */}
+            <circle cx={webOrigin.x} cy={webOrigin.y} r="1.5" fill="#FFFFFF" />
+          </>
+        )}
 
         {/* 2. Spidey Actor (Either Rappelling or Crawling on the Blue Box) */}
         <g
