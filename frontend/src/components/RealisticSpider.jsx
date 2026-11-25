@@ -1,15 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * CyberCatVsSpider:
+ * CyberHeroVsSpider:
  * 1. Friendly pixel-art Spidey descends from the text and crawls on the blue box.
- * 2. Cyber Cat Avatar created from scratch:
- *    - Pointed feline ears with cyber glow, sleek feline face, cyber armor suit, and swishing tail.
- *    - Wields a high-tech futuristic railgun/blaster in hand.
- *    - Dynamically aims weapon towards Spidey.
- *    - Shoots rapid glowing cyan laser bolts with muzzle flashes!
+ * 2. Cyber Hero Avatar built from scratch:
+ *    - Humanoid cyber-guardian with glowing cyan visor, nano-armor plates, fluttering energy scarf, and booster boots.
+ *    - Dual-hand futuristic laser railgun/blaster that dynamically aims at the spider.
+ *    - Fires rapid glowing cyan & hot-white plasma laser pulses with muzzle flashes and weapon recoil.
  *    - Spidey dodges and reacts ("WHOA!", "THWIP!", jump flips) on laser impact.
- *    - Jumps across the stepped blue box elevations.
+ *    - Hero patrols, runs, and leaps across the stepped blue box platforms.
  */
 export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   // Spider State
@@ -23,14 +22,14 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   const [webOrigin, setWebOrigin] = useState({ x: 200, y: 40 });
   const [webSlack, setWebSlack] = useState(0);
 
-  // Cyber Cat State
-  const [catPos, setCatPos] = useState({ x: 450, y: 150 });
-  const [catFacing, setCatFacing] = useState(-1);
-  const [catAimAngle, setCatAimAngle] = useState(Math.PI);
-  const [catMuzzleFlash, setCatMuzzleFlash] = useState(0);
-  const [catRecoil, setCatRecoil] = useState(0);
-  const [catTailAngle, setCatTailAngle] = useState(0);
-  const [catWalkFrame, setCatWalkFrame] = useState(0);
+  // Hero Avatar State
+  const [heroPos, setHeroPos] = useState({ x: 450, y: 150 });
+  const [heroFacing, setHeroFacing] = useState(-1);
+  const [heroAimAngle, setHeroAimAngle] = useState(Math.PI);
+  const [heroMuzzleFlash, setHeroMuzzleFlash] = useState(0);
+  const [heroRecoil, setHeroRecoil] = useState(0);
+  const [heroWalkFrame, setHeroWalkFrame] = useState(0);
+  const [heroIsJumping, setHeroIsJumping] = useState(false);
 
   // Lasers & Hit Particles
   const [lasers, setLasers] = useState([]);
@@ -49,21 +48,20 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
     sPatrolDir: 1,
     sReactTimer: 0,
 
-    // Cyber Cat state
-    cx: 460,
-    cy: 150,
-    cvx: 0,
-    cvy: 0,
-    cFacing: -1,
-    cAim: Math.PI,
-    cWalkCycle: 0,
-    cShootCooldown: 0,
-    cRecoil: 0,
-    cMuzzle: 0,
-    cTailWiggle: 0,
-    patrolTimer: 0,
+    // Hero state
+    hx: 460,
+    hy: 150,
+    hvx: 0,
+    hvy: 0,
+    hFacing: -1,
+    hAim: Math.PI,
+    hWalkCycle: 0,
+    hShootCooldown: 0,
+    hRecoil: 0,
+    hMuzzle: 0,
+    hIsJumping: false,
 
-    // Entities
+    // Projectiles & FX
     projectiles: [],
     sparks: [],
 
@@ -123,8 +121,8 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       stateRef.current.webX = initGeom.webOriginX;
       stateRef.current.webY = initGeom.webOriginY;
       stateRef.current.sy = initGeom.webOriginY + 10;
-      stateRef.current.cx = initGeom.boxWidth * 0.62;
-      stateRef.current.cy = getGroundY(initGeom.boxWidth * 0.62, initGeom);
+      stateRef.current.hx = initGeom.boxWidth * 0.60;
+      stateRef.current.hy = getGroundY(initGeom.boxWidth * 0.60, initGeom);
     }
 
     const loop = (now) => {
@@ -223,68 +221,71 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       }
 
       // =============================================================
-      // 2. CYBER CAT AVATAR WITH FUTURISTIC LASER GUN
+      // 2. HERO AVATAR WITH FUTURISTIC LASER RAILGUN
       // =============================================================
-      const catFloor = getGroundY(s.cx, geom);
-      s.cTailWiggle = Math.sin(s.time * 6) * 14;
-      s.cRecoil = Math.max(0, s.cRecoil - dt * 25);
-      s.cMuzzle = Math.max(0, s.cMuzzle - dt * 10);
-      s.cShootCooldown = Math.max(0, s.cShootCooldown - dt);
+      const heroFloor = getGroundY(s.hx, geom);
+      s.hRecoil = Math.max(0, s.hRecoil - dt * 25);
+      s.hMuzzle = Math.max(0, s.hMuzzle - dt * 10);
+      s.hShootCooldown = Math.max(0, s.hShootCooldown - dt);
 
-      // Cat always aims futuristic gun directly at the spider
-      const gunMouthX = s.cx + s.cFacing * 16;
-      const gunMouthY = s.cy - 14;
+      // Hero always tracks and aims futuristic gun directly at the spider
+      const gunMouthX = s.hx + s.hFacing * 18;
+      const gunMouthY = s.hy - 18;
       const aimAngle = Math.atan2(s.sy - gunMouthY, s.sx - gunMouthX);
-      s.cAim = aimAngle;
-      s.cFacing = s.sx > s.cx ? 1 : -1;
+      s.hAim = aimAngle;
+      s.hFacing = s.sx > s.hx ? 1 : -1;
 
-      // Cat moves and patrols across the blue box to maintain tactical firing range
-      const distToSpider = Math.hypot(s.sx - s.cx, s.sy - s.cy);
-      if (distToSpider > 220) {
+      // Hero maneuvers along the blue box to maintain tactical firing range
+      const distToSpider = Math.hypot(s.sx - s.hx, s.sy - s.hy);
+      if (distToSpider > 240) {
         // Move towards spider
-        s.cvx = s.cFacing * 52;
-        s.cWalkCycle += dt * 8;
-      } else if (distToSpider < 90) {
-        // Back up slightly for firing distance
-        s.cvx = -s.cFacing * 38;
-        s.cWalkCycle += dt * 6;
+        s.hvx = s.hFacing * 50;
+        s.hWalkCycle += dt * 8;
+      } else if (distToSpider < 95) {
+        // Back up slightly for optimal vantage line
+        s.hvx = -s.hFacing * 38;
+        s.hWalkCycle += dt * 6;
       } else {
-        s.cvx *= 0.8;
+        s.hvx *= 0.8;
       }
 
-      // Cat step jumping across platforms
-      const catLookAhead = s.cx + s.cFacing * 28;
-      const catFloorAhead = getGroundY(catLookAhead, geom);
-      if (catFloorAhead < catFloor - 20) {
-        s.cvy = -175;
-        s.cvx = s.cFacing * 70;
-      } else if (catFloorAhead > catFloor + 20) {
-        s.cvy = -40;
-        s.cvx = s.cFacing * 50;
+      // Hero step jumping across platforms with rocket boots
+      const heroLookAhead = s.hx + s.hFacing * 28;
+      const heroFloorAhead = getGroundY(heroLookAhead, geom);
+      if (heroFloorAhead < heroFloor - 20) {
+        s.hvy = -180;
+        s.hvx = s.hFacing * 70;
+        s.hIsJumping = true;
+      } else if (heroFloorAhead > heroFloor + 20) {
+        s.hvy = -45;
+        s.hvx = s.hFacing * 50;
+        s.hIsJumping = true;
       }
 
-      s.cx += s.cvx * dt;
-      if (s.cvy < 0) {
-        s.cvy += 480 * dt;
-        s.cy += s.cvy * dt;
-        if (s.cy >= catFloor && s.cvy > 0) {
-          s.cy = catFloor;
-          s.cvy = 0;
+      s.hx += s.hvx * dt;
+      if (s.hvy < 0 || s.hy < heroFloor - 1) {
+        s.hvy += 480 * dt;
+        s.hy += s.hvy * dt;
+        if (s.hy >= heroFloor && s.hvy > 0) {
+          s.hy = heroFloor;
+          s.hvy = 0;
+          s.hIsJumping = false;
         }
       } else {
-        s.cy = catFloor;
+        s.hy = heroFloor;
+        s.hIsJumping = false;
       }
 
       // -------------------------------------------------------------
       // 3. SHOOTING FUTURISTIC LASER BULLETS
       // -------------------------------------------------------------
-      // Fire every ~0.8s when in range
-      if (s.cShootCooldown <= 0 && distToSpider < 450) {
-        s.cShootCooldown = 0.75 + Math.random() * 0.35;
-        s.cRecoil = 5.0;
-        s.cMuzzle = 1.0;
+      // Fire every ~0.8s when spider is in range
+      if (s.hShootCooldown <= 0 && distToSpider < 480) {
+        s.hShootCooldown = 0.75 + Math.random() * 0.35;
+        s.hRecoil = 5.5;
+        s.hMuzzle = 1.0;
 
-        const laserSpeed = 420;
+        const laserSpeed = 440;
         s.projectiles.push({
           id: Math.random(),
           x: gunMouthX,
@@ -309,8 +310,8 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           // SPIDER GETS HIT! Spidey dodges and flips backwards!
           s.spiderPhase = 'DODGE';
           s.svy = -190;
-          s.svx = -s.cFacing * 110;
-          s.sPatrolDir = -s.cFacing;
+          s.svx = -s.hFacing * 110;
+          s.sPatrolDir = -s.hFacing;
           setSpiderReaction(Math.random() > 0.5 ? 'WHOA!' : 'THWIP!');
           s.sReactTimer = 1.8;
 
@@ -357,13 +358,13 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
       setWebOrigin({ x: Math.round(s.webX), y: Math.round(s.webY) });
       setWebSlack(Math.sin(s.time * 2) * 4);
 
-      setCatPos({ x: Math.round(s.cx), y: Math.round(s.cy) });
-      setCatFacing(s.cFacing);
-      setCatAimAngle(s.cAim);
-      setCatMuzzleFlash(s.cMuzzle);
-      setCatRecoil(s.cRecoil);
-      setCatTailAngle(s.cTailWiggle);
-      setCatWalkFrame(Math.floor(s.cWalkCycle) % 4);
+      setHeroPos({ x: Math.round(s.hx), y: Math.round(s.hy) });
+      setHeroFacing(s.hFacing);
+      setHeroAimAngle(s.hAim);
+      setHeroMuzzleFlash(s.hMuzzle);
+      setHeroRecoil(s.hRecoil);
+      setHeroWalkFrame(Math.floor(s.hWalkCycle) % 4);
+      setHeroIsJumping(s.hIsJumping);
 
       setLasers([...s.projectiles]);
       setHitParticles([...s.sparks]);
@@ -378,10 +379,10 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
     };
   }, [sectionRef, textAnchorRef, boxRef]);
 
-  // Click interaction: commands cat to immediately fire a rapid laser burst!
-  const handleCatShoot = () => {
+  // Click interaction: commands hero to immediately rapid-fire!
+  const handleHeroShoot = () => {
     const s = stateRef.current;
-    s.cShootCooldown = 0;
+    s.hShootCooldown = 0;
   };
 
   const P = 2.2;
@@ -488,101 +489,95 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
   );
 
   // -----------------------------------------------------------------
-  // CYBER CAT AVATAR DRAWN FROM SCRATCH
-  // Pointed Feline Ears, Sleek Visor Eyes, Tail, and Futuristic Railgun
+  // CYBER HERO AVATAR BUILT FROM SCRATCH
+  // Humanoid Cyber Defender with Glowing Cyan Visor, Scarf, and Plasma Cannon
   // -----------------------------------------------------------------
-  const renderCyberCat = () => {
-    const f = catFacing;
-    const step = catWalkFrame % 2 === 0 ? 1 : -1;
-    // Calculate rotation angle for gun relative to cat facing direction
-    const gunRot = f === 1 ? catAimAngle : catAimAngle - Math.PI;
+  const renderHeroAvatar = () => {
+    const f = heroFacing;
+    const legCycle = Math.sin(heroWalkFrame * 1.5) * 4;
+    const gunRot = f === 1 ? heroAimAngle : heroAimAngle - Math.PI;
 
     return (
       <g transform={`scale(${f}, 1)`} className="cursor-pointer">
-        {/* Animated Cyber Tail */}
+        {/* 1. Fluttering Energy Scarf / Cape behind Hero */}
         <path
-          d={`M -12 -12 Q -18 ${-18 + catTailAngle * 0.4} ${-22 + catTailAngle * 0.3} ${-26 + catTailAngle}`}
-          stroke="#E2E8F0"
-          strokeWidth="2.8"
-          strokeLinecap="round"
-          fill="none"
+          d={`M -4 -22 Q -14 -18 -22 -12 Q -16 -8 -2 -18`}
+          fill="rgba(0, 71, 255, 0.85)"
+          stroke="#00F0FF"
+          strokeWidth="1.0"
         />
 
-        {/* Back Legs (Dark sleek cyber armor) */}
-        <ellipse cx="-8" cy="-4" rx="4.5" ry="6" fill="#0F172A" />
-        <rect x="-10" y="-3" width="5" height="4" rx="1.5" fill="#E2E8F0" />
+        {/* 2. Legs / Robotic Thruster Boots */}
+        {heroIsJumping ? (
+          // In-air tucked legs with rocket thruster sparks
+          <>
+            <rect x="-6" y="-12" width="4.5" height="10" rx="1.5" fill="#0F172A" />
+            <rect x="1" y="-14" width="4.5" height="12" rx="1.5" fill="#1E293B" />
+            {/* Cyan Thruster Boots */}
+            <rect x="-7" y="-3" width="6.5" height="4" rx="1" fill="#00F0FF" />
+            <rect x="0" y="-3" width="6.5" height="4" rx="1" fill="#00F0FF" />
+            {/* Thruster Flames */}
+            <polygon points="-4,1 -6,6 -2,6" fill="#38BDF8" />
+            <polygon points="3,1 1,6 5,6" fill="#38BDF8" />
+          </>
+        ) : (
+          // Running / Stride Legs
+          <>
+            {/* Back Leg */}
+            <rect x={-4 - legCycle * 0.4} y="-13" width="4.5" height="11" rx="1.5" fill="#0F172A" />
+            <rect x={-5 - legCycle * 0.4} y="-3" width="6" height="4" rx="1" fill="#0047FF" />
+            {/* Front Leg */}
+            <rect x={2 + legCycle * 0.4} y="-13" width="4.5" height="11" rx="1.5" fill="#1E293B" />
+            <rect x={1 + legCycle * 0.4} y="-3" width="6" height="4" rx="1" fill="#00F0FF" />
+          </>
+        )}
 
-        {/* Front Legs */}
-        <ellipse cx="6" cy="-4" rx="4" ry="5.5" fill="#0F172A" />
-        <rect x="4" y="-3" width="5" height="4" rx="1.5" fill="#E2E8F0" />
+        {/* 3. Hero Torso & Cyber Nano-Armor */}
+        <rect x="-6" y="-24" width="12" height="13" rx="2" fill="#0F172A" />
+        <rect x="-5" y="-23" width="10" height="9" rx="1" fill="#1E293B" />
+        {/* Glowing Arc Reactor Chest Core */}
+        <circle cx="0" cy="-19" r="2.2" fill="#00F0FF" />
 
-        {/* Cyber Cat Body / Nano-Suit */}
-        <ellipse cx="-1" cy="-12" rx="12" ry="9" fill="#1E293B" stroke="#0047FF" strokeWidth="1.2" />
-        {/* Chest Armor Plate with glowing power core */}
-        <ellipse cx="2" cy="-12" rx="7" ry="6" fill="#F8FAFC" />
-        <circle cx="2" cy="-12" r="2" fill="#00F0FF" />
-
-        {/* CAT HEAD (Drawn from scratch: Round face with pointed cat ears) */}
-        <g transform="translate(6, -21)">
-          {/* Left Cat Ear (Pointed Triangle with pink/cyan inner ear) */}
-          <polygon points="-7,-6 -4,-16 -1,-6" fill="#0F172A" stroke="#E2E8F0" strokeWidth="0.8" />
-          <polygon points="-6,-7 -4,-13 -2,-7" fill="#00F0FF" />
-
-          {/* Right Cat Ear (Pointed Triangle) */}
-          <polygon points="1,-6 4,-16 7,-6" fill="#0F172A" stroke="#E2E8F0" strokeWidth="0.8" />
-          <polygon points="2,-7 4,-13 6,-7" fill="#00F0FF" />
-
-          {/* Head Sphere (White & Slate Feline Face) */}
-          <ellipse cx="0" cy="0" rx="9" ry="8" fill="#F8FAFC" stroke="#0F172A" strokeWidth="1.0" />
-
-          {/* Feline Eyes (Cyber Visor / Glowing Cyan Eyes) */}
-          <ellipse cx="-3" cy="-1" rx="2.5" ry="3" fill="#0F172A" />
-          <ellipse cx="-3" cy="-1" rx="1.8" ry="2.2" fill="#00F0FF" />
-          <circle cx="-2.5" cy="-1.8" r="0.7" fill="#FFFFFF" />
-
-          <ellipse cx="4" cy="-1" rx="2.5" ry="3" fill="#0F172A" />
-          <ellipse cx="4" cy="-1" rx="1.8" ry="2.2" fill="#00F0FF" />
-          <circle cx="4.5" cy="-1.8" r="0.7" fill="#FFFFFF" />
-
-          {/* Cute Cat Snout & Whisker Dots */}
-          <polygon points="0.5,2 -0.5,2 0,3.2" fill="#EC4899" />
-          {/* Whiskers */}
-          <line x1="-5" y1="2" x2="-9" y2="1" stroke="#94A3B8" strokeWidth="0.6" />
-          <line x1="-5" y1="3.5" x2="-9" y2="4.5" stroke="#94A3B8" strokeWidth="0.6" />
-          <line x1="5" y1="2" x2="9" y2="1" stroke="#94A3B8" strokeWidth="0.6" />
-          <line x1="5" y1="3.5" x2="9" y2="4.5" stroke="#94A3B8" strokeWidth="0.6" />
-        </g>
+        {/* 4. Helmet & Glowing Visor */}
+        <ellipse cx="0" cy="-29" rx="7" ry="7.5" fill="#0F172A" stroke="#334155" strokeWidth="0.8" />
+        <rect x="-2" y="-37" width="4" height="3" fill="#0047FF" rx="0.5" /> {/* Helmet crest */}
+        
+        {/* Futuristic Glowing Cyan Visor */}
+        <rect x="-1" y="-31" width="7.5" height="3.2" rx="1" fill="#00F0FF" />
+        <rect x="1" y="-30" width="4.5" height="1.2" fill="#FFFFFF" />
 
         {/* -------------------------------------------------------------
-            FUTURISTIC LASER GUN HELD IN CAT PAWS
-            Pivots directly with aim angle and recoils when firing!
+            5. DUAL-HAND FUTURISTIC RAILGUN / LASER BLASTER
+            Pivots smoothly to aim directly at the spider!
             ------------------------------------------------------------- */}
         <g
-          transform={`translate(8, -13) rotate(${(gunRot * 180) / Math.PI}) translate(${-catRecoil}, 0)`}
+          transform={`translate(4, -18) rotate(${(gunRot * 180) / Math.PI}) translate(${-heroRecoil}, 0)`}
         >
-          {/* Cat Arm / Paw holding weapon */}
-          <ellipse cx="-4" cy="1" rx="4" ry="2.5" fill="#E2E8F0" />
+          {/* Back Glove holding rifle grip */}
+          <circle cx="-3" cy="2" r="2.5" fill="#334155" />
 
-          {/* Gun Stock & Battery Core */}
-          <rect x="-7" y="-3" width="9" height="6" rx="1.5" fill="#0F172A" stroke="#0047FF" strokeWidth="0.8" />
-          <circle cx="-3" cy="0" r="1.5" fill="#00F0FF" />
+          {/* Gun Stock & Battery Chassis */}
+          <rect x="-8" y="-3.5" width="10" height="7" rx="1.5" fill="#0F172A" stroke="#0047FF" strokeWidth="0.8" />
+          <circle cx="-3" cy="0" r="1.6" fill="#00F0FF" />
 
-          {/* Futuristic Extended Railgun Barrel */}
-          <rect x="2" y="-2" width="13" height="4" rx="1" fill="#1E293B" />
-          {/* Neon Energy Rails */}
-          <line x1="3" y1="-1" x2="14" y2="-1" stroke="#00F0FF" strokeWidth="1.2" />
-          <line x1="3" y1="1" x2="14" y2="1" stroke="#00F0FF" strokeWidth="1.2" />
-          <rect x="14" y="-2.5" width="2" height="5" rx="0.5" fill="#E2E8F0" />
+          {/* Heavy Railgun Barrel */}
+          <rect x="2" y="-2.5" width="16" height="5" rx="1" fill="#1E293B" />
+          {/* Glowing Energy Power Conduits along barrel */}
+          <line x1="3" y1="-1" x2="16" y2="-1" stroke="#00F0FF" strokeWidth="1.2" />
+          <line x1="3" y1="1" x2="16" y2="1" stroke="#00F0FF" strokeWidth="1.2" />
+          <rect x="16" y="-3" width="2.5" height="6" rx="0.5" fill="#E2E8F0" />
+
+          {/* Front Glove supporting barrel */}
+          <circle cx="6" cy="3" r="2.2" fill="#00F0FF" />
 
           {/* Muzzle Flash FX when shooting */}
-          {catMuzzleFlash > 0.1 && (
-            <g transform="translate(18, 0)">
-              {/* Starburst flash */}
+          {heroMuzzleFlash > 0.1 && (
+            <g transform="translate(21, 0)">
               <polygon
-                points="0,-6 2,-2 7,0 2,2 0,6 -2,2 -7,0 -2,-2"
+                points="0,-7 3,-2 9,0 3,2 0,7 -3,2 -9,0 -3,-2"
                 fill="#FFFFFF"
               />
-              <circle cx="0" cy="0" r="4.5" fill="#00F0FF" opacity="0.85" />
+              <circle cx="0" cy="0" r="5.5" fill="#00F0FF" opacity="0.85" />
             </g>
           )}
         </g>
@@ -638,7 +633,7 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
 
           return (
             <g key={p.id}>
-              {/* Outer Laser Glow Trail */}
+              {/* Outer Cyan Glow Beam */}
               <line
                 x1={tailX}
                 y1={tailY}
@@ -649,7 +644,7 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
                 strokeLinecap="round"
                 opacity="0.85"
               />
-              {/* Hot White Inner Core */}
+              {/* Hot White Laser Core */}
               <line
                 x1={tailX + 4}
                 y1={tailY + 4}
@@ -659,7 +654,6 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
-              {/* Laser Bullet Head */}
               <circle cx={p.x} cy={p.y} r="2.2" fill="#FFFFFF" />
             </g>
           );
@@ -713,14 +707,14 @@ export default function RealisticSpider({ sectionRef, textAnchorRef, boxRef }) {
           )}
         </g>
 
-        {/* 5. CYBER CAT AVATAR WITH FUTURISTIC GUN */}
+        {/* 5. CYBER HERO AVATAR WITH FUTURISTIC LASER CANNON */}
         <g
-          transform={`translate(${catPos.x}, ${catPos.y})`}
+          transform={`translate(${heroPos.x}, ${heroPos.y})`}
           className="pointer-events-auto cursor-pointer"
-          onClick={handleCatShoot}
-          title="Cyber Cat Defender! Click to manual-fire laser blaster!"
+          onClick={handleHeroShoot}
+          title="Cyber Hero Defender! Click to rapid-fire laser pulses!"
         >
-          {renderCyberCat()}
+          {renderHeroAvatar()}
         </g>
       </svg>
     </div>
