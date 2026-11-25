@@ -1,27 +1,30 @@
 # PhishShield-X 🛡️
-### *A Multimodal Defense-in-Depth Framework with Quish-EDL for Real-Time URL, Quishing, and Social Engineering Threat Detection*
+### *A Multimodal Defense-in-Depth Framework with Quish-EDL for Real-Time URL, Quishing, Email, and Document Threat Detection*
 
+[![Live Frontend (Vercel)](https://img.shields.io/badge/Live%20Demo-Vercel%20Edge-black?style=for-the-badge&logo=vercel&logoColor=white)](https://phishshield-x.vercel.app)
+[![Live Backend (Render)](https://img.shields.io/badge/Backend%20API-Render%2024%2F7-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://phishshield-x-1.onrender.com/health)
 [![Research Paper](https://img.shields.io/badge/Research-Paper%20Manuscript-blue?style=for-the-badge&logo=googlescholar&logoColor=white)](research_paper/PAPER_MANUSCRIPT.md)
 [![LaTeX Source](https://img.shields.io/badge/LaTeX-IEEE%20Manuscript-green?style=for-the-badge&logo=latex&logoColor=white)](research_paper/paper_draft.tex)
-[![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%20REST-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![TensorFlow](https://img.shields.io/badge/Deep%20Learning-TensorFlow%20%2F%20Keras-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://tensorflow.org/)
-[![Scikit-Learn](https://img.shields.io/badge/ML-Scikit--Learn-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
-[![Docker](https://img.shields.io/badge/Deployment-Docker%20Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Docker](https://img.shields.io/badge/Deployment-Docker%20%2F%20Vercel%20%2F%20Render-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 
 ---
 
-> **PhishShield-X** is a publication-grade, multimodal cybersecurity intelligence platform engineered to detect and neutralize zero-day phishing across **URLs, QR Codes (Quishing), and Spoofed Emails (.EML)**.
+> **PhishShield-X** is a publication-grade, multimodal cybersecurity intelligence platform engineered to detect and neutralize zero-day phishing across **URLs, QR Codes (Quishing), Spoofed Emails (.EML, .MSG), and Malicious Documents (.PDF)**.
 > 
-> * **Production Serving Architecture**: Runs **M3 (Multimodal Early Fusion + Softmax)** for QR image scanning (delivering state-of-the-art $94.41\%$ accuracy and a calibrated Expected Calibration Error of $\text{ECE} = 0.0236$), alongside a 34-feature Random Forest + Live OSINT pipeline for standalone URL traffic.
+> * **Production Serving Architecture**: Runs **M3 (Multimodal Early Fusion + Softmax)** for QR image scanning (delivering $94.41\%$ accuracy and a calibrated Expected Calibration Error of $\text{ECE} = 0.0236$), alongside a 34-feature Random Forest + Live OSINT pipeline for standalone URL traffic.
+> * **PDF & Document Forensics Engine**: Integrates automated `pypdf` stream analysis to extract embedded hyperlinks, uncover hidden QR quishing matrices, evaluate font/script obfuscations, and flag fraudulent payroll/invoice coercion markers.
 > * **Research Discovery (Quish-EDL)**: Rigorously evaluates Dirichlet Subjective Logic Evidential Deep Learning (EDL) on open-set zero-day attacks, establishing the mathematical necessity of Outlier Exposure to prevent open-set spurious evidence leakage.
+> * **Stateless 24/7 Cloud Architecture**: Engineered with a zero-disk footprint (no local SQLite accumulation) to operate flawlessly on cloud free tiers, featuring automated GitHub Actions keep-alive heartbeats and Vercel edge proxy rewrites.
 
 ---
 
 ## 🗺️ System Architecture & Workflow Maps
 
 ### 1. End-to-End Multi-Signal Ingestion & Defense Pipeline Map
-The diagram below maps the multi-modal routing flow across URL, QR image, and email submission vectors:
+The diagram below maps the multi-modal routing flow across URL, QR image, and email/document submission vectors:
 
 ```mermaid
 flowchart TD
@@ -66,16 +69,17 @@ flowchart TD
     Q_CV --> Q4["[Stage 4] M3 Multimodal Early Fusion Neural Network"]
     Q1 & Q2 & Q3 & Q4 --> Q_Fused["[Stage 5] Multimodal Decision Fusion Engine"]
     
-    %% ----------------- EMAIL VECTOR -----------------
-    Ingest -->|.EML File / Raw Email| E0["[Stage 0] RFC 822 Forensic Header Parser"]
+    %% ----------------- EMAIL & PDF VECTOR -----------------
+    Ingest -->|.EML / .MSG / .PDF Document| E0["[Stage 0] Unified Ingestion Router"]
     
-    subgraph E_Forensics ["Email Forensic & Social Engineering Engine"]
-        E0A["Cryptographic Header Verification (SPF, DKIM, DMARC)"]
-        E0B["Envelope Return-Path vs From Mismatch Detector"]
-        E0C["Body Semantic TF-IDF NLP + Job/Invoice Scam Rules"]
+    subgraph E_Forensics ["Email & PDF Document Forensics Engine"]
+        E0 -->|Email Stream| E0A["Cryptographic Header Verification (SPF, DKIM, DMARC)"]
+        E0A --> E0B["Envelope Return-Path vs From Mismatch Detector"]
+        E0 -->|PDF Document| E0C["pypdf Stream Ingestion & Font / Object Extractor"]
+        E0C --> E0D["Embedded URI / Link Harvester & Embedded QR Detector"]
+        E0B & E0D --> E0E["Body Semantic TF-IDF NLP + Coercion Heuristics (Urgent Payroll/Tax)"]
     end
-    E0 --> E_Forensics
-    E_Forensics --> E_Fused["[Stage 3] Email Threat Verdict Synthesis"]
+    E0E --> E_Fused["[Stage 3] Social Engineering Verdict Synthesis"]
     
     %% ----------------- UNIFIED OUTPUT -----------------
     U4 & Q_Fused & E_Fused --> FinalOut["[Output Layer] Forensic Threat Card & JSON API Response"]
@@ -83,71 +87,29 @@ flowchart TD
 
 ---
 
-### 2. Quish-EDL Neural Architecture Map
-Detailed schematic of the visual and lexical feature extraction streams, early multimodal concatenation, and dual evaluation heads:
+## ✨ Key Platform Features & Upgrades
 
-```mermaid
-flowchart LR
-    subgraph Visual_Stream ["Visual Spatial QR Stream"]
-        V_In["QR Matrix X_vis\n(64x64x1 Grayscale)"] --> V_Conv["Conv2D\n(16 filters, 3x3, ReLU)"]
-        V_Conv --> V_Pool["MaxPool2D\n(4x4 Pool)"]
-        V_Pool --> V_Flat["Flatten"]
-        V_Flat --> V_Dense["Dense (32, ReLU)\n+ Dropout (0.2)"]
-        V_Dense --> V_Feat["f_vis in R^32"]
-    end
+### 1. 📄 Advanced PDF & Document Threat Analysis
+* **Native PDF Parsing**: Direct extraction of text streams, annotation links, and metadata objects using `pypdf`.
+* **Zero-Day Embedded Link Auditing**: Discovers concealed hyperlinks and shortened redirect links nested within PDF invoices, delivery receipts, and HR notices.
+* **Coercion & Urgency Detection**: Employs heuristic NLP to detect social engineering pressure points (*"Action Required within 24h"*, *"Payroll Account Suspended"*, *"Wire Transfer Discrepancy"*).
+* **Multi-Format Support**: Seamless ingestion of `.pdf`, `.eml`, `.msg`, `.mbox`, and plain `.txt` files.
 
-    subgraph Lexical_Stream ["Lexical Character Sequence Stream"]
-        L_In["URL Payload Sequence X_lex\n(180 Character Tokens)"] --> L_Emb["Embedding Layer\n(Vocab 110 -> Dim 32)"]
-        L_Emb --> L_Conv["Conv1D\n(32 filters, k=3, ReLU)"]
-        L_Conv --> L_Pool["MaxPool1D\n(Pool Size 6)"]
-        L_Pool --> L_Flat["Flatten"]
-        L_Flat --> L_Dense["Dense (32, ReLU)\n+ Dropout (0.2)"]
-        L_Dense --> L_Feat["f_lex in R^32"]
-    end
+### 2. 📺 Retro CRT Computer Terminal UI & Figma Live Cursor
+* **Interactive Vintage Monitor**: Designed as a physical retro CRT terminal with cooling louvers, 3.5" floppy drive activity indicator, hardware power LED, curved glass reflection, and authentic scanlines.
+* **3D Animated Envelope Housing**: Realistic opening envelope with an emerging inspection card and nested payload display.
+* **Live Multiplayer Figma Cursor**: 
+  * Solid black vector cursor with crisp white outline.
+  * Real-time user tag badge that automatically detects the visitor's platform (`Windows User`, `Mac User`, `Android User`, `iOS User`) and rotates across a **12-color Figma multiplayer palette** (*Violet, Emerald, Tangerine, Electric Blue, Hot Pink, Amber, Magenta*) on every interaction.
+  * Double-click rename support and interactive `● USER: [Name] ✎` monitor controls.
 
-    V_Feat & L_Feat --> Fuse["Multimodal Early Fusion Concatenation\nh_fused = [f_vis || f_lex] in R^64"]
-    Fuse --> Dense1["Dense (48, ReLU)\n+ Dropout (0.2)"]
-    Dense1 --> Dense2["Dense (32, ReLU)"]
-    Dense2 --> Logits["Logits z in R^2"]
+### 3. ☁️ Hybrid Vercel + Render Cloud Architecture
+* **Vercel Edge Frontend**: Lightning-fast global CDN delivery, zero cold starts, and transparent edge proxy rewrites (`/api/*` $\rightarrow$ Render backend) to eliminate CORS limitations.
+* **Stateless Zero-Disk Backend**: Operates in 100% in-memory processing mode without accumulating local SQLite database rows, preventing cloud disk exhaustion on free tiers.
+* **24/7 Keep-Alive Automation**: Features a dedicated GitHub Actions cron heartbeat ([`.github/workflows/keep_alive.yml`](.github/workflows/keep_alive.yml)) that pings the lightweight `/health` endpoint every 10 minutes to prevent container sleep.
 
-    subgraph Serving_Head ["Production Serving Head (M3)"]
-        Logits --> Softmax["Softmax Layer\np = Softmax(z)"]
-        Softmax --> CalibOut["Calibrated Threat Probability\n(ECE = 0.0236, Acc = 94.41%)"]
-    end
-
-    subgraph Research_Head ["Subjective Logic Evidential Head (M6)"]
-        Logits --> EvLayer["Evidence e = ReLU(z)\nDirichlet alpha = e + 1.0"]
-        EvLayer --> Strength["Total Strength S = sum(alpha_k)"]
-        Strength --> Belief["Belief Masses: b_k = (alpha_k - 1) / S"]
-        Strength --> Uncert["Epistemic Uncertainty: u = K / S"]
-    end
-```
-
----
-
-### 3. Decoupled Poison-Resilient Active Learning Triage Map
-The architecture isolates independent external ground truth from internal model predictions to eliminate circular bias and protect against adversarial dataset poisoning:
-
-```mermaid
-flowchart TD
-    Live["Incoming Telemetry Stream (Live Traffic)"] --> ModelInf["Model Inference (M3 Score)"]
-    Live --> ExtIntel["Independent External Intelligence (VT, GSB, WHOIS)"]
-    
-    ModelInf & ExtIntel --> Triage{"Three-Tier Consensus Triage Engine"}
-    
-    Triage -->|Model Phishing >0.74 AND Corroborated by External Threat Feed| T1["Tier 1: Auto-Confirmed Malicious\n• VT >= 1, GSB = True, or Fresh Domain with Active Harvest Form\n• Action: Auto-Enqueued to Malicious Retraining Pool"]
-    
-    Triage -->|Ambiguous Score 0.40-0.74 OR Conflicting Signals OR Zero-Day Protocol| T2["Tier 2: Ambiguous Quarantine Firewall\n• Divergent Signals or Novel Transport Protocol\n• Action: Quarantined for Mandatory Human / Sandbox Review\n• Strict Safety Rule: NEVER fed directly to automated retraining"]
-    
-    Triage -->|Aged Domain >365d AND Clean Threat Intel AND Zero Heuristic Flags| T3["Tier 3: Auto-Cleared Benign\n• Zero ML Score Dependency (Prevents Circular Confirmation Bias)\n• Action: Auto-Enqueued to Benign Baseline Retraining Pool"]
-
-    subgraph Retrain_Pipeline ["Continuous Retraining & Safety Gate"]
-        T1 & T3 --> NewModel["Retrain Candidate Neural Model"]
-        NewModel --> RegGate{"Golden Benchmark Regression Gate"}
-        RegGate -->|Passes Immutable 5-Fold Benchmark: Acc >= 94.40%, ECE <= 0.025| ProdDeploy["🚀 Promote to Production Live Serving"]
-        RegGate -->|Performance Regression Detected| Reject["⚠️ Reject Weights & Trigger SecOps Alert"]
-    end
-```
+### 4. 📬 Direct Security Inquiries & Contact Modal
+* Integrated modal dialog providing direct communication channels, GitHub repository links, source code access, and pre-formatted mail client (`mailto`) routing to the research maintainers.
 
 ---
 
@@ -176,32 +138,30 @@ Evaluated across a full **5-Fold Stratified Cross-Validation Protocol** with str
 * **Quish-EDL (Ours)**: Achieves **$0.9885 \pm 0.0040$ ROC-AUC**, representing an absolute increase of **$+0.0752$ AUC points (+7.52 percentage points)** over published upper bounds, while introducing Subjective Logic Bayesian uncertainty estimation.
 * **CIC-Trap4Phish 2025 & Galadima Mendeley Benchmark (2025)**: Robust zero-shot generalization across unified visual-lexical distributions ($>91.8\%$ accuracy).
 
-### Calibration & Epistemic Uncertainty Findings
-* **In-Distribution Calibration**: Deterministic Early Fusion with Softmax (M3) achieves peak calibration ($\text{ECE} = 0.0236 \pm 0.0039$, $\text{Brier} = 0.0418 \pm 0.0084$). Evidential Deep Learning (M6) exhibits systematic in-distribution underconfidence ($\text{ECE} = 0.0871 \pm 0.0042$) due to Dirichlet KL penalty evidence suppression.
-* **Open-Set Spurious Evidence Leakage**: On $N=400$ unseen zero-day evasion samples spanning non-HTTP protocols (`WIFI:`, `UPI:`, `bitcoin:`, `ethereum:`, `geo:`, `tel:`, `otpauth:`, `matrix:`, `ssh:`, `magnet:`, vCards, JSON telemetry, base64 payloads), multi-seed evaluation demonstrates $\bar{u}_{\text{OOD}} = 0.2096 \pm 0.0108$ vs. $\bar{u}_{\text{ID}} = 0.2571 \pm 0.0093$ ($0.82\times$ ratio). Because standard evidential loss operates exclusively on in-distribution labeled data, unconstrained feature activations produce non-zero evidence on novel domains, proving the necessity of explicit Outlier Exposure for zero-day defense.
-
 ---
 
 ## 🛠️ Technology Stack
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Frontend UI** | React 18, Vite, Lucide Icons, Glassmorphic Dashboard, Tailwind CSS |
-| **Backend API** | FastAPI, Python 3.13, Uvicorn, SQLAlchemy, SQLite |
-| **Deep Learning** | TensorFlow 2.21, Keras 3, Custom Evidential Dirichlet Layers |
+| **Frontend UI** | React 19, Vite, Tailwind CSS, Lucide Icons, Recharts, Swiss Editorial Aesthetics |
+| **Backend API** | FastAPI, Python 3.11, Uvicorn, SQLAlchemy |
+| **Document Processing** | `pypdf`, Python `email` package, RFC 822 MIME parsers |
+| **Deep Learning** | TensorFlow 2.15+, Keras 3, Evidential Dirichlet Custom Loss Layers |
 | **Machine Learning** | Scikit-Learn, Joblib, NumPy, Pandas, SciPy |
-| **Computer Vision** | OpenCV (cv2), PyZbar, CLAHE contrast equalization, Perceptual dHash |
+| **Computer Vision** | OpenCV (cv2), PyZbar, ZXing-CPP, CLAHE contrast equalization |
 | **Threat Intel / OSINT** | VirusTotal v3 REST API, Google Safe Browsing v4, Python-WHOIS, SSL Sockets |
 | **Browser Automation** | Playwright headless Chromium for real-time live page rendering |
-| **Browser Extension** | Chrome/Edge Manifest V3, Vanilla JS Service Worker, Content Scripts, OffscreenCanvas QR signature detection, chrome.notifications |
-| **Containerization** | Docker, Docker Compose |
+| **Browser Extension** | Chrome/Edge Manifest V3, Service Workers, OffscreenCanvas QR finder scanner |
+| **Cloud Hosting** | **Vercel** (Global Edge CDN Frontend) + **Render** (24/7 Keep-Alive Python Backend) |
+| **Automation** | GitHub Actions Keep-Alive Cron Heartbeat (`.github/workflows/keep_alive.yml`) |
 
 ---
 
 ## 🚀 Quick Start & Installation
 
 ### Prerequisites
-* Python 3.10+ (Tested up to Python 3.13)
+* Python 3.11+
 * Node.js 18+ and npm
 * Optional: VirusTotal API Key and Google Safe Browsing API Key in `backend/.env`
 
@@ -219,9 +179,6 @@ python -m venv venv
 # Windows: venv\Scripts\activate | Linux/macOS: source venv/bin/activate
 pip install -r requirements.txt
 
-# Run the 5-Fold Evaluation Suite (Optional - to re-evaluate research benchmarks):
-python evaluate_quishing_research.py
-
 # Start FastAPI Server:
 uvicorn main:app --reload --port 8000
 ```
@@ -233,31 +190,7 @@ npm install
 npm run dev
 ```
 
-The web dashboard will be accessible at: `http://localhost:5173`.
-
-### 4. Browser Extension (Chrome / Edge — Manifest V3)
-1. Open `chrome://extensions` and enable **Developer mode**.
-2. Click **Load unpacked** and select the `extension/` folder.
-3. Keep the FastAPI backend running on port 8000 (`API_BASE` is configured in `extension/background.js`). Without it, the shield degrades silently (no badges).
-
-**Extension capabilities:**
-* **Passive real-time URL verdicts** — every top-level navigation is scanned; toolbar badge shows `OK` / `UNC` / `PHISH` with eTLD+1 tiered-TTL caching (7d safe / 4h uncertain / 24h phish) to reduce alert fatigue.
-* **Tier-1 block interstitial** — confirmed phishing (`tier1_phish`) redirects to a non-overridable forensic block page (`blocked.html`) exposing prediction, confidence, epistemic uncertainty (u), Dirichlet strength (S), and a "Report Misclassification" feedback channel logged to `/api/extension/log`.
-* **On-page warning banner** (`banner.js` content script) — Tier-2 evidentially uncertain sites show a habituation-aware top banner with a guardrailed **24h snooze** override; Tier-1 blocks are never overridable.
-* **Right-click QR scanning** — context-menu scan of any image via the M3 multimodal backend, surfaced as a system notification with confidence + uncertainty.
-* **Automatic passive QR defense (core Quishing U.S.P.)** — as the user browses, `qr_auto_scan.js` harvests square-ish images/canvases, the background worker filters them via a client-side QR finder-pattern signature (1:1:3:1:1 run-length test on OffscreenCanvas, no network cost for normal images), and only QR-like payloads hit the M3 multimodal backend. A phishing QR embedded in a webmail body or page triggers the red `PHISH` badge, a sticky system notification ("Do NOT scan this QR with your phone"), a page-scoped alert in the popup, and `auto_qr_phishing` / `auto_qr_safe` telemetry for field precision/recall evaluation — all before the user ever lifts their phone to scan.
-* **Field ECE telemetry** — anonymous SHA-256 hashed visit/override logs written by the backend to `backend/logs/extension_field_ece.log` for the usability study.
-
----
-
-## 📑 Research Artifacts & Reproducibility
-
-* **Full Research Manuscript Draft**: [`research_paper/PAPER_MANUSCRIPT.md`](research_paper/PAPER_MANUSCRIPT.md)
-* **IEEE LaTeX Source Code**: [`research_paper/paper_draft.tex`](research_paper/paper_draft.tex)
-* **Evaluation & Ablation Script**: [`backend/evaluate_quishing_research.py`](backend/evaluate_quishing_research.py)
-* **Production Serving Weights (M3)**: `backend/m3_early_fusion_weights.weights.h5`
-* **Research Ablation Weights (EDL)**: `backend/quish_cross_edl_weights.weights.h5`
-* **Raw Benchmark Results**: [`backend/quishing_research_results.json`](backend/quishing_research_results.json)
+The web interface will be accessible at `http://localhost:5173`.
 
 ---
 
@@ -284,5 +217,3 @@ If you use **Quish-EDL** or **PhishShield-X** in your academic research, please 
   year={2026}
 }
 ```
-
-
